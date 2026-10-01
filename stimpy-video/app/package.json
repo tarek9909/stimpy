@@ -1,0 +1,19 @@
+{
+  "name": "stimpy-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "stills": "node scripts/render.mjs stills",
+    "render": "node scripts/render.mjs video"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.55.0",
+    "typescript": "^5.9.0",
+    "vite": "^7.1.0"
+  },
+  "dependencies": {
+    "@types/three": "^0.180.0",
+    "three": "^0.180.0"
+  }
+}

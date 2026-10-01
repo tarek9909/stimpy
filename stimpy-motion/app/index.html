@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Stimpy — Motion</title>
+  <style>
+    html, body { margin: 0; background: #0b0b0b; color: #ddd; font: 12px ui-monospace, Menlo, Consolas, monospace; overflow: hidden; }
+    #c { display: block; height: calc(100vh - 118px); aspect-ratio: 9 / 16; max-width: 100vw; margin: 8px auto 0; box-shadow: 0 0 0 1px #222; }
+    body.export #c { width: 1080px; height: auto; margin: 0; box-shadow: none; }
+    body.export #ui { display: none; }
+    #ui { position: fixed; left: 0; right: 0; bottom: 0; padding: 8px 14px 10px; background: #0b0b0b; border-top: 1px solid #1d1d1d; }
+    #ui.hidden { display: none; }
+    #row { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+    select, button { background: #161616; color: #eee; border: 1px solid #333; border-radius: 6px; padding: 4px 8px; font: inherit; }
+    button { cursor: pointer; }
+    button:hover, select:hover { border-color: #FF7A59; }
+    #scrub { width: 100%; accent-color: #FF7A59; }
+    #marks { position: relative; height: 18px; }
+    .mark { position: absolute; top: 0; height: 16px; border-left: 1px solid #555; padding-left: 3px; color: #999; cursor: pointer; overflow: hidden; white-space: nowrap; font-size: 10px; }
+    .mark:hover { color: #FF7A59; }
+    #info { color: #aaa; }
+    #brief { color: #777; flex: 1; min-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #errs { display: none; position: fixed; top: 0; left: 0; right: 0; max-height: 40vh; overflow: auto; background: rgba(60,0,0,.92); color: #f99; white-space: pre; padding: 8px; z-index: 9; }
+    #safe { position: fixed; pointer-events: none; display: none; }
+    #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #FF7A59; font-size: 14px; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="loading">loading…</div>
+  <div id="ui">
+    <div id="row">
+      <select id="film"></select>
+      <select id="variant"></select>
+      <button id="play">▶ play</button>
+      <button id="safeBtn" title="show the Reels safe area (s)">safe area</button>
+      <span id="info"></span>
+      <span id="brief"></span>
+    </div>
+    <div id="marks"></div>
+    <input id="scrub" type="range" min="0" value="0" />
+    <div style="color:#666">space play/pause · ←/→ 1 s (shift 5 s) · ,/. one frame · [ ] marks · l loop section · s safe area · m mute · h hide UI</div>
+  </div>
+  <div id="safe"></div>
+  <pre id="errs"></pre>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

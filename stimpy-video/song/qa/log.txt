@@ -1,0 +1,14 @@
+dark    rms  -13.9 dBFS  peak 0.75
+walk    rms   -8.3 dBFS  peak 0.92
+worlds  rms   -5.7 dBFS  peak 0.97
+deck    rms  -16.0 dBFS  peak 0.84
+swap    rms   -5.6 dBFS  peak 0.97
+logo    rms  -14.1 dBFS  peak 0.97
+wrote C:\Users\aswad\Downloads\motion\stimpy-video\app\public\stimpy.wav 49.75s
+section   20-60  60-250  250-2000  2000-6000  6000-16000
+dark       -16.0   -18.4   -30.7   -41.5   -44.3
+walk       -10.6   -13.0   -24.5   -25.8   -26.5
+worlds      -7.6   -10.5   -21.1   -28.2   -26.5
+deck       -20.2   -22.6   -24.2   -27.4   -28.3
+swap        -7.5   -10.5   -20.8   -25.3   -26.2
+logo       -15.1   -24.3   -30.6   -32.1   -27.0

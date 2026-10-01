@@ -1,0 +1,21 @@
+# Reference repository
+pdoom-video/
+
+# Render outputs, videos, and renderer profiles
+stimpy/out/
+out/
+.chrome-profile/
+*.mp4
+
+# Dependencies and caches
+node_modules/
+dist/
+.vite/
+.venv/
+__pycache__/
+*.pyc
+
+# OS & Environment
+.DS_Store
+Thumbs.db
+*.log

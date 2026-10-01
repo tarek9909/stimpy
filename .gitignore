@@ -1,0 +1,32 @@
+# OS and Editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+**/node_modules/
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Build & Vite artifacts
+dist/
+**/dist/
+.vite/
+**/.vite/
+.chrome-profile/
+
+# Nested git backups
+.git_backup/
+**/.git_backup/
+
+# Excluded large files (>100MB per GitHub limit)
+stimpy-motion.zip
+stimpy-video/out/stimpy_master.mp4

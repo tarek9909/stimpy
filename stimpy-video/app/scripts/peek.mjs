@@ -1,0 +1,33 @@
+// Render a model file on its own (front + back) to see what it looks like: node scripts/peek.mjs models/x.glb
+import { chromium } from 'playwright-core';
+const file = process.argv[2];
+const b = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
+const p = await b.newPage({ viewport: { width: 1000, height: 1000 } });
+p.on('pageerror', (e) => console.log('ERR', e.message));
+await p.goto('http://localhost:5190/?render=1');
+await p.waitForFunction(() => window.__stimpy?.ready);
+const out = await p.evaluate(async (file) => {
+  const THREE = await import('/node_modules/.vite/deps/three.js');
+  const { GLTFLoader } = await import('/node_modules/.vite/deps/three_examples_jsm_loaders_GLTFLoader__js.js');
+  const g = await new GLTFLoader().loadAsync(file);
+  const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  r.setSize(1000, 1000, false);
+  r.outputColorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Scene();
+  s.background = new THREE.Color(0x777777);
+  s.add(new THREE.HemisphereLight(0xffffff, 0x444444, 2.2));
+  const d = new THREE.DirectionalLight(0xffffff, 2); d.position.set(1, 2, 3); s.add(d);
+  const m1 = g.scene; s.add(m1);
+  const box = new THREE.Box3().setFromObject(m1, true);
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const m2 = m1.clone(); m2.rotation.y = Math.PI; m2.position.x = size.y * 0.7; s.add(m2);
+  m1.position.x = -size.y * 0.35; m2.position.x = size.y * 0.35;
+  const cam = new THREE.PerspectiveCamera(30, 1, 0.01, 100);
+  cam.position.set(0, c.y, size.y * 2.2); cam.lookAt(0, c.y, 0);
+  r.render(s, cam);
+  return { png: r.domElement.toDataURL('image/png'), size: size.toArray(), min: box.min.toArray() };
+}, file);
+const { writeFileSync } = await import('node:fs');
+writeFileSync('../out/shots/peek.png', Buffer.from(out.png.split(',')[1], 'base64'));
+console.log(out.size, out.min);
+await b.close();
