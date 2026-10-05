@@ -265,7 +265,7 @@ Rules:
 - `customer.email`, `phone`, `name` required. `whatsapp` is required unless `whatsappSameAsPhone` is `true`.
 - `delivery.areaId` optional; `areaName` and `address` required. Length limits are in the conventions table.
 - `expectedTotalCents` is an optional safety check and is the **grand total including the delivery fee** (here items $55.00 + delivery $3.00 = 5800). If it differs from the server's total, the order is rejected with `PRICE_CHANGED` and nothing is reserved.
-- `attribution` is optional. It carries the UTM values the website captured on landing, each at most 80 characters, letters/digits/`-_.` only. They are stored on the order for the Insights "by campaign" view and never shown to customers.
+- `attribution` is optional and stores the current checkout touch on this order. `firstTouch` is a separate optional first-party session snapshot used only to initialize the customer's immutable first-touch fields. Both accept `utmSource`, `utmMedium`, `utmCampaign`, `utmContent`, `utmTerm` (each up to 80 characters, letters/digits/`-_.` only) and `referrer` (HTTP(S), at most 500 characters). Repeated orders may update their own `attribution`, but never replace a customer's first-touch values.
 - `hp` is a hidden honeypot field; it must be `""`. Real users never fill it. A non-empty value gets a generic `VALIDATION_ERROR`.
 - Prices in the request are never accepted; the server prices everything.
 - A `pack` item's `stimpieIds` must be **distinct** (a pack is N different designs). A duplicate id is a `VALIDATION_ERROR` on `items.N.stimpieIds.M`. `LIMITED` Stimpies may be used in packs while their drop is live. Across the whole order, the same Stimpie may appear in several lines (stock is summed).
@@ -411,6 +411,13 @@ Long text fields are **plain text with blank-line paragraph breaks and `**bold**
 
 ---
 
+### 3.8 Email unsubscribe
+
+| Endpoint | Response |
+|---|---|
+| `GET /unsubscribe/:token` | `{ valid: true }` when the token exists; this validates the link without changing consent |
+| `POST /unsubscribe/:token/confirm` | `204`; idempotently revokes email consent and records the unsubscribe time. WhatsApp consent is unchanged |
+
 ## 4. Authentication endpoints
 
 | Endpoint | Request | Response |
@@ -548,7 +555,7 @@ Resources (all with `GET` list, `GET /:id`, `POST`, `PATCH /:id`, `DELETE /:id`)
 
 List responses include stock summary fields for convenience (`available`, `reserved`), read-only. **Admin lists include inactive rows**; each has `active`, and `?active=true|false` filters.
 
-**Reordering:** `PUT /admin/colors/order`, `PUT /admin/sizes/order`, `PUT /admin/packs/order`, `PUT /admin/hoodies/order` and `PUT /admin/faqs/order` each take `{ ids: number[] }` (the full list in the new order) and return `204`.
+**Reordering:** `PUT /admin/colors/order`, `PUT /admin/sizes/order`, `PUT /admin/packs/order`, `PUT /admin/hoodies/order` and `PUT /admin/faqs/order` each take `{ ids: number[] }` (the full list in the new order, up to 5,000 ids) and return `204`.
 
 **Global search:** `GET /admin/search?q=` returns `{ orders: AdminOrderSummary[], customers: { id, name, phone, email }[] }` with at most 5 of each, for the dashboard's top-bar search.
 
@@ -564,8 +571,8 @@ List responses include stock summary fields for convenience (`available`, `reser
 |---|---|
 | `GET /admin/stock/hoodies` | `{ colors: Color[], sizes: Size[], hoodies: { hoodieId, name, cells: { variantId, colorId, sizeId, quantity, reserved, available }[] }[] }` |
 | `GET /admin/stock/stimpies` | `{ items: { stimpieId, name, type, dropName: string \| null, quantity, reserved, available, low: boolean }[] }` |
-| `POST /admin/stock/adjust` | `{ itemType: 'HOODIE_VARIANT' \| 'STIMPIE', itemId, delta: number, reason: 'RESTOCK' \| 'CORRECTION' \| 'DAMAGED', note: string }`. `delta` may be negative. `note` required. Rejects adjustments that would make `quantity` lower than `reserved` (`CONFLICT`). Response `{ quantity, reserved, available }` |
-| `POST /admin/stock/set` | `{ itemType, itemId, quantity, note }` : sets the on-hand quantity (recorded as a `CORRECTION` movement for the difference) |
+| `POST /admin/stock/adjust` | `{ itemType: 'HOODIE_VARIANT' \| 'STIMPIE', itemId, delta: number, reason: 'RESTOCK' \| 'CORRECTION' \| 'DAMAGED', note: string }`. `delta` may be negative. `note` required. Rejects adjustments that would make `quantity` lower than `reserved` (`CONFLICT`). `reserved` is read-only here and changes only through order transitions (confirm/release, deliver/sell, return). Response `{ quantity, reserved, available }` |
+| `POST /admin/stock/set` | `{ itemType, itemId, quantity, note }` : sets the on-hand quantity (recorded as a `CORRECTION` movement for the difference); direct changes to `reserved` are rejected |
 | `GET /admin/stock/movements` | Query: `itemType`, `itemId`, `reason`, `orderId`, `from`, `to`, paged. Items: `{ id, at, itemType, itemId, itemName, field: 'QUANTITY' \| 'RESERVED', delta, reason, orderNumber: string \| null, note, by: string \| null }`. `reason` is one of `INITIAL`, `RESTOCK`, `CORRECTION`, `DAMAGED`, `ORDER_RESERVED`, `ORDER_RELEASED`, `ORDER_SOLD`, `ORDER_RETURNED`, `ORDER_WRITTEN_OFF`; the manual adjust call accepts only `RESTOCK`, `CORRECTION`, `DAMAGED` |
 
 ### 5.6 Drops
@@ -580,10 +587,37 @@ Read adds: `state`, `unitsTotal`, `unitsSold`, `unitsRemaining`, `revenueCents`,
 
 | Endpoint | Response |
 |---|---|
-| `GET /admin/customers` | Query `filter=all\|repeat`, `q` (name, phone, email, WhatsApp). `Page<{ id, name, email, phone, whatsapp, ordersCount, totalSpentCents, lastOrderAt }>` |
+| `GET /admin/customers` | Query `filter=all\|repeat`, `q` (name, phone, email, WhatsApp), `areaId`, `tagId`, `ordersMin`, `ordersMax`, `spentMinCents`, `spentMaxCents`, `lastOrderBefore`, `lastOrderAfter` (`YYYY-MM-DD`), `hasEmail`, `returned`, `optedOut` (`yes\|no`), `relationship=SUBSCRIBED_NEVER_BOUGHT\|BOUGHT_NOT_SUBSCRIBED`; all filters are AND-combined. Paginated SQL query returns `Page<CustomerRow>` with consent status, unsubscribe time, and page-scoped `tags[]` |
+| `POST /admin/customers/bulk/preview` | `{ target, channel: 'EMAIL'\|'WHATSAPP' }` where `target` is `{ ids }` or `{ filters }` (the list filters). `{ matched, eligible, skipped: { noContact, noConsent, optedOut }, cap, overCap, sample }`; consent and opt-out are enforced by the server |
+| `POST /admin/customers/bulk/email` | `{ target, subject, body }`. Queues one email per customer with email consent (`{name}`, `{full_name}` filled in, unsubscribe link appended), at most the configured campaign recipient cap (default 200). `{ queued, skipped, overCap }`; 409 when nobody is eligible or customer emails are switched off |
+| `POST /admin/customers/bulk/whatsapp` | `{ target, text }`. Returns per-customer `wa.me` links only for customers with WhatsApp consent; no messages are sent automatically |
+| `GET/POST /admin/segments`, `PATCH/DELETE /admin/segments/:id` | List, save, edit or delete named segments with validated AND-combined filters |
+| `POST /admin/segments/preview` | `{ filters, channel }` -> eligible count, skipped by reason, cap and sample; channel consent is required |
+| `GET/POST /admin/campaigns`, `GET /admin/campaigns/:id` | Campaign history, create a draft from a saved segment or filters, and read recipient status |
+| `POST /admin/campaigns/preview` | Preview recipient counts and a sample before creating/confirming a campaign |
+| `POST /admin/campaigns/:id/confirm` | Explicitly confirm a campaign; email is queued through the email worker, WhatsApp creates manual chat links only |
+| `POST /admin/campaigns/:id/recipients/:customerId/sent` | Mark a WhatsApp chat as sent; the action appears in the customer timeline |
 | `GET /admin/customers/:id` | The above plus `notes` and `orders: AdminOrderSummary[]` |
-| `PATCH /admin/customers/:id` | `{ name?, email?, whatsapp?, notes? }` |
-| `GET /admin/subscribers` | `Page<{ id, contact, type, dropName: string \| null, createdAt }>`; `?format=csv` returns a CSV |
+| `GET /admin/customers/:id/profile` | Customer aggregates plus consent state/timestamp and immutable first-touch fields: `firstSource`, `firstUtmSource`, `firstUtmMedium`, `firstUtmCampaign`, `firstUtmContent`, `firstUtmTerm`, `firstReferrer`, `firstTouchAt` |
+| `PATCH /admin/customers/:id` | `{ name?, email?, whatsapp?, notes?, marketingOptOut?, emailConsent?, whatsappConsent? }`; explicit channel consent updates are recorded with a consent timestamp |
+| `GET /admin/customers/duplicates` | Query `page`, `pageSize`. `Page<{ match: 'EMAIL' \| 'PHONE', value: string, customers: CustomerRow[] }>`; groups are exact case-insensitive e-mail matches or equal normalized phone numbers, newest customer ids first |
+| `GET /admin/customers/:id/export` | JSON containing the customer's profile, all order rows with items, stock lines, events, notes and e-mail logs, plus matching drop subscribers |
+| `DELETE /admin/customers/:id/personal-data` | Anonymizes customer and order contact fields, free-text notes and matching subscriber/e-mail personal data while preserving order accounting/status rows; `204` |
+| `POST /admin/customers/:id/merge` | `{ duplicateCustomerId }` atomically merges orders, notes, follow-ups, tags and subscribers into the path customer, deletes the duplicate, and returns the surviving customer detail |
+| `GET /admin/customer-tags` | Paginated `Page<CustomerTag>` |
+| `POST /admin/customer-tags` | `{ name, color? }` -> `201 CustomerTag`; names are unique |
+| `PATCH /admin/customer-tags/:id` | `{ name?, color? }` -> `CustomerTag` |
+| `DELETE /admin/customer-tags/:id` | Deletes the tag and its customer links; `204` |
+| `GET /admin/customers/:id/tags` | `CustomerTag[]` currently attached to the customer |
+| `POST /admin/customers/:id/tags/:tagId` | Idempotently attaches the tag; returns the customer's `CustomerTag[]` |
+| `DELETE /admin/customers/:id/tags/:tagId` | Detaches the tag; `204` |
+| `GET /admin/customers/:id/notes` | Paginated `Page<CustomerNote>` in newest-first order |
+| `POST /admin/customers/:id/notes` | `{ body }` (1–2000 characters) -> `201 CustomerNote`, attributed to the authenticated admin |
+| `GET /admin/follow-ups` | Query `due=today\|overdue\|upcoming`, optional `customerId`, `page`, `pageSize`. `Page<CustomerFollowUp>`; `today` uses `business.timezone`, `overdue` means before today, and `upcoming` means after today; completed rows are excluded |
+| `POST /admin/follow-ups` | `{ customerId, dueAt, note }` -> `201 CustomerFollowUp` |
+| `PATCH /admin/follow-ups/:id` | `{ dueAt?, note?, done? }`; `done` completes or reopens a follow-up -> `CustomerFollowUp` |
+| `DELETE /admin/follow-ups/:id` | Deletes the follow-up; `204` |
+| `GET /admin/subscribers` | Query `customerId` to scope the result to one CRM profile (also supports `q`, `type`, `dropId`, paging); `Page<{ id, contact, type, customerId: number \| null, dropName: string \| null, createdAt }>`; `?format=csv` returns a CSV |
 
 ### 5.8 Deliveries
 
@@ -613,6 +647,7 @@ All accept `from`, `to`. **All ratios are fractions from 0 to 1** (not percentag
 | `GET /admin/insights/sales` | `{ series: { date, orders, revenueCents }[], byDrop: { dropName, orders, revenueCents }[], bySource: { source, orders, revenueCents }[], byCampaign: { utmSource: string \| null, utmCampaign: string \| null, orders, revenueCents }[], byWeekday: { weekday: 0..6, orders }[] }` |
 | `GET /admin/insights/products` | `{ stimpies: { name, unitsSold, revenueCents }[], packMix: { packName, orders }[], extraStimpieAttachRate: number, sizes: { label, units }[], colors: { name, units }[] }` |
 | `GET /admin/insights/customers` | `{ repeatRate: number, byArea: { areaName, orders }[], deliverySuccessRate: number, returnRate: number }` |
+| `GET /admin/insights/acquisition` | Query `from`, `to` (optional real `YYYY-MM-DD` dates; inclusive business-timezone calendar days; either bound may be omitted). Response `{ bySource: { source, customers, revenueCents, adSpendCents, costPerCustomerCents: number \| null, roas: number \| null }[], byCampaign: { source, campaign, customers, revenueCents }[], unmatchedAdSpendCents }` (money fields are integer cents). New customers are counted by `firstTouchAt`; delivered revenue is the delivered order `subtotalCents` dated by `deliveredAt`; ad spend is dated by `spentOn`. `source` is trimmed `firstUtmSource`, falling back to trimmed `firstSource`, then `Unknown`; `campaign` is trimmed `firstUtmCampaign`, falling back to `Unknown`. Source/campaign rows are created from new-customer or delivered-order attribution. `AdSpend.channel` matches a source row by trimmed, case-insensitive exact equality; spend without a matching source row contributes to `unmatchedAdSpendCents`. `costPerCustomerCents` is rounded spend/customer and is `null` when there are no customers; `roas` is revenue/spend and is `null` when spend is zero. Campaign rows report customers and delivered revenue only; ad spend cannot be attributed to campaigns because `AdSpend` has no campaign key. Invalid dates, impossible calendar dates, or `from` after `to` return `400`. |
 
 ### 5.11 Content
 
@@ -649,7 +684,7 @@ Email template keys: `order_received`, `order_confirmed`, `order_out_for_deliver
     hardwareCostCents: Cents;        // default 100: zippers/velcro added to each hoodie's cost
   };
   email: { enabled: boolean; senderName: string; senderAddress: string; replyTo: string;
-           footerText: string };    // shown at the bottom of every customer email; the layout and logo are fixed in v1
+           footerText: string; campaignRecipientCap: number }; // campaign cap 1..5000; default 200
   notifications: { founderEmail: string | null; onNewOrder: boolean; onLowStock: boolean };
 }
 ```

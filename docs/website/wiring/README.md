@@ -2,7 +2,7 @@
 
 **Purpose and audience.** This document defines how the pieces of the Stimpy system are connected to each other on a developer machine: which process runs where, which ports, how the apps call the API, how cookies and CORS work, how configuration flows, how the typed API client is produced, and the exact order to start things. It is the document to read before creating any project folders. Everything is **local-only**; production deployment is deliberately out of scope for now (see the [plan](../../../stimpy_website_plan.md)).
 
-> **Status: documentation only.** Nothing described here exists yet.
+> **Implementation note (4 October 2026).** The website, dashboard, API and local infrastructure now exist under [`website/`](../../../website/). This document began as the wiring plan, so its historical Docker and `apps/*` examples are not the current workspace layout. For commands, actual paths and environment facts, use [`website/docs/BUILD-RULES.md`](../../../website/docs/BUILD-RULES.md) and [`website/docs/HANDOFF.md`](../../../website/docs/HANDOFF.md). The generated API contract and `website/docs/DECISIONS.md` govern implementation details where this plan differs.
 
 ## Contents
 

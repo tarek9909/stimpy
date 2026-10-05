@@ -1,0 +1,263 @@
+/*
+ * @stimpy/ui design tokens (design-system.md sections 2-14).
+ *
+ * This file and tailwind-preset.cjs are the ONLY places raw colour values may live.
+ * Components use Tailwind class names or the semantic variables below, never hex.
+ *
+ * Usage in an app stylesheet (Tailwind 3.4):
+ *   @import '@stimpy/ui/tokens.css';
+ *   @tailwind base; @tailwind components; @tailwind utilities;
+ * Fonts: import '@stimpy/ui/fonts.css' (self-hosted Poppins) OR load Poppins with next/font and
+ * point `--font-sans` at it.
+ */
+
+:root {
+  /* ---- Brand palette [Brand] ---- */
+  --color-coral: #ff7a59;
+  --color-black: #111111;
+  --color-white: #ffffff;
+  --color-blue: #2e63ff;
+  --color-butter: #ffe45c;
+  --color-sky: #5cc8ff;
+  --color-lilac: #c9b6ff;
+  --color-cream: #fff4e6;
+
+  /* ---- Supporting neutrals and status [Rec] ---- */
+  --color-ink-70: #4d4d4d;
+  --color-ink-55: #6b6b6b;
+  --color-line: #e7e1d8;
+  --color-line-strong: #8a8a8a;
+  --color-surface: #faf7f2;
+  --color-disabled-bg: #efeae3;
+  --color-disabled-fg: #767676;
+  --color-success: #167a3e;
+  --color-danger: #c62828;
+  --color-neutral: #6b6b6b;
+
+  /* ---- Semantic surface variables (light default); `.surface-dark` overrides ---- */
+  --bg: var(--color-white);
+  --fg: var(--color-black);
+  --fg-muted: var(--color-ink-70);
+  --border: var(--color-line);
+  --border-control: var(--color-line-strong);
+  --accent: var(--color-coral);
+  --action: var(--color-blue);
+  --fg-inverse: var(--color-white); /* text on a fg-filled element (dark button, selected segment) */
+  --fg-danger: var(--color-danger); /* error text; danger is only 3.2:1 on black, so dark bands switch it */
+  --focus-ring: var(--color-black);
+  --zip-line: var(--color-black);
+
+  /* ---- Typography ---- */
+  --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-display: clamp(2.5rem, 1.6rem + 3.5vw, 4.5rem);
+  --text-h1: clamp(2rem, 1.609rem + 1.739vw, 3rem);
+  --text-h2: clamp(1.5rem, 1.206rem + 1.304vw, 2.25rem);
+  --text-h3: clamp(1.25rem, 1.152rem + 0.435vw, 1.5rem);
+  --text-h4: 1.125rem;
+  --text-lead: clamp(1.125rem, 1.076rem + 0.217vw, 1.25rem);
+  --text-body: 1rem;
+  --text-body-sm: 0.875rem;
+  --text-caption: 0.75rem;
+
+  /* ---- Spacing (4px base) ---- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* ---- Radii ---- */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ---- Shadows: only for floating layers ---- */
+  --shadow-float: 0 8px 24px rgba(17, 17, 17, 0.12);
+  --shadow-overlay: 0 16px 48px rgba(17, 17, 17, 0.2);
+
+  /* ---- Layout ---- */
+  --container-max: 1200px;
+  --logo-clear: 0.75rem;
+
+  /* ---- Motion ---- */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --motion-zip: 450ms;
+  --motion-zip-section: 600ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-zip: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ---- Dark band (design-system section 12). A band, not a component theme. ---- */
+.surface-dark,
+[data-theme='dark'] {
+  --bg: var(--color-black);
+  --fg: var(--color-white);
+  --fg-muted: #c9c9c9; /* 11.6:1 on black */
+  --border: rgba(255, 255, 255, 0.18);
+  --border-control: #8f8f8f; /* 5.5:1 on black */
+  --accent: var(--color-coral);
+  --fg-inverse: var(--color-black);
+  --fg-danger: var(--color-white);
+  --focus-ring: var(--color-white);
+  --zip-line: var(--color-white);
+  background-color: var(--bg);
+  color: var(--fg);
+}
+
+/*
+ * Filled brand colour bands (coral, butter, sky, lilac, cream). ink-70 does not reach 4.5:1 on
+ * these fills (ink-70 on coral is 3.3:1), so muted text and borders switch to full ink.
+ */
+.surface-colored {
+  --bg: var(--color-cream);
+  --fg: var(--color-black);
+  --fg-muted: var(--color-black);
+  --border: rgba(17, 17, 17, 0.35);
+  --border-control: var(--color-black);
+  --fg-inverse: var(--color-white);
+  --fg-danger: var(--color-black);
+  --focus-ring: var(--color-black);
+  color: var(--fg);
+}
+.surface-coral { --bg: var(--color-coral); }
+.surface-butter { --bg: var(--color-butter); }
+.surface-sky { --bg: var(--color-sky); }
+.surface-lilac { --bg: var(--color-lilac); }
+.surface-cream { --bg: var(--color-cream); }
+
+/* ---- Base styles ---- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Poppins is used at 400, 500 and 700 only. */
+b,
+strong {
+  font-weight: 700;
+}
+
+/* Inputs never below 16px so iOS does not zoom on focus. */
+input,
+select,
+textarea {
+  font-size: max(1rem, 16px);
+}
+
+/* Tabular numbers helpers: prices, tables, countdowns. */
+.tabular,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Focus ring (rule 9): 3px solid, 2px offset, white on dark surfaces. Never removed. ---- */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* Stretched-link cards: the card shows the ring when its link has keyboard focus. */
+.focus-within-ring:has(:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.focus-within-ring :focus-visible {
+  outline: none;
+}
+/* Hidden native inputs drive a visible sibling box. */
+.stimpy-peer:focus-visible ~ .focus-target {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.stimpy-peer:focus-visible {
+  outline: none;
+}
+
+/* The zip line follows --zip-line (black on light surfaces, white on dark). `.zip-on-dark` forces white. */
+.zip-on-dark {
+  --zip-line: var(--color-white);
+}
+
+/* ---- Zip line: black on light, white on dark. The only gradient allowed besides photo scrims. ---- */
+.zip-line {
+  --zip-thick: 4px;
+  --zip-tooth: 2px;
+  --zip-pitch: 6px;
+}
+.zip-line[data-axis='y'] {
+  height: calc(var(--zip-thick) + var(--zip-tooth));
+  background:
+    linear-gradient(var(--zip-line), var(--zip-line)) top / 100% var(--zip-thick) no-repeat,
+    repeating-linear-gradient(90deg, var(--zip-line) 0 var(--zip-tooth), transparent var(--zip-tooth) var(--zip-pitch)) bottom / 100% var(--zip-tooth) no-repeat;
+}
+.zip-line[data-axis='x'] {
+  width: calc(var(--zip-thick) + var(--zip-tooth));
+  background:
+    linear-gradient(var(--zip-line), var(--zip-line)) left / var(--zip-thick) 100% no-repeat,
+    repeating-linear-gradient(180deg, var(--zip-line) 0 var(--zip-tooth), transparent var(--zip-tooth) var(--zip-pitch)) right / var(--zip-tooth) 100% no-repeat;
+}
+.zip-line[data-flip='true'][data-axis='y'] {
+  background:
+    linear-gradient(var(--zip-line), var(--zip-line)) bottom / 100% var(--zip-thick) no-repeat,
+    repeating-linear-gradient(90deg, var(--zip-line) 0 var(--zip-tooth), transparent var(--zip-tooth) var(--zip-pitch)) top / 100% var(--zip-tooth) no-repeat;
+}
+.zip-line[data-flip='true'][data-axis='x'] {
+  background:
+    linear-gradient(var(--zip-line), var(--zip-line)) right / var(--zip-thick) 100% no-repeat,
+    repeating-linear-gradient(180deg, var(--zip-line) 0 var(--zip-tooth), transparent var(--zip-tooth) var(--zip-pitch)) left / var(--zip-tooth) 100% no-repeat;
+}
+
+/* ---- Reduced motion (design-system 10.2): instant swaps, no slide, no pulse, no autoplay ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Skeleton shimmer disabled: static fill. */
+  .animate-stimpy-pulse {
+    animation: none !important;
+  }
+  /* Indeterminate progress becomes a static, full-width bar. */
+  .animate-stimpy-indeterminate {
+    animation: none !important;
+    transform: none !important;
+    width: 100% !important;
+  }
+}
+
+/* Windows high contrast: keep focus visible. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}

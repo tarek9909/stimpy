@@ -366,7 +366,7 @@ The seed makes a fresh database usable immediately. **Everything seeded is edita
 | Size chart | Columns Chest, Length, Sleeve (cm) with placeholder numbers, clearly marked "edit me" in the dashboard |
 | Hoodie | "Stimpy Hoodie", price $25, cost $10; 20 units per variant in dev only |
 | Packs | "Hoodie + 1 Stimpie" $35; "Hoodie + 2 Stimpies" $45 with badge "Most popular" (from the master plan) |
-| Core Stimpies | THE VOID, AFTER DARK, THE CEDAR, THE DREAMER (from `stimpy-video/app/src/cards.ts`), price $10, cost $6, artwork copied from `stimpy-video/out/stimpies/stimpie-001…004.png` |
+| Core Stimpies | THE VOID, AFTER DARK, THE CEDAR, THE DREAMER (from `content/stimpy-video/app/src/cards.ts`), price $10, cost $6, artwork copied from `content/stimpy-video/out/stimpies/stimpie-001…004.png` |
 | Drop 001 (live) | THE SIGNAL, THE STATIC, limited, 30 units each, accent Butter |
 | Drop 002 (upcoming, in 14 days) | THE MOTH, THE MAZE, accent Sky |
 | Areas | Beirut, Mount Lebanon, North, South, Bekaa, Nabatieh *(names only, no fees)* |

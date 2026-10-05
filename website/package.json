@@ -1,0 +1,38 @@
+{
+  "name": "stimpy-website",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "frontend/*",
+    "packages/*",
+    "e2e"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "infra:up": "node scripts/infra.mjs up",
+    "infra:down": "node scripts/infra.mjs down",
+    "infra:reset": "node scripts/infra.mjs reset",
+    "infra:status": "node scripts/infra.mjs status",
+    "db:migrate": "npm run db:migrate -w @stimpy/api",
+    "db:deploy": "npm run db:deploy -w @stimpy/api",
+    "db:seed": "npm run db:seed -w @stimpy/api",
+    "db:seed:demo": "npm run db:seed:demo -w @stimpy/api",
+    "db:backup": "npm run db:backup -w @stimpy/api",
+    "db:restore": "npm run db:restore -w @stimpy/api",
+    "api:dev": "npm run dev -w @stimpy/api",
+    "api:test": "npm run test -w @stimpy/api",
+    "api:typecheck": "npm run typecheck -w @stimpy/api",
+    "web:dev": "npm run dev -w @stimpy/web",
+    "web:build": "npm run build -w @stimpy/web",
+    "admin:dev": "npm run dev -w @stimpy/admin",
+    "admin:build": "npm run build -w @stimpy/admin",
+    "docs:api": "npm run docs:api -w @stimpy/api",
+    "client:generate": "npm run generate -w @stimpy/api-client",
+    "contract:check": "npm run contract:check -w @stimpy/api",
+    "dev": "node scripts/dev.mjs",
+    "e2e": "npm run test -w @stimpy/e2e"
+  }
+}

@@ -1,0 +1,15 @@
+Validating C:\Projects\motion\website\apps\api\seed-assets\models\hoodie.glb
+  size 955 KB, triangles 40228, materials ["fabric","panel"]
+  mesh hoodie_body: 31128 tris on fabric
+  mesh back_panel: 1280 tris on panel
+  mesh zip: 3684 tris on fabric
+  mesh drawcords: 1992 tris on fabric
+  mesh panel_zip: 2144 tris on fabric
+  bbox size 0.991 x 0.888 x 0.463 m  (y -0.446 .. 0.442)
+  panel: 0.3294 x 0.5161 m, aspect 0.6382, centroid z -0.126
+  panel UV range u 0.0000..1.0000 v 0.0000..1.0000, corr(u,x)=-1.000 corr(v,y)=-1.000, uvArea 0.9990
+  panel offset from body (mm): {"min":1.5,"avg":1.58,"max":1.67,"samples":63}
+  texel density median 5.856, outliers 0/1280
+  zip centroid z 0.133 (front is +Z)
+  WARN  Total triangles 40228 exceed target 40000
+RESULT: OK

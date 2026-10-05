@@ -1,8 +1,8 @@
 # Stimpy Website: Documentation Index
 
-This folder is the complete **documentation plan** for the Stimpy website, dashboard and backend. It contains no code: it is what a developer reads before building, and what the owner reads to check that the plan matches their intent.
+This folder is the **specification set** for the Stimpy website, dashboard and backend. The implementation lives in [`website/`](../../website/). Use the specification documents for intended behavior, then check the implementation handoff, decisions and audit under `website/docs/` for current delivery and verification status.
 
-The business plan these documents implement is [stimpy_website_plan.md](../../stimpy_website_plan.md) (what the website and dashboard are for, their pages, and their behaviour). The brand source of truth is [identity/stimpy_brand_identity.md](../../identity/stimpy_brand_identity.md) and the [master plan](../../stimpy_master_plan.md).
+The business plan these documents implement is [stimpy_website_plan.md](../../stimpy_website_plan.md) (what the website and dashboard are for, their pages, and their behaviour). The brand source of truth is [identity/stimpy_brand_identity.md](../../content/identity/stimpy_brand_identity.md) and the [master plan](../../stimpy_master_plan.md).
 
 ## Reading order
 
@@ -37,7 +37,7 @@ The business plan these documents implement is [stimpy_website_plan.md](../../st
 | Order identity | Every order gets its own permanent **order number** (`STP-1042`), separate from the delivery number |
 | Configurable from the dashboard | Hoodie colours, sizes, size chart, prices, packs, drops, delivery fee, Builder mode (2D / 3D / Both), FAQs, policies, announcement bar, email and WhatsApp texts |
 | Builder | In version 1, with both 2D and 3D modes chosen from the dashboard |
-| Environment | Local only for now: Docker MySQL + Mailpit. No domain, hosting, or production deployment yet |
+| Environment | Local only: MySQL and Mailpit run from the portable binaries in `website/.infra/` on this workspace; no domain, hosting, or production deployment is configured |
 | Sessions | Server-side opaque sessions in an HttpOnly cookie (replaces the "JWT" wording in the early plan) |
 
 ## How this documentation was produced and kept consistent
@@ -46,7 +46,9 @@ The business plan these documents implement is [stimpy_website_plan.md](../../st
 - Where the frontend authors found something they needed that the contract lacks, they listed it under **"Open questions for the API"** at the end of their document. Those lists are collected in [open-questions.md](open-questions.md) so the contract can be amended deliberately.
 - Where a later decision changed an earlier one (for example sessions instead of JWT, port 3317 for MySQL), the newer document wins and the earlier plan carries a pointer to it.
 
-## Status
+## Implementation status
+
+The source documents below began as a build plan. They are not an implementation-status tracker. Current code, test results, unresolved gaps and verification dates are recorded in [`website/docs/audit/`](../../website/docs/audit/) and [`website/docs/HANDOFF.md`](../../website/docs/HANDOFF.md).
 
 | Part | State |
 |---|---|
@@ -54,6 +56,7 @@ The business plan these documents implement is [stimpy_website_plan.md](../../st
 | Backend documentation | Written |
 | Wiring documentation | Written |
 | Frontend documentation | Written |
-| Backend code | **Not started** |
-| Frontend code | **Not started** |
-| Local infrastructure (Docker) | **Not created** (specified in [wiring §3](wiring/README.md#3-local-infrastructure-docker)) |
+| Backend code | Implemented in `website/backend/`; check the current audit and handoff for verified scope |
+| Frontend code | Implemented in `website/frontend/web/` and `website/frontend/admin/`; check the current audit and handoff for verified scope |
+| Local infrastructure | Portable MySQL and Mailpit binaries configured under `website/.infra/`; see `website/docs/BUILD-RULES.md` |
+| Production deployment | Not configured; the source plan defines a local prototype |

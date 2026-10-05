@@ -22,11 +22,21 @@ dist/
 .vite/
 **/.vite/
 .chrome-profile/
+*.tsbuildinfo
+**/*.tsbuildinfo
 
 # Nested git backups
 .git_backup/
 **/.git_backup/
 
+# Temporary and test artifacts
+.tmp*
+**/.tmp*
+.tmp-*/
+**/.tmp-*/
+
 # Excluded large files (>100MB per GitHub limit)
 stimpy-motion.zip
 stimpy-video/out/stimpy_master.mp4
+**/stimpy_master.mp4
+

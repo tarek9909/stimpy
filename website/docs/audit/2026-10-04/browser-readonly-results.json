@@ -1,0 +1,203 @@
+[
+  {
+    "path": "/",
+    "status": 200,
+    "title": "Stimpy | One hoodie. Multiple identities.",
+    "headings": [],
+    "errorPage": true,
+    "overflow": false,
+    "errors": [
+      "%o\n\n%s Error: Invalid src prop (http://localhost:4150/uploads/seed/photos/lookbook-1b8298ec.webp) on `next/image`, hostname \"localhost\" is not configured under images in your `next.config.js`\nSee more info: https://nextjs.org/docs/messages/next-image-unconfigured-host\n    at defaultLoader (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/image-loader.js:67:49)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:36)\n    at Array.map (<anonymous>)\n    at generateImgAttrs (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:24)\n    at getImgProps (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:508:27)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/image-component.js:272:82)\n    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)\n    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)\n    at updateForwardRef (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8807:19)\n    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11197:18)\n    at runWithFiberInDEV (webpack-internal://",
+      "[stimpy:web] route error  Error",
+      "[stimpy:web] route error  Error"
+    ]
+  },
+  {
+    "path": "/shop",
+    "status": 200,
+    "title": "Shop hoodies and Stimpies | Stimpy",
+    "headings": [],
+    "errorPage": true,
+    "overflow": false,
+    "errors": [
+      "%o\n\n%s Error: Invalid src prop (http://localhost:4150/uploads/seed/hoodies/photo-front-black-094e278a.webp) on `next/image`, hostname \"localhost\" is not configured under images in your `next.config.js`\nSee more info: https://nextjs.org/docs/messages/next-image-unconfigured-host\n    at defaultLoader (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/image-loader.js:67:49)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:36)\n    at Array.map (<anonymous>)\n    at generateImgAttrs (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:24)\n    at getImgProps (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:508:27)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/image-component.js:272:82)\n    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)\n    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)\n    at updateForwardRef (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8807:19)\n    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11197:18)\n    at runWithFiberInDEV (webpack-i",
+      "[stimpy:web] route error  Error",
+      "[stimpy:web] route error  Error"
+    ]
+  },
+  {
+    "path": "/shop/hoodie/stimpy-hoodie",
+    "status": 200,
+    "title": "Stimpy Hoodie | Stimpy",
+    "headings": [],
+    "errorPage": true,
+    "overflow": false,
+    "errors": [
+      "%o\n\n%s Error: Invalid src prop (http://localhost:4150/uploads/seed/hoodies/photo-front-black-094e278a.webp) on `next/image`, hostname \"localhost\" is not configured under images in your `next.config.js`\nSee more info: https://nextjs.org/docs/messages/next-image-unconfigured-host\n    at defaultLoader (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/image-loader.js:67:49)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:36)\n    at Array.map (<anonymous>)\n    at generateImgAttrs (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:24)\n    at getImgProps (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:508:27)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/image-component.js:272:82)\n    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)\n    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)\n    at updateForwardRef (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8807:19)\n    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11197:18)\n    at runWithFiberInDEV (webpack-i",
+      "[stimpy:web] route error  Error",
+      "[stimpy:web] route error  Error"
+    ]
+  },
+  {
+    "path": "/shop/stimpie/stimpy",
+    "status": 200,
+    "title": "STIMPY Stimpie | Stimpy",
+    "headings": [],
+    "errorPage": true,
+    "overflow": false,
+    "errors": [
+      "%o\n\n%s Error: Invalid src prop (http://localhost:4150/uploads/seed/stimpies/stimpy-800-81f103ca.webp) on `next/image`, hostname \"localhost\" is not configured under images in your `next.config.js`\nSee more info: https://nextjs.org/docs/messages/next-image-unconfigured-host\n    at defaultLoader (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/image-loader.js:67:49)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:36)\n    at Array.map (<anonymous>)\n    at generateImgAttrs (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:24)\n    at getImgProps (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:508:27)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/image-component.js:272:82)\n    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)\n    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)\n    at updateForwardRef (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8807:19)\n    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11197:18)\n    at runWithFiberInDEV (webpack-interna",
+      "[stimpy:web] route error  Error",
+      "[stimpy:web] route error  Error"
+    ]
+  },
+  {
+    "path": "/builder",
+    "status": 200,
+    "title": "Builder: try Stimpies on your hoodie | Stimpy",
+    "headings": [
+      "Build your look"
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": [
+      "Loading the image 'http://localhost:4150/uploads/seed/builder/back-black-eed97999.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/stimpy-800-81f103ca.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/builder/overlay-6ed5ed74.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-void-800-c5452a48.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/after-dark-800-61b73a25.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-cedar-800-800f1599.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/builder/back-black-eed97999.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/stimpy-800-81f103ca.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/builder/overlay-6ed5ed74.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/stimpy-800-81f103ca.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-void-800-c5452a48.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/after-dark-800-61b73a25.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-cedar-800-800f1599.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-dreamer-800-eac5f079.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-orbit-800-37febb48.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-wave-800-9c04895b.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-eye-800-6c33b1d1.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-signal-800-9d93534e.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-static-800-af3df95d.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-flame-800-b3717b72.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-dreamer-800-eac5f079.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-orbit-800-37febb48.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-wave-800-9c04895b.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-eye-800-6c33b1d1.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-signal-800-9d93534e.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-static-800-af3df95d.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-flame-800-b3717b72.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/stimpy-800-81f103ca.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/the-void-800-c5452a48.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Connecting to 'http://localhost:4150/uploads/seed/models/hoodie-0b537d43.glb' violates the following Content Security Policy directive: \"connect-src 'self' http://localhost:4000 ws: wss:\". The action has been blocked.",
+      "Fetch API cannot load http://localhost:4150/uploads/seed/models/hoodie-0b537d43.glb. Refused to connect because it violates the document's Content Security Policy.",
+      "Loading the image 'http://localhost:4150/uploads/seed/stimpies/stimpy-1024-81f103ca.webp' violates the following Content Security Policy directive: \"img-src 'self' data: blob: http://localhost:4000\". The action has been blocked.",
+      "Connecting to 'http://localhost:4150/uploads/seed/models/hoodie-0b537d43.glb' violates the following Content Security Policy directive: \"connect-src 'self' http://localhost:4000 ws: wss:\". The action has been blocked.",
+      "Fetch API cannot load http://localhost:4150/uploads/seed/models/hoodie-0b537d43.glb. Refused to connect because it violates the document's Content Security Policy."
+    ]
+  },
+  {
+    "path": "/drops",
+    "status": 200,
+    "title": "Drops: limited Stimpies, never restocked | Stimpy",
+    "headings": [],
+    "errorPage": true,
+    "overflow": false,
+    "errors": [
+      "%o\n\n%s Error: Invalid src prop (http://localhost:4150/uploads/seed/photos/lookbook-1b8298ec.webp) on `next/image`, hostname \"localhost\" is not configured under images in your `next.config.js`\nSee more info: https://nextjs.org/docs/messages/next-image-unconfigured-host\n    at defaultLoader (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/image-loader.js:67:49)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:36)\n    at Array.map (<anonymous>)\n    at generateImgAttrs (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:24)\n    at getImgProps (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:508:27)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/image-component.js:272:82)\n    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)\n    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)\n    at updateForwardRef (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8807:19)\n    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11197:18)\n    at runWithFiberInDEV (webpack-internal://",
+      "[stimpy:web] route error  Error",
+      "[stimpy:web] route error  Error"
+    ]
+  },
+  {
+    "path": "/drops/drop-001",
+    "status": 200,
+    "title": "Drop 001: Signal drop | Stimpy",
+    "headings": [],
+    "errorPage": true,
+    "overflow": false,
+    "errors": [
+      "%o\n\n%s Error: Invalid src prop (http://localhost:4150/uploads/seed/photos/lookbook-1b8298ec.webp) on `next/image`, hostname \"localhost\" is not configured under images in your `next.config.js`\nSee more info: https://nextjs.org/docs/messages/next-image-unconfigured-host\n    at defaultLoader (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/image-loader.js:67:49)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:36)\n    at Array.map (<anonymous>)\n    at generateImgAttrs (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:108:24)\n    at getImgProps (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/shared/lib/get-img-props.js:508:27)\n    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/image-component.js:272:82)\n    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)\n    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)\n    at updateForwardRef (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:8807:19)\n    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:11197:18)\n    at runWithFiberInDEV (webpack-internal://",
+      "[stimpy:web] route error  Error",
+      "[stimpy:web] route error  Error"
+    ]
+  },
+  {
+    "path": "/how-it-works",
+    "status": 200,
+    "title": "How it works | Stimpy",
+    "headings": [
+      "Wear it plain. Zip on a Stimpie. Switch it tomorrow."
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "path": "/about",
+    "status": 200,
+    "title": "About Stimpy | Stimpy",
+    "headings": [
+      "Two sides. One identity."
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "path": "/delivery-returns",
+    "status": 200,
+    "title": "Delivery & returns | Stimpy",
+    "headings": [
+      "Delivery & returns"
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "path": "/help",
+    "status": 200,
+    "title": "Size guide | Stimpy",
+    "headings": [
+      "Size guide & FAQ"
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "path": "/legal",
+    "status": 200,
+    "title": "Privacy and terms | Stimpy",
+    "headings": [
+      "Privacy and terms"
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "status": 200,
+    "title": "Checkout | Stimpy",
+    "headings": [
+      "Checkout"
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  },
+  {
+    "path": "/track",
+    "status": 200,
+    "title": "Track your order | Stimpy",
+    "headings": [
+      "Track your order"
+    ],
+    "errorPage": false,
+    "overflow": false,
+    "errors": []
+  }
+]

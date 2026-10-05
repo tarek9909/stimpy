@@ -1,0 +1,15 @@
+{
+  "name": "@stimpy/e2e",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:api-load": "playwright test tests/performance/api-load.spec.ts --project=desktop-1280"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  }
+}

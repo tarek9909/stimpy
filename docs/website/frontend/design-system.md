@@ -6,7 +6,7 @@ This document defines the design tokens and the shared component inventory used 
 
 **Provenance labels.** Every value is tagged:
 
-- **[Brand]**: taken from [identity/stimpy_brand_identity.md](../../../identity/stimpy_brand_identity.md) or [stimpy_website_plan.md](../../../stimpy_website_plan.md). Must not be changed without a brand decision.
+- **[Brand]**: taken from [identity/stimpy_brand_identity.md](../../../content/identity/stimpy_brand_identity.md) or [stimpy_website_plan.md](../../../stimpy_website_plan.md). Must not be changed without a brand decision.
 - **[Rec]**: a recommendation made in this document because the brand documents are silent. Can be changed by the founder/designer without breaking the brand.
 
 Related: [builder.md](builder.md) (Builder UI), [state-and-errors.md](state-and-errors.md) (loading/empty/error behaviour), [API contract](../backend/api-reference.md) (enums such as `OrderStatus`).

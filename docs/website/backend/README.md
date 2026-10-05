@@ -2,7 +2,7 @@
 
 **Purpose and audience.** This is the build guide for the Stimpy backend: what it is made of, how the code is organised, how a request travels through it, and the order to build it in. It is written for the developer (or Claude) who will implement it. Product behaviour is defined in [stimpy_website_plan.md](../../../stimpy_website_plan.md); the exact HTTP contract is in [api-reference.md](api-reference.md).
 
-> **Status: documentation only.** Nothing described here is implemented yet.
+> **Status: specification.** This document remains the backend design reference; the implemented API lives in [`website/backend/`](../../../website/backend/). Current verification results and known gaps are tracked in the [implementation audit](../../../website/docs/audit/2026-10-04/report.md).
 
 ## Contents
 

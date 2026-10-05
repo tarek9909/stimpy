@@ -2,7 +2,7 @@
 
 **Purpose and audience.** The entry point for everyone building the two frontends: the public **website** and the private **dashboard**. It fixes the technology and folder structure, the conventions both apps follow, the order to build things in, and what "done" means. The detailed per-page specifications are in the documents listed in [§5](#5-document-map).
 
-> **Status: documentation only.** No frontend code exists yet. The backend is likewise only documented ([backend docs](../backend/README.md)).
+> **Status: specification.** The planned layout and conventions below remain the design reference; the implemented website and dashboard live in [`website/`](../../../website/). Current verification results and known gaps are tracked in the [implementation audit](../../../website/docs/audit/2026-10-04/report.md). The backend specification is in [backend docs](../backend/README.md).
 
 ## Contents
 

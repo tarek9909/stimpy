@@ -1,0 +1,50 @@
+{
+  "name": "@stimpy/ui",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./preset": "./tailwind-preset.cjs",
+    "./tokens.css": "./src/tokens.css",
+    "./fonts.css": "./src/fonts.css",
+    "./fonts/*": "./fonts/*",
+    "./assets/*": "./assets/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "fonts",
+    "assets",
+    "tailwind-preset.cjs"
+  ],
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^25.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "gallery:build": "vite build --config gallery/vite.config.ts",
+    "gallery:dev": "vite --config gallery/vite.config.ts",
+    "gallery:shots": "node gallery/screenshot.mjs"
+  }
+}

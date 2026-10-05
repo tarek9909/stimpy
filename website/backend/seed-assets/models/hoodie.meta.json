@@ -1,0 +1,60 @@
+{
+  "triangles": 40228,
+  "trianglesPerMesh": {
+    "hoodie_body": 31128,
+    "back_panel": 1280,
+    "zip": 3684,
+    "drawcords": 1992,
+    "panel_zip": 2144
+  },
+  "sizeBytes": 978332,
+  "backPanelMesh": "back_panel",
+  "panelAspect": 0.64,
+  "bbox": {
+    "min": [
+      -0.4953,
+      -0.446,
+      -0.2818
+    ],
+    "max": [
+      0.4953,
+      0.4418,
+      0.1815
+    ],
+    "size": [
+      0.9907,
+      0.8878,
+      0.4633
+    ]
+  },
+  "recommendedCamera": {
+    "position": [
+      0,
+      0.02,
+      -2.5
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "fov": 32
+  },
+  "nodes": [
+    "Hoodie",
+    "hoodie_body",
+    "back_panel",
+    "zip",
+    "drawcords",
+    "panel_zip"
+  ],
+  "materials": [
+    "fabric",
+    "panel"
+  ],
+  "fabricExtensions": [
+    "KHR_materials_sheen"
+  ],
+  "notes": "Procedural hoodie, front +Z, back -Z, metres, origin mid-chest, all transforms baked. Materials: fabric, panel. Panel UVs: u grows toward -X, v (glTF, down) grows toward -Y. Fabric carries optional KHR_materials_sheen (soft grazing highlight so black tints keep their form); regenerate without it via NOSHEEN=1. Whole-scene bbox height includes the hood; shoulder seam to hem is about 0.69 m. Regenerate with node tools/hoodie-model/generate.mjs (seeded, deterministic).",
+  "seed": 7
+}

@@ -1,0 +1,86 @@
+<!doctype html><meta charset="utf-8"><title>hoodie viewer</title>
+<style>html,body{margin:0;background:#e9e2d6;overflow:hidden}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<body><script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const q = new URLSearchParams(location.search);
+const W = +q.get('w') || 1000, H = +q.get('h') || 1250;
+const colors = { black: '#111111', cream: '#F1E6D6', coral: '#FF7A59', grey: '#8a8a8a' };
+const color = colors[q.get('color') || 'black'] || q.get('color');
+const light = q.get('light') || 'STUDIO';
+const view = q.get('view') || 'back';
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NeutralToneMapping;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(light === 'NIGHT' ? '#0b0b0d' : '#e9e2d6');
+const L = (l, p) => { l.position.set(...p); scene.add(l); return l; };
+if (light === 'STUDIO') {
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 0.6));
+  L(new THREE.DirectionalLight(0xffffff, 2.2), [2, 3, -4]);
+  L(new THREE.DirectionalLight(0xffffff, 0.8), [-3, 1, -2]);
+  L(new THREE.DirectionalLight(0xffffff, 1.2), [0, 2, 3]);
+} else if (light === 'SOFT') {
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc7bc, 0.9));
+  L(new THREE.DirectionalLight(0xffffff, 0.9), [1, 2, -3]);
+} else {
+  scene.add(new THREE.HemisphereLight(0x6677aa, 0x111111, 0.25));
+  L(new THREE.DirectionalLight(0xaabbff, 1.4), [-2, 2, -3]);
+  L(new THREE.DirectionalLight(0xFF7A59, 2.0), [1, 1.5, 3]);
+}
+if (q.get('fl') === '1') L(new THREE.DirectionalLight(0xffffff, 1.5), [-2, 2.5, 4]);
+const D = 2.5;
+const rad = (d) => d * Math.PI / 180;
+const orbit = (az, el, d, t = [0, 0, 0], fov = 32) => [[t[0] + d * Math.sin(rad(az)) * Math.cos(rad(el)), t[1] + d * Math.sin(rad(el)), t[2] + d * Math.cos(rad(az)) * Math.cos(rad(el))], t, fov];
+const views = {
+  back: orbit(180, 0, D),
+  front: orbit(0, 0, D),
+  back_left: orbit(-145, 8, D),
+  back_right: orbit(145, 8, D),
+  front_right: orbit(35, 8, D),
+  front_left: orbit(-35, 8, D),
+  left: orbit(-90, 0, D),
+  right: orbit(90, 0, D),
+  top_hood: orbit(180, 62, 0.95, [0, 0.28, -0.05]),
+  hood_side: orbit(120, 25, 0.9, [0, 0.28, 0]),
+  hood_lower: orbit(-125, 18, 0.45, [-0.14, 0.24, -0.08]),
+  hood_lower2: orbit(150, 25, 0.5, [0.1, 0.24, -0.1]),
+  front_top: orbit(10, 55, 0.7, [0, 0.27, 0.05]),
+  under: orbit(150, -55, 1.6, [0, -0.1, 0]),
+  neck34: orbit(40, 30, 0.6, [-0.05, 0.28, 0.08]),
+  hood_front: orbit(20, 28, 0.75, [0, 0.25, 0.05]),
+  panel_zip: orbit(165, 5, 0.55, [0.12, 0.17, -0.12]),
+  panel_zip_bot: orbit(190, 5, 0.5, [-0.08, -0.32, -0.12]),
+  cuff: orbit(40, 5, 0.6, [0.38, -0.33, 0.09]),
+  hem: orbit(-30, 10, 0.7, [-0.1, -0.34, 0.1]),
+  zip_pull: orbit(0, 5, 0.55, [0, 0.2, 0.1]),
+  pocket: orbit(15, 10, 0.9, [0, -0.2, 0.1]),
+  shoulder: orbit(-120, 20, 0.9, [-0.25, 0.15, 0]),
+  armpit: orbit(70, 5, 0.9, [0.28, 0.05, 0]),
+};
+const v = views[view] || views.back;
+const camera = new THREE.PerspectiveCamera(v[2], W / H, 0.05, 20);
+camera.position.set(...v[0]); camera.lookAt(...v[1]);
+new GLTFLoader().load('/backend/seed-assets/models/hoodie.glb', (g) => {
+  const root = g.scene;
+  scene.add(root);
+  let fabric, panelMesh;
+  root.traverse((o) => {
+    if (o.isMesh && o.material.name === 'fabric') fabric = o.material;
+    if (o.isMesh && o.name === 'back_panel') panelMesh = o;
+  });
+  fabric.color.set(color);
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0 });
+  panelMesh.material = mat;
+  new THREE.TextureLoader().load('/tex.png', (t) => {
+    t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+    mat.map = t; mat.needsUpdate = true;
+    renderer.render(scene, camera);
+    window.__ready = true;
+  });
+}, undefined, (e) => { window.__err = String(e); });
+</script>

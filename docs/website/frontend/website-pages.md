@@ -337,10 +337,10 @@ Fully specified in [checkout-and-order-flow.md section 1.5](checkout-and-order-f
 
 | | |
 |---|---|
-| Route / mode | Server-rendered **shell** (metadata, heading, no-JS fallback image) + a **client-only** `BuilderApp`. Config and catalog are fetched in the browser at mount so a mode change in the dashboard shows within the API cache window (30 s) without a redeploy. |
+| Route / mode | Dynamic server-rendered route (it reads share-link `searchParams`) with server-fetched Builder data, server-rendered 2D preview markup, and a hydrated interactive client island. The initial HTML includes the selected Builder state and remains useful without JavaScript. |
 | Purpose | Let the visitor try Stimpies on a hoodie, then buy the combination. |
 
-**Data (client)**
+**Initial data (server, passed to the client island)**
 
 | Call | Drives |
 |---|---|
@@ -349,6 +349,8 @@ Fully specified in [checkout-and-order-flow.md section 1.5](checkout-and-order-f
 | `GET /products/stimpies?includeSoldOut=true` | Carousel: name, `artworkUrl`, price, `status`, `purchasable`. The Builder joins textures to Stimpies by `stimpieId` |
 | `GET /packs` | Pack choice and running price |
 | `GET /products/hoodies/:slug` with `config.hoodie.slug` | Sizes, colours and variant stock for adding to cart. The Builder always sells `config.hoodie` (set in the dashboard, default the first active hoodie); it no longer guesses the first hoodie from the list |
+
+The page fetches these endpoints in its server component; the browser does not fetch Builder configuration or catalog data on mount. Cache windows follow [builder.md section 2](builder.md#2-data-what-drives-the-builder): configuration and options revalidate after 60 seconds, Stimpies after 30 seconds, and packs and hoodie details after 60 seconds. Dashboard configuration changes are visible within about 90 seconds, accounting for the 60-second Next.js revalidation and the API's 30-second cache. Cart validation remains client-triggered when the cart drawer opens.
 
 Query parameters: `?stimpie=<slug>&color=<id>&pack=<slug>`.
 
@@ -633,7 +635,7 @@ Details in [checkout-and-order-flow.md section 6](checkout-and-order-flow.md#6-t
 | `/shop` | `GET /products/hoodies` or `GET /products/stimpies?...`, `GET /drops` | Dynamic SSR (fetch revalidate 30) |
 | `/shop/hoodie/[slug]` | `GET /products/hoodies/:slug`, `GET /packs`, `GET /products/stimpies?includeSoldOut=true`, `GET /delivery/fees` | ISR 30 s + configurator island |
 | `/shop/stimpie/[slug]` | `GET /products/stimpies/:slug`, `GET /products/stimpies?drop=<slug>`, client `GET /health`, `POST /drops/:id/subscribe` | ISR 10 s (30 s without a drop) |
-| `/builder` | client: `GET /builder/config`, `GET /options`, `GET /products/stimpies?includeSoldOut=true`, `GET /packs`, `GET /products/hoodies/:slug` (slug from `config.hoodie`) | Shell (static) + client-only app |
+| `/builder` | server: `GET /builder/config`, `GET /options`, `GET /products/stimpies?includeSoldOut=true`, `GET /packs`, `GET /products/hoodies/:slug` (slug from `config.hoodie`) | Dynamic SSR (share-link parameters) + hydrated interactive island; endpoint-specific data revalidation |
 | `/drops` | `GET /drops`, client `GET /health`, `POST /drops/:id/subscribe` | ISR 10 s + islands |
 | `/drops/[slug]` | `GET /drops/:slug` (also polled), client `GET /health`, `POST /drops/:id/subscribe` | ISR 10 s + polling |
 | `/how-it-works` | `GET /content` | ISR 60 s |

@@ -583,7 +583,7 @@ Reference device: **mid-range Android** (about 4 GB RAM, Snapdragon 6xx-class), 
 
 | Route / app | Budget |
 |---|---|
-| Website shared shell (framework + layout + header/cart) | <= 90 KB |
+| Website shared shell (framework + layout + header/cart) | <= 110 KiB total: framework runtime <= 105 KiB and app-owned shared code <= 10 KiB |
 | `/` | <= 130 KB total first-load JS |
 | `/shop`, detail pages | <= 140 KB |
 | `/checkout` | <= 170 KB |
@@ -595,6 +595,12 @@ Reference device: **mid-range Android** (about 4 GB RAM, Snapdragon 6xx-class), 
 | Third-party scripts | Analytics script only (< 3 KB gzip, async); no other third-party JS in v1 |
 
 CI check: `size-limit` (or Next's build output budget) fails the build when a budget is exceeded.
+
+The shared-shell gate separates Next's mandatory App Router runtime from the application code the team can directly
+reduce. On Next.js 15.5.27, the runtime files in `build-manifest.json`'s `rootMainFiles` measure 100.76 KiB gzip before
+storefront shell code is included, so the earlier 90 KB combined target was below the framework floor. The build gate
+keeps the runtime at <= 105 KiB, app-owned shared code at <= 10 KiB, and their combined total at <= 110 KiB; revisit
+these limits when changing the framework version.
 
 ### 15.3 Images and media
 

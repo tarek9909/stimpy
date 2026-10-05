@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Poppins comes from next/font (lib/fonts.ts); tokens.css defines the fallback stack. */
+:root {
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  /* sticky header (56-72px) must not cover anchor targets or focused fields */
+  scroll-padding-top: 5rem;
+  scroll-padding-bottom: 6rem;
+}
+
+/* Skip-link target and route-change focus target: focusable but no ring on programmatic focus. */
+#main-content:focus,
+[data-route-heading]:focus {
+  outline: none;
+}
+
+/* Horizontally scrolling rows (carousels): snap, hide the scrollbar, keep keyboard focus visible. */
+.scroll-row {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-row::-webkit-scrollbar {
+  display: none;
+}
