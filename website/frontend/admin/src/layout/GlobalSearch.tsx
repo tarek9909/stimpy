@@ -135,7 +135,7 @@ export function GlobalSearch() {
 
   const field = (
     <div ref={wrapRef} className="relative min-w-0 flex-1">
-      <div className="focus-within-ring relative flex min-h-11 items-center rounded-md border border-control bg-surface-base">
+      <div className="admin-search-box focus-within-ring relative flex items-center border">
         <Search size={20} aria-hidden="true" className="pointer-events-none absolute left-3 text-fg-muted" />
         <input
           ref={inputRef}
@@ -146,7 +146,7 @@ export function GlobalSearch() {
           aria-controls={showPanel ? listId : undefined}
           aria-activedescendant={activeId}
           aria-autocomplete="list"
-          placeholder="Search order, delivery no., phone, email, name"
+          placeholder="Search orders and customers..."
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
@@ -278,7 +278,7 @@ export function GlobalSearch() {
     </div>
   );
 
-  if (isMd) return <div className="flex min-w-0 max-w-xl flex-1">{field}</div>;
+  if (isMd) return <div className="admin-search flex min-w-0">{field}</div>;
 
   if (!expanded) {
     return (

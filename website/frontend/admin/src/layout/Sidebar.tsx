@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ArrowUpRight, PanelLeftClose, PanelLeftOpen, Store } from 'lucide-react';
 import { Logo, cn } from '@stimpy/ui';
-import { NAV_ITEMS, isNavActive } from '../app/navigation';
-import { useCan, type Area } from '../auth/roles';
+import { NAV_GROUPS, NAV_ITEMS, isNavActive } from '../app/navigation';
+import { canAccess, useCan, type Area } from '../auth/roles';
+import { useSession } from '../auth/session';
+import { getEnv } from '../env';
 import { useIsLgUp } from '../lib/hooks';
 import { useNavBadges } from './navBadges';
 
@@ -47,7 +49,7 @@ function SidebarLink({ area, path, label, icon: Icon, end, collapsed }: { area: 
   const allowed = useCan(area);
   const badges = useNavBadges();
   if (!allowed) return null;
-  const active = isNavActive({ area, path, label, icon: Icon, end }, pathname);
+  const active = isNavActive({ path, end }, pathname);
   const badge = badges[area];
   return (
     <Link
@@ -56,18 +58,17 @@ function SidebarLink({ area, path, label, icon: Icon, end, collapsed }: { area: 
       aria-label={collapsed ? label : undefined}
       title={collapsed ? label : undefined}
       className={cn(
-        'relative flex min-h-11 items-center gap-3 rounded-md px-3 text-body-sm no-underline transition-colors duration-fast',
+        'admin-nav-link relative flex items-center gap-3 rounded-md px-3 no-underline transition-colors duration-fast',
         collapsed && 'justify-center px-0',
-        active ? 'bg-coral font-medium text-ink' : 'text-fg hover:bg-surface',
+        active ? 'font-medium' : 'text-fg-muted',
       )}
     >
-      {active ? <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-1 rounded-r-sm bg-ink" /> : null}
-      <Icon size={22} aria-hidden="true" className="shrink-0" />
+      <Icon size={18} aria-hidden="true" className="shrink-0" />
       <span className={cn('min-w-0 flex-1 truncate', collapsed && 'sr-only')}>{label}</span>
       {badge ? (
         <span
           className={cn(
-            'inline-flex min-w-5 items-center justify-center rounded-full bg-ink px-1.5 text-caption tabular-nums text-white',
+            'admin-nav-badge inline-flex items-center justify-center rounded-sm px-1.5 tabular-nums',
             collapsed && 'absolute right-1 top-1 min-w-4 px-1',
           )}
           aria-label={`${badge} ${area === 'orders' ? 'new' : 'to check'}`}
@@ -82,6 +83,7 @@ function SidebarLink({ area, path, label, icon: Icon, end, collapsed }: { area: 
 /** Desktop and tablet navigation. Below `md` the bottom bar replaces it. */
 export function Sidebar() {
   const { collapsed, toggle } = useSidebarCollapsed();
+  const { user } = useSession();
   // Keep the page width stable: the shell reads this attribute for its layout.
   useEffect(() => {
     document.documentElement.dataset.sidebar = collapsed ? 'collapsed' : 'expanded';
@@ -90,33 +92,44 @@ export function Sidebar() {
     <>
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 hidden h-dvh shrink-0 flex-col border-r border-base bg-surface-base transition-[width] duration-fast md:flex print:hidden',
-          collapsed ? 'w-[72px]' : 'w-60',
+          'admin-sidebar fixed inset-y-0 left-0 z-40 hidden h-dvh shrink-0 flex-col border-r transition-[width] duration-fast md:flex print:hidden',
+          collapsed ? 'w-[72px]' : 'w-56',
         )}
       >
-        <div className={cn('flex h-14 items-center border-b border-base md:h-16', collapsed ? 'justify-center' : 'px-4')}>
-          <Link to="/" aria-label="Stimpy dashboard home" className="inline-flex no-underline">
-            {collapsed ? <Logo variant="icon" surface="white" width={20} clearSpace={false} /> : <Logo variant="full" surface="white" width={112} clearSpace={false} />}
+        <div className={cn('admin-brand flex items-center', collapsed ? 'justify-center' : 'px-6')}>
+          <Link to="/" aria-label="Stimpy dashboard home" className="inline-flex items-center gap-2.5 no-underline">
+            <Logo variant="icon" surface="white" width={22} clearSpace={false} />
+            {!collapsed ? <span className="admin-brand-copy"><strong>Stimpy</strong><span>Store management</span></span> : null}
           </Link>
         </div>
-        <nav aria-label="Main" className="flex-1 overflow-y-auto p-3">
-          <ul className="flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.area}>
-                <SidebarLink {...item} collapsed={collapsed} />
-              </li>
-            ))}
-          </ul>
+        <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 pb-5 pt-3">
+          {NAV_GROUPS.map((group) => {
+            const items = NAV_ITEMS.filter((item) => item.group === group && canAccess(user.role, item.area));
+            if (items.length === 0) return null;
+            return (
+              <div key={group} className="admin-nav-group">
+                {!collapsed ? <p className="admin-nav-heading">{group}</p> : null}
+                <ul className="flex flex-col gap-1">
+                  {items.map((item) => <li key={item.area}><SidebarLink {...item} collapsed={collapsed} /></li>)}
+                </ul>
+              </div>
+            );
+          })}
         </nav>
-        <div className="border-t border-base p-3">
+        <div className="admin-sidebar-footer">
+          <a href={getEnv().siteUrl} target="_blank" rel="noopener noreferrer" aria-label="Open customer website" title="Open customer website" className={cn('admin-store-link', collapsed && 'justify-center !px-0')}>
+            <Store size={17} aria-hidden="true" />
+            {!collapsed ? <><span className="flex-1">View storefront</span><ArrowUpRight size={14} aria-hidden="true" /></> : null}
+          </a>
           <button
             type="button"
             onClick={toggle}
             aria-label={collapsed ? 'Expand the sidebar' : 'Collapse the sidebar'}
-            className={cn('flex min-h-11 w-full items-center gap-3 rounded-md px-3 text-body-sm text-fg-muted hover:bg-surface hover:text-fg', collapsed && 'justify-center px-0')}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={cn('mt-1 flex min-h-9 w-full items-center gap-3 rounded-md px-2.5 text-caption text-fg-muted hover:bg-surface hover:text-fg', collapsed && 'justify-center px-0')}
           >
-            {collapsed ? <PanelLeftOpen size={22} aria-hidden="true" /> : <PanelLeftClose size={22} aria-hidden="true" />}
-            <span className={cn(collapsed && 'sr-only')}>Collapse</span>
+            {collapsed ? <PanelLeftOpen size={17} aria-hidden="true" /> : <PanelLeftClose size={17} aria-hidden="true" />}
+            <span className={cn(collapsed && 'sr-only')}>Collapse sidebar</span>
           </button>
         </div>
       </aside>
@@ -125,7 +138,7 @@ export function Sidebar() {
         aria-hidden="true"
         className={cn(
           'hidden shrink-0 transition-[width] duration-fast md:block print:hidden',
-          collapsed ? 'w-[72px]' : 'w-60',
+          collapsed ? 'w-[72px]' : 'w-56',
         )}
       />
     </>

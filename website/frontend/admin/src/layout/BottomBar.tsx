@@ -34,7 +34,7 @@ function BarLink({ item, active }: { item: NavItem; active: boolean }) {
         active ? 'font-medium text-fg' : 'text-fg-muted',
       )}
     >
-      <span className={cn('relative inline-flex h-7 w-12 items-center justify-center rounded-full', active && 'bg-coral text-ink')}>
+      <span className={cn('relative inline-flex h-7 w-12 items-center justify-center rounded-md', active && 'bg-action/10 text-action')}>
         <Icon size={22} aria-hidden="true" />
         {badge ? (
           <span className="absolute -right-0.5 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-ink px-1 text-caption tabular-nums text-white" aria-label={`${badge} new`}>
@@ -79,7 +79,7 @@ export function BottomBar() {
           aria-expanded={moreOpen}
           className={cn('relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-caption', moreActive ? 'font-medium text-fg' : 'text-fg-muted')}
         >
-          <span className={cn('inline-flex h-7 w-12 items-center justify-center rounded-full', moreActive && 'bg-coral text-ink')}>
+          <span className={cn('inline-flex h-7 w-12 items-center justify-center rounded-md', moreActive && 'bg-action/10 text-action')}>
             <MoreHorizontal size={22} aria-hidden="true" />
           </span>
           <span>More</span>
@@ -95,7 +95,7 @@ export function BottomBar() {
                 <Link
                   to={item.path}
                   aria-current={active ? 'page' : undefined}
-                  className={cn('flex min-h-12 items-center gap-3 rounded-md px-3 text-body no-underline', active ? 'bg-coral font-medium text-ink' : 'text-fg hover:bg-surface')}
+                  className={cn('flex min-h-12 items-center gap-3 rounded-md px-3 text-body no-underline', active ? 'bg-action/10 font-medium text-action' : 'text-fg hover:bg-surface')}
                 >
                   <Icon size={22} aria-hidden="true" />
                   {item.label}

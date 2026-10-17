@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ChevronDown, ChevronUp, CircleCheck, Circle, Clock, Mail, PackageX, Truck, type LucideIcon } from 'lucide-react';
-import { Button, Checkbox, EmptyState, Pill, ProgressBar, Skeleton, StatCard, StatusPill, TextLink, cn, useToast, useUI } from '@stimpy/ui';
+import { AlertTriangle, ArrowRight, CalendarDays, ChevronDown, ChevronRight, ChevronUp, CircleCheck, Circle, ClipboardCheck, Clock, DollarSign, Mail, Package, PackageX, ShoppingBag, Table2, Truck, Wallet, type LucideIcon } from 'lucide-react';
+import { Button, Checkbox, Pill, ProgressBar, Skeleton, StatusPill, TextLink, cn, useUI } from '@stimpy/ui';
 import { api, unwrap } from '../../api/client';
 import { queryKeys } from '../../api/queryKeys';
 import { useNotifyError } from '../../api/errors';
@@ -21,9 +21,9 @@ const COLLAPSE_KEY = 'stimpy.setup.collapsed';
 
 function readCollapsed(): boolean {
   try {
-    return window.localStorage.getItem(COLLAPSE_KEY) === '1';
+    return window.localStorage.getItem(COLLAPSE_KEY) !== '0';
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -56,9 +56,12 @@ const ATTENTION_ICON: Record<Attention['type'], { Icon: LucideIcon; label: strin
 /** Overview (dashboard-pages 4): setup checklist, today, needs attention, live drop, last 7 days, recent orders. */
 export default function OverviewPage() {
   const query = useOverview({ refetchInterval: 60_000 });
+  const f = useFormatters();
+  const today = new Date();
+  const date = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: f.timeZone }).format(today);
   return (
     <>
-      <PageHeader title="Overview" />
+      <PageHeader title="Overview" actions={<div className="overview-date"><CalendarDays size={15} aria-hidden="true" /><time dateTime={today.toISOString()}>{date}</time></div>} />
       <QueryBoundary query={query} skeleton={<OverviewSkeleton />}>
         {(data) => <OverviewBody data={data} />}
       </QueryBoundary>
@@ -86,51 +89,44 @@ function OverviewBody({ data }: { data: Overview }) {
   const f = useFormatters();
   const { Link } = useUI();
   const today = data.today;
-  const cards: Array<{ label: string; value: string; to?: string; hint?: string }> = [
-    { label: 'New orders', value: String(today.newOrders), to: '/orders?status=NEW' },
-    { label: 'To pack', value: String(today.toPack), to: '/orders?status=TO_PACK' },
-    { label: 'Out for delivery', value: String(today.outForDelivery), to: '/orders?status=OUT_FOR_DELIVERY' },
-    { label: 'Cash to collect', value: f.money(today.cashToCollectCents), to: '/finance?tab=cash' },
-    { label: "Today's revenue", value: f.money(today.revenueCents) },
+  const cards: Array<{ label: string; value: string; to: string; hint: string; Icon: LucideIcon }> = [
+    { label: "Today's revenue", value: f.money(today.revenueCents), to: '/finance?tab=profit', hint: 'Recorded today', Icon: DollarSign },
+    { label: 'New orders', value: String(today.newOrders), to: '/orders?status=NEW', hint: 'Awaiting confirmation', Icon: ShoppingBag },
+    { label: 'To pack', value: String(today.toPack), to: '/orders?status=TO_PACK', hint: 'Ready to prepare', Icon: Package },
+    { label: 'Out for delivery', value: String(today.outForDelivery), to: '/orders?status=OUT_FOR_DELIVERY', hint: 'On the way to customers', Icon: Truck },
+    { label: 'Cash to collect', value: f.money(today.cashToCollectCents), to: '/finance?tab=cash', hint: 'Outstanding collections', Icon: Wallet },
   ];
   return (
-    <div className="flex flex-col gap-4">
-      {!data.setup.complete ? <SetupCard setup={data.setup} /> : null}
-      <section aria-label="Today" className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        {cards.map((c, i) => {
-          const card = <StatCard label={c.label} value={c.value} className={cn(c.to && 'transition hover:border-fg')} />;
-          return (
-            <div key={c.label} className={cn(i === cards.length - 1 && 'col-span-2 lg:col-span-1')}>
-              {c.to ? (
-                <Link href={c.to} className="block rounded-lg no-underline" aria-label={`${c.label}: ${c.value}`}>
-                  {card}
-                </Link>
-              ) : (
-                card
-              )}
-            </div>
-          );
-        })}
+    <div className="overview-body">
+      <section aria-label="Today" className="overview-metrics">
+        {cards.map(({ label, value, to, hint, Icon }) => (
+          <Link key={label} href={to} className="overview-metric" aria-label={`${label}: ${value}`}>
+            <span className="overview-metric-label">{label}<Icon size={16} aria-hidden="true" /></span>
+            <strong className="overview-metric-value">{value}</strong>
+            <span className="overview-metric-note">{hint}</span>
+          </Link>
+        ))}
       </section>
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-4">
+      {!data.setup.complete ? <SetupCard setup={data.setup} /> : null}
+      <div className="overview-workspace">
+        <div className="overview-side-column">
           <AttentionCard items={data.attention} />
-          <RecentOrders orders={data.recentOrders} />
+          <div className="overview-drop"><LiveDropCard drop={data.liveDrop} /></div>
         </div>
-        <div className="flex min-w-0 flex-col gap-4">
-          <LiveDropCard drop={data.liveDrop} />
+        <div className="overview-main-column">
           <SalesChart days={data.sales7d} />
+          <div className="overview-recent"><RecentOrders orders={data.recentOrders} /></div>
         </div>
       </div>
     </div>
   );
 }
 
-function Panel({ title, children, id, action }: { title: string; children: React.ReactNode; id: string; action?: React.ReactNode }) {
+function Panel({ title, children, id, action }: { title: string; children: ReactNode; id: string; action?: ReactNode }) {
   return (
-    <section aria-labelledby={`${id}-h`} className="rounded-lg border border-base bg-surface-base p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 id={`${id}-h`} className="text-h5">
+    <section aria-labelledby={`${id}-h`} className="overview-panel">
+      <div className="overview-panel-heading">
+        <h2 id={`${id}-h`}>
           {title}
         </h2>
         {action}
@@ -156,28 +152,29 @@ function SetupCard({ setup }: { setup: Overview['setup'] }) {
     }
   };
   return (
-    <section aria-labelledby="setup-h" className="rounded-lg border-2 border-fg bg-cream p-4" data-testid="setup-card">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h2 id="setup-h" className="text-h4">
-            Get ready to sell
+    <section aria-labelledby="setup-h" className="overview-setup" data-testid="setup-card">
+      <div className="overview-setup-header">
+        <span className="overview-setup-icon"><ClipboardCheck size={18} aria-hidden="true" /></span>
+        <div className="overview-setup-copy">
+          <h2 id="setup-h">
+            Finish setting up your store
           </h2>
           <p className="text-body-sm text-fg-muted tabular-nums">
             {done} of {required.length} required steps done
           </p>
         </div>
-        <Button variant="secondary" size="sm" onClick={toggle} aria-expanded={!collapsed} aria-controls="setup-items" rightIcon={collapsed ? <ChevronDown size={16} aria-hidden="true" /> : <ChevronUp size={16} aria-hidden="true" />}>
-          {collapsed ? 'Show steps' : 'Hide steps'}
+        <div className="overview-setup-progress"><ProgressBar value={done} max={Math.max(1, required.length)} aria-label="Required setup steps done" /></div>
+        <Button variant="ghost" size="sm" onClick={toggle} aria-expanded={!collapsed} aria-controls="setup-items" rightIcon={collapsed ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronUp size={14} aria-hidden="true" />}>
+          {collapsed ? 'Review setup' : 'Hide steps'}
         </Button>
       </div>
-      <ProgressBar className="mt-3" value={done} max={Math.max(1, required.length)} aria-label="Required setup steps done" />
-      {!collapsed ? (
-        <ul id="setup-items" className="mt-3 divide-y divide-line rounded-md border border-base bg-surface-base">
+      <div id="setup-items" hidden={collapsed}>
+        <ul className="mt-3 border-t border-base">
           {setup.items.map((item) => (
             <SetupRow key={item.key} item={item} />
           ))}
         </ul>
-      ) : null}
+      </div>
     </section>
   );
 }
@@ -194,9 +191,9 @@ function SetupRow({ item }: { item: SetupItem }) {
   const isDone = item.status === 'DONE';
   const Icon = isDone ? CircleCheck : Circle;
   return (
-    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-3" data-setup-key={item.key}>
+    <li className="overview-setup-row" data-setup-key={item.key}>
       <Icon size={20} className={isDone ? 'text-success' : 'text-fg-muted'} aria-hidden="true" />
-      <div className="min-w-0 flex-1 basis-56">
+      <div className="overview-setup-row-copy">
         <p className="flex flex-wrap items-center gap-2 font-medium">
           {item.label}
           <span className={cn('text-caption font-medium', isDone ? 'text-success' : 'text-fg-muted')}>{isDone ? 'Done' : 'To do'}</span>
@@ -212,9 +209,7 @@ function SetupRow({ item }: { item: SetupItem }) {
         {item.kind === 'REVIEW' ? (
           <Checkbox label="Mark as done" checked={isDone} disabled={mark.isPending} onChange={(e) => mark.mutate(e.target.checked)} className="!min-h-0" />
         ) : null}
-        <Button variant="secondary" size="sm" href={item.link}>
-          Open
-        </Button>
+        <Button variant="ghost" size="sm" href={item.link} iconOnly aria-label={`Open ${item.label}`} title={`Open ${item.label}`}><ArrowRight size={16} aria-hidden="true" /></Button>
       </div>
     </li>
   );
@@ -224,28 +219,32 @@ function SetupRow({ item }: { item: SetupItem }) {
 
 function AttentionCard({ items }: { items: Attention[] }) {
   const { Link } = useUI();
+  const [expanded, setExpanded] = useState(false);
+  const visibleItems = expanded ? items : items.slice(0, 3);
   return (
-    <Panel title="Needs attention" id="attention">
+    <Panel title="Needs attention" id="attention" action={items.length > 0 ? <span className="overview-count">{items.length}</span> : undefined}>
       {items.length === 0 ? (
-        <p className="text-body text-fg-muted">All clear. Nothing needs your attention.</p>
+        <div className="overview-empty !px-0 !py-4"><CircleCheck size={26} aria-hidden="true" /><strong>You're all caught up</strong><p>Nothing needs your attention right now.</p></div>
       ) : (
-        <ul className="divide-y divide-line">
-          {items.map((a, i) => {
+        <ul id="attention-items" className="overview-attention-list">
+          {visibleItems.map((a, i) => {
             const { Icon, label } = ATTENTION_ICON[a.type];
             return (
               <li key={`${a.type}-${a.orderId ?? a.itemId ?? i}-${i}`}>
-                <Link href={attentionLink(a)} className="flex min-h-11 items-center gap-3 rounded-md px-1 py-2 no-underline hover:bg-surface">
-                  <Icon size={20} className="shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 break-words text-body-sm">
-                    <span className="sr-only">{label}: </span>
+                <Link href={attentionLink(a)} className="overview-attention-item">
+                  <span className="overview-attention-icon"><Icon size={16} aria-hidden="true" /></span>
+                  <span className="overview-attention-copy">
+                    <small>{label}</small>
                     {a.label}
                   </span>
+                  <ChevronRight size={13} aria-hidden="true" className="shrink-0 text-fg-muted" />
                 </Link>
               </li>
             );
           })}
         </ul>
       )}
+      {items.length > 3 ? <button type="button" className="mt-3 inline-flex min-h-9 items-center gap-1.5 text-caption text-action" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} aria-controls="attention-items">{expanded ? 'Show fewer' : `View all ${items.length} alerts`}{expanded ? <ChevronUp size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}</button> : null}
     </Panel>
   );
 }
@@ -280,10 +279,8 @@ function LiveDropCard({ drop }: { drop: Overview['liveDrop'] }) {
         </div>
       ) : (
         <div className="flex flex-col items-start gap-2">
-          <p className="text-body text-fg-muted">No drop is live.</p>
-          <Button variant="secondary" size="sm" href="/drops">
-            Plan a drop
-          </Button>
+          <p className="text-body-sm text-fg-muted">No active drop</p>
+          <TextLink href="/drops" className="mt-1 !text-caption !text-action !no-underline">Plan your next drop <ArrowRight size={13} aria-hidden="true" /></TextLink>
         </div>
       )}
     </Panel>
@@ -308,34 +305,33 @@ function SalesChart({ days }: { days: Overview['sales7d'] }) {
   const orders = days.reduce((s, d) => s + d.orders, 0);
   return (
     <Panel
-      title="Last 7 days"
+      title="Revenue"
       id="sales"
       action={
-        <Button variant="ghost" size="sm" onClick={() => setShowData((v) => !v)} aria-expanded={showData}>
-          {showData ? 'Hide data' : 'Show data'}
-        </Button>
+        <div className="flex items-center gap-2"><span className="text-caption text-fg-muted">Last 7 days</span><Button variant="ghost" size="sm" iconOnly title={showData ? 'Hide daily sales data' : 'Show daily sales data'} aria-label={showData ? 'Hide daily sales data' : 'Show daily sales data'} onClick={() => setShowData((v) => !v)} aria-expanded={showData} aria-controls="daily-sales-data"><Table2 size={15} aria-hidden="true" /></Button></div>
       }
     >
-      <p className="mb-3 text-body-sm text-fg-muted tabular-nums">
-        {f.money(total)} from {orders} {orders === 1 ? 'order' : 'orders'}
-      </p>
-      <div role="img" aria-label={`Revenue per day, last 7 days: ${days.map((d) => `${d.date} ${f.money(d.revenueCents)}`).join(', ')}`} className="flex h-44 items-end gap-1.5">
-        {days.map((d) => {
-          const lbl = dayLabel(d.date);
-          const pct = Math.round((d.revenueCents / max) * 100);
-          return (
-            <div key={d.date} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={`${lbl.weekday} ${lbl.day}: ${f.money(d.revenueCents)}, ${d.orders} ${d.orders === 1 ? 'order' : 'orders'}`}>
-              <span className="mb-1 truncate text-center text-[11px] leading-none tabular-nums text-fg-muted">{d.revenueCents > 0 ? f.money(d.revenueCents).replace(/\.00$/, '') : ''}</span>
-              <div className="flex flex-1 items-end">
-                <div className={cn('w-full rounded-t-sm bg-coral', d.revenueCents === 0 && 'bg-line')} style={{ height: `${Math.max(d.revenueCents > 0 ? 4 : 2, pct)}%` }} />
+      <div className="overview-sales-summary"><strong>{f.money(total)}</strong><span>from {orders} {orders === 1 ? 'order' : 'orders'}</span></div>
+      <div role="img" aria-label={`Revenue per day, last 7 days: ${days.map((d) => `${d.date} ${f.money(d.revenueCents)}`).join(', ')}`} className="overview-chart">
+        <div className="overview-chart-lines" aria-hidden="true">
+          {[1, 0.75, 0.5, 0.25, 0].map((fraction) => <div key={fraction} className="overview-chart-line"><span>{f.money(Math.round(Math.max(400, max) * fraction)).replace(/\.00$/, '')}</span></div>)}
+        </div>
+        <div className="overview-chart-bars">
+          {days.map((d) => {
+            const lbl = dayLabel(d.date);
+            const pct = (d.revenueCents / Math.max(400, max)) * 100;
+            return (
+              <div key={d.date} className="overview-chart-day" title={`${lbl.weekday} ${lbl.day}: ${f.money(d.revenueCents)}, ${d.orders} ${d.orders === 1 ? 'order' : 'orders'}`}>
+                <div className="overview-chart-track"><div className="overview-chart-bar" style={{ height: `${pct}%` }} /></div>
+                <span>{lbl.weekday}</span>
               </div>
-              <span className="mt-1 truncate text-center text-[11px] leading-tight text-fg-muted">{lbl.weekday}</span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
+      {total === 0 ? <p className="mt-3 text-caption text-fg-muted">No revenue recorded in the last 7 days.</p> : null}
       {showData ? (
-        <table className="mt-3 w-full text-body-sm">
+        <table id="daily-sales-data" className="mt-3 w-full text-body-sm">
           <caption className="sr-only">Revenue and orders per day</caption>
           <thead>
             <tr className="border-b border-base text-left text-fg-muted">
@@ -375,7 +371,7 @@ function RecentOrders({ orders }: { orders: AdminOrderSummary[] }) {
     [f],
   );
   return (
-    <Panel title="Recent orders" id="recent" action={<TextLink href="/orders">All orders</TextLink>}>
+    <Panel title="Recent orders" id="recent" action={<TextLink href="/orders">View all orders <ArrowRight size={13} aria-hidden="true" /></TextLink>}>
       <DataTable
         caption="Recent orders"
         columns={columns}
@@ -384,7 +380,7 @@ function RecentOrders({ orders }: { orders: AdminOrderSummary[] }) {
         rowLabel={(o) => o.number}
         density="dense"
         stickyHeader={false}
-        empty={<EmptyState title="No orders yet" text="Orders from the website appear here within seconds." />}
+        empty={<div className="overview-empty"><ShoppingBag size={28} strokeWidth={1.4} aria-hidden="true" /><strong>No orders yet</strong><p>Your first customer order will appear here.</p><TextLink href="/orders/new" className="mt-1 !text-caption !text-action !no-underline">Create an order <ArrowRight size={13} aria-hidden="true" /></TextLink></div>}
         onRowClick={(o) => navigate(`/orders/${o.id}`)}
       />
     </Panel>

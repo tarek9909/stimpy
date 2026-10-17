@@ -71,7 +71,7 @@ export function PageHeader({ title, documentTitle, description, breadcrumbs, act
   }, []);
 
   return (
-    <header className={cn('mb-4 flex flex-col gap-2 md:mb-6', className)}>
+    <header className={cn('admin-page-header flex flex-col gap-2', className)}>
       {breadcrumbs && breadcrumbs.length > 0 ? <Breadcrumbs items={breadcrumbs} /> : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">

@@ -13,13 +13,12 @@ export interface FormSectionProps {
 }
 
 /**
- * A titled group of fields (a card with a heading). Quiet, bordered, no shadow. Use one per topic
- * ("Details", "Pricing", "Images") and lay the fields out with `className="grid gap-4 md:grid-cols-2"`.
+ * A titled, unframed group of fields. Topic dividers keep long forms easy to scan.
  */
 export function FormSection({ title, description, aside, children, variant = 'card', className }: FormSectionProps) {
   const headingId = useId();
   return (
-    <section aria-labelledby={headingId} className={cn(variant === 'card' && 'rounded-lg border border-base bg-surface-base p-4 md:p-6', className)}>
+    <section aria-labelledby={headingId} className={cn(variant === 'card' && 'admin-form-section', className)}>
       <header className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 id={headingId} className="text-h3 text-fg">

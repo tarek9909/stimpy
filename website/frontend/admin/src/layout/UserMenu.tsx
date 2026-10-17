@@ -1,4 +1,4 @@
-import { KeyRound, LogOut, Settings } from 'lucide-react';
+import { ChevronDown, KeyRound, LogOut, Settings } from 'lucide-react';
 import { Avatar, useToast } from '@stimpy/ui';
 import { useSessionFlow } from '../auth/SessionFlowContext';
 import { useSession } from '../auth/session';
@@ -16,7 +16,7 @@ export function UserMenu() {
     <Menu
       label="Account menu"
       align="end"
-      trigger={<Avatar name={user.name || user.email} size="sm" />}
+      trigger={<span className="admin-user-trigger"><Avatar name={user.name || user.email} size="sm" /><span className="admin-user-copy hidden xl:flex"><strong>{user.name || user.email}</strong><span>{ROLE_LABEL[user.role] ?? user.role}</span></span><ChevronDown size={13} aria-hidden="true" className="hidden text-fg-muted xl:block" /></span>}
       header={
         <div className="min-w-0">
           <p className="truncate text-body-sm font-medium">{user.name}</p>

@@ -236,7 +236,7 @@ export function DataTable<Row>(props: DataTableProps<Row>) {
       ) : !hasRows ? (
         <div className="rounded-lg border border-base">{empty}</div>
       ) : asTable ? (
-        <div className={cn(scroll ? 'overflow-x-auto' : 'overflow-x-clip', 'rounded-lg border border-base')}>
+        <div className={cn(scroll ? 'overflow-x-auto' : 'overflow-x-clip', 'admin-table rounded-lg border border-base')}>
           <table className={cn('w-full border-collapse text-left', refreshing && 'opacity-60 transition-opacity')} aria-busy={refreshing || undefined}>
             <caption className="sr-only">{caption}</caption>
             <thead className={cn('bg-surface text-body-sm', stickyHeader && !scroll && 'sticky top-14 z-10 md:top-16')}>

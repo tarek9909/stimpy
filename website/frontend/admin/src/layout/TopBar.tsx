@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ChevronRight, Plus } from 'lucide-react';
 import { Button, Logo } from '@stimpy/ui';
-import { NEW_ORDER_PATH } from '../app/navigation';
+import { NAV_ITEMS, NEW_ORDER_PATH, isNavActive } from '../app/navigation';
 import { useCan } from '../auth/roles';
 import { useIsMdUp } from '../lib/hooks';
 import { GlobalSearch } from './GlobalSearch';
@@ -12,18 +12,21 @@ import { UserMenu } from './UserMenu';
 export function TopBar() {
   const isMd = useIsMdUp();
   const canOrder = useCan('orders');
+  const { pathname } = useLocation();
+  const current = NAV_ITEMS.find((item) => isNavActive(item, pathname));
   return (
-    <header className="no-print sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-base bg-surface-base px-3 md:h-16 md:gap-3 md:px-6">
+    <header className="admin-topbar no-print sticky top-0 z-30 flex items-center gap-2 border-b border-base px-3 md:gap-4 md:px-6">
       {!isMd ? (
         <Link to="/" aria-label="Stimpy dashboard home" className="inline-flex shrink-0 no-underline">
           <Logo variant="icon" surface="white" width={20} clearSpace={false} />
         </Link>
       ) : null}
+      {isMd ? <div className="admin-location"><span>{current?.group ?? 'Workspace'}</span><ChevronRight size={12} aria-hidden="true" /><strong>{current?.label ?? 'Store'}</strong></div> : null}
       <GlobalSearch />
       <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2">
-        {canOrder ? (
+        {canOrder && !pathname.startsWith('/orders') ? (
           isMd ? (
-            <Button href={NEW_ORDER_PATH} variant="primary" leftIcon={<Plus size={20} aria-hidden="true" />}>
+            <Button href={NEW_ORDER_PATH} variant="primary" leftIcon={<Plus size={16} aria-hidden="true" />}>
               New order
             </Button>
           ) : (

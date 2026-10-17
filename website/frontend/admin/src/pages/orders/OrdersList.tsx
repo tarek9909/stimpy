@@ -314,7 +314,7 @@ export function OrdersList() {
       <Tabs aria-label="Order status" tabs={tabs} value={p.status} onChange={(t) => { setP({ status: t as OrderTab }); selection.clear(); }} />
       <div className="flex flex-col gap-4 pt-4">
         <FilterBar
-          search={<SearchField label="Search orders" placeholder="Search order, delivery no., phone, email, name" value={p.q} onChange={(q) => setP({ q }, { replace: true })} shortcut />}
+          search={<SearchField label="Search orders" placeholder="Search orders, customers, or delivery number..." value={p.q} onChange={(q) => setP({ q }, { replace: true })} shortcut />}
           activeCount={activeFilters}
           onClear={() => clearFilters()}
           actions={

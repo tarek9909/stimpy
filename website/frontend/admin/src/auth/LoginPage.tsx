@@ -203,13 +203,13 @@ export function LoginPage() {
   const pwdReg = form.register('password');
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-cream px-4 py-8">
+    <main className="admin-login flex min-h-dvh items-center justify-center px-4 py-8">
       <div className="w-full max-w-[400px]">
         <div className="rounded-lg border border-base bg-surface-base p-6 md:p-8">
-          <div className="mb-6 flex justify-center">
-            <Logo variant="full" surface="white" width={160} />
+          <div className="mb-8 flex">
+            <Logo variant="full" surface="white" width={112} clearSpace={false} />
           </div>
-          <h1 className="mb-4 text-center text-h3">Log in to Stimpy</h1>
+          <h1 className="mb-6 text-h3">Log in to Stimpy</h1>
 
           {messages.length > 0 ? (
             <Banner variant="info" live className="mb-4">

@@ -56,7 +56,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
     </p>
   );
   if (total === 0 || fits) {
-    return <div className={cn('flex min-h-11 items-center', className)}>{summary}</div>;
+    return <div className={cn(total === 0 ? 'sr-only' : 'flex min-h-11 items-center', className)}>{summary}</div>;
   }
 
   const prev = (

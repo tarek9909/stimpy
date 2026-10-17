@@ -1,9 +1,6 @@
 import { Suspense, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { SkipLink, Skeleton, SkeletonGroup } from '@stimpy/ui';
-import { NEW_ORDER_PATH } from '../app/navigation';
-import { useCan } from '../auth/roles';
 import { useSessionRevalidation } from '../auth/session';
 import { useIsMdUp } from '../lib/hooks';
 import { useStockBadgeFeed } from '../lib/refdata';
@@ -30,7 +27,7 @@ function ShellEffects() {
   useSessionRevalidation();
   useStockBadgeFeed();
   const isMd = useIsMdUp();
-  // Toasts and the floating buttons sit above the phone bottom bar (design: --stimpy-sticky-offset).
+  // Keep toasts above the phone navigation.
   useEffect(() => {
     document.documentElement.style.setProperty('--stimpy-sticky-offset', isMd ? '0px' : '72px');
     return () => {
@@ -38,24 +35,6 @@ function ShellEffects() {
     };
   }, [isMd]);
   return null;
-}
-
-/** Phone floating "+ New order" (the top bar also has "+"), hidden on the order form itself. */
-function NewOrderFab() {
-  const { pathname } = useLocation();
-  const canOrder = useCan('orders');
-  const isMd = useIsMdUp();
-  // Only on top-level pages: deeper pages (forms, details) have their own action bars.
-  if (isMd || !canOrder || pathname.split('/').filter(Boolean).length > 1) return null;
-  return (
-    <Link
-      to={NEW_ORDER_PATH}
-      aria-label="New order"
-      className="no-print fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-4 z-30 inline-flex h-14 w-14 items-center justify-center rounded-full bg-action text-white shadow-float no-underline hover:brightness-90"
-    >
-      <Plus size={26} aria-hidden="true" />
-    </Link>
-  );
 }
 
 /**
@@ -69,7 +48,7 @@ export function AppShell() {
     <NotificationsProvider>
       <ShellEffects />
       <SkipLink />
-      <div className="min-h-dvh md:flex">
+      <div className="admin-shell min-h-dvh md:flex">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar />
@@ -77,7 +56,7 @@ export function AppShell() {
             <ConnectionBanners />
             <SessionExpiryHint />
           </div>
-          <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-admin flex-1 px-4 pb-28 pt-4 outline-none md:px-6 md:pb-10 md:pt-6">
+          <main id="main-content" tabIndex={-1} className="admin-page mx-auto w-full max-w-admin flex-1 px-4 pb-28 outline-none md:px-6 md:pb-10">
             <ErrorBoundary inline resetKey={pathname}>
               <Suspense fallback={<PageFallback />}>
                 <Outlet />
@@ -87,7 +66,6 @@ export function AppShell() {
         </div>
       </div>
       <BottomBar />
-      <NewOrderFab />
       <ShortcutsHost />
     </NotificationsProvider>
   );
