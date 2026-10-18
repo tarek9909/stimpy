@@ -7,7 +7,7 @@ import { track } from '@/lib/track';
 
 export function MobileMenu({ open, onClose, pathname }: { open: boolean; onClose: () => void; pathname: string | null }) {
   return (
-    <Drawer open={open} onClose={onClose} title="Menu" className="!max-w-none !rounded-none">
+    <Drawer open={open} onClose={onClose} title="Menu" className="store-mobile-menu !max-w-drawer !rounded-none">
       <nav aria-label="Mobile">
         <ul className="flex flex-col">
           {PRIMARY_NAV.map((item) => (
@@ -19,7 +19,7 @@ export function MobileMenu({ open, onClose, pathname }: { open: boolean; onClose
                   track('nav_click', { item: item.href });
                   onClose();
                 }}
-                className="flex min-h-14 items-center text-h2 font-bold text-fg"
+                className="flex min-h-16 items-center text-h3 font-medium text-fg"
               >
                 {item.label}
               </Link>

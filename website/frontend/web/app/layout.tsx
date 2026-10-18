@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const content = await getContentSafe();
   return (
     <html lang="en" className={poppins.variable}>
-      <body>
+      <body className="storefront">
         <Providers>
           <SkipLink />
           {content?.announcement ? <AnnouncementBar text={content.announcement.text} linkUrl={content.announcement.linkUrl} /> : null}

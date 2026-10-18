@@ -1,6 +1,6 @@
 'use client';
 
-import { StimpieCard, useOptionalToast, type StimpieCardProps } from '@stimpy/ui';
+import { StimpieCard, cn, useOptionalToast, type StimpieCardProps } from '@stimpy/ui';
 import type { Stimpie } from '@stimpy/api-client';
 import { cartStore } from '@/features/cart/store';
 import { stimpieUnitsInCart } from '@/features/cart/helpers';
@@ -14,6 +14,7 @@ import { buildStimpieLine } from './composer';
 export function StimpieAddCard({
   stimpie,
   source = 'shop',
+  className,
   ...rest
 }: Omit<StimpieCardProps, 'stimpie' | 'onAdd'> & { stimpie: Stimpie; source?: AddSource }) {
   const add = useAddToCart();
@@ -21,6 +22,7 @@ export function StimpieAddCard({
   return (
     <StimpieCard
       {...rest}
+      className={cn('store-product-card', className)}
       stimpie={stimpie}
       onAdd={() => {
         // A LOW Stimpie: the whole cart (pack picks plus extras) may not exceed `remaining`.

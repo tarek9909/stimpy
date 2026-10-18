@@ -115,7 +115,7 @@ describe('seed (data-model section 8)', () => {
     expect((await t.prisma.color.findMany()).every((c) => Array.isArray(c.images) && (c.images as unknown[]).length === 2)).toBe(true);
     const colorsCfg = (await t.prisma.builderConfig.findUniqueOrThrow({ where: { key: 'colors' } })).value as { hoodieImage2d: string; overlay2d: string; placement2d: { width: number } }[];
     expect(colorsCfg).toHaveLength(4);
-    expect(colorsCfg[0]!.placement2d.width).toBe(0.36);
+    expect(colorsCfg[0]!.placement2d.width).toBe(0.3);
     const textures = (await t.prisma.builderConfig.findUniqueOrThrow({ where: { key: 'stimpieTextures' } })).value as unknown[];
     expect(textures).toHaveLength(17);
 

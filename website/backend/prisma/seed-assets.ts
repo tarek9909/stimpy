@@ -84,7 +84,7 @@ const HEM = 'M300 1290 L900 1290 L903 1345 Q600 1378 297 1345 Z';
 const CUFF_L = 'M112 1000 L254 1052 L275 1100 Q260 1100 250 1090 L135 1055 Q105 1045 112 1000 Z';
 const CUFF_R = 'M1088 1000 L946 1052 L925 1100 Q940 1100 950 1090 L1065 1055 Q1095 1045 1088 1000 Z';
 
-function hoodieSvg(view: 'front' | 'back', hex: string, o: { background: string | null; overlay?: boolean }): string {
+export function renderSeedHoodieSvg(view: 'front' | 'back', hex: string, o: { background: string | null; overlay?: boolean }): string {
   const body = hex;
   const shade = darker(hex, 0.14);
   const deep = darker(hex, 0.3);
@@ -124,8 +124,7 @@ function hoodieSvg(view: 'front' | 'back', hex: string, o: { background: string 
          <rect x="590" y="500" width="20" height="46" rx="6" fill="${light}" stroke="${stroke}" stroke-width="3"/>
          <path d="M520 520 L520 690" stroke="${light}" stroke-width="9" stroke-linecap="round"/><path d="M680 520 L680 690" stroke="${light}" stroke-width="9" stroke-linecap="round"/>
          <path d="M395 960 L460 1120 L740 1120 L805 960 Z" fill="${shade}" stroke="${stroke}" stroke-width="5" stroke-linejoin="round"/>`
-      : // back view: the faint outline of the swappable back panel (centre 0.5 / 0.46 of the image, 36% wide, aspect 0.64)
-        `<rect x="384" y="352" width="432" height="675" rx="14" fill="none" stroke="${stroke}" stroke-opacity="0.45" stroke-width="4" stroke-dasharray="14 10"/>`;
+      : '';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   ${bg}${shadow}
@@ -147,7 +146,7 @@ async function svgToWebp(svg: string): Promise<{ buffer: Buffer; width: number; 
 
 /** Product photo placeholder (front or back view on a neutral studio background). */
 export function seedHoodiePhoto(ctx: AppContext, o: { colorSlug: string; hex: string; view: 'front' | 'back' }): Promise<SeedAsset> {
-  const svg = hoodieSvg(o.view, o.hex, { background: '#F1EFEA' });
+  const svg = renderSeedHoodieSvg(o.view, o.hex, { background: '#F1EFEA' });
   return ensureAsset(ctx, {
     path: `seed/hoodies/photo-${o.view}-${o.colorSlug}-${short(svg)}.webp`, mime: 'image/webp', ext: 'webp',
     originalName: `placeholder-${o.view}-${o.colorSlug}.svg`, produce: () => svgToWebp(svg),
@@ -156,7 +155,7 @@ export function seedHoodiePhoto(ctx: AppContext, o: { colorSlug: string; hex: st
 
 /** Builder 2D base: flat back view, transparent background. */
 export function seedBuilderBack(ctx: AppContext, o: { colorSlug: string; hex: string }): Promise<SeedAsset> {
-  const svg = hoodieSvg('back', o.hex, { background: null });
+  const svg = renderSeedHoodieSvg('back', o.hex, { background: null });
   return ensureAsset(ctx, {
     path: `seed/builder/back-${o.colorSlug}-${short(svg)}.webp`, mime: 'image/webp', ext: 'webp',
     originalName: `builder-back-${o.colorSlug}.svg`, produce: () => svgToWebp(svg),
@@ -165,14 +164,14 @@ export function seedBuilderBack(ctx: AppContext, o: { colorSlug: string; hex: st
 
 /** Builder 2D shading overlay (shared by every colour). */
 export function seedBuilderOverlay(ctx: AppContext): Promise<SeedAsset> {
-  const svg = hoodieSvg('back', '#808080', { background: null, overlay: true });
+  const svg = renderSeedHoodieSvg('back', '#808080', { background: null, overlay: true });
   return ensureAsset(ctx, {
     path: `seed/builder/overlay-${short(svg)}.webp`, mime: 'image/webp', ext: 'webp', originalName: 'builder-overlay.svg', produce: () => svgToWebp(svg),
   });
 }
 
 /** Default Stimpie panel placement on the generated back view (also used when the owner has not set one). */
-export const SEED_PLACEMENT_2D = { x: 0.5, y: 0.46, width: 0.36, rotation: 0 } as const;
+export const SEED_PLACEMENT_2D = { x: 0.5, y: 0.6, width: 0.3, rotation: 0 } as const;
 
 /** A binary file (e.g. the GLB) stored content-addressed. */
 export async function seedBinary(

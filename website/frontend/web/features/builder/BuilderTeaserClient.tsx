@@ -3,9 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import { ArrowRight, Box, Maximize2 } from 'lucide-react';
 import { BuilderStage2D } from '@stimpy/builder/src/BuilderStage2D';
 import type { BuilderData, BuilderStimpie, JoinedColor, SwapSample } from '@stimpy/builder';
 import { track } from '@/lib/track';
+
+const BuilderPreviewDialog = dynamic(() => import('./BuilderPreviewDialog'), { ssr: false });
 
 /** The homepage's small, 2D-only Builder island. It deliberately avoids importing the full 2D/3D Builder. */
 export function BuilderTeaserClient({ data }: { data: BuilderData }) {
@@ -34,6 +38,8 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
   const [colorId, setColorId] = useState<number | null>(colors[0]?.id ?? null);
   const [stimpieId, setStimpieId] = useState<number | null>(stimpies[0]?.id ?? null);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const previewTrigger = useRef<HTMLButtonElement>(null);
   const colorRefs = useRef(new Map<number, HTMLButtonElement>());
   const stimpieRefs = useRef(new Map<number, HTMLButtonElement>());
   const swapCount = useRef(0);
@@ -109,7 +115,7 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
   const fullBuilder = `/builder?color=${encodeURIComponent(color.id)}&stimpie=${encodeURIComponent(stimpie.slug)}`;
 
   return (
-    <section data-builder="teaser" data-builder-view="2d" aria-label="Builder" className="grid grid-cols-1 items-center gap-6 md:grid-cols-2">
+    <section data-builder="teaser" data-builder-view="2d" aria-label="Builder" className="store-teaser grid grid-cols-1 items-center gap-6 md:grid-cols-2">
       <div className="mx-auto w-full max-w-[384px]">
         <div
           role="group"
@@ -118,14 +124,18 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
           className="relative mx-auto w-full overflow-hidden bg-cream"
           style={{ aspectRatio: '4 / 5' }}
         >
-          <BuilderStage2D color={stageColor} art={stageArt} instant={reducedMotion} active preload={stimpies.map((item) => item.artworkUrl)} chip />
+          <BuilderStage2D color={stageColor} art={stageArt} instant={reducedMotion} active preload={stimpies.map((item) => item.artworkUrl)} chip={false} />
+          <button ref={previewTrigger} type="button" className="store-preview-trigger" aria-label="Open 3D preview" aria-haspopup="dialog" onClick={() => setPreviewOpen(true)}>
+            <span className="store-preview-trigger-label"><Box size={16} aria-hidden="true" /> 3D preview</span>
+            <span className="store-preview-expand" title="Open 3D preview"><Maximize2 size={18} aria-hidden="true" /></span>
+          </button>
         </div>
-        <p className="mt-2 text-caption text-fg-muted">Preview. Real photos are one tap away.</p>
+        <div className="store-teaser-caption"><span>{stimpie.name}</span><span>{color.name} hoodie</span></div>
       </div>
 
       <div className="flex min-w-0 flex-col gap-5">
         <div>
-          <p className="text-body-sm font-medium text-fg">Hoodie colour</p>
+          <p className="text-body-sm font-medium text-fg">Colour: <span className="text-fg-muted">{color.name}</span></p>
           <div role="radiogroup" aria-label="Hoodie colour" onKeyDown={handleColorKeys} className="mt-2 flex flex-wrap gap-2">
             {colors.map((item) => (
               <button
@@ -137,13 +147,13 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
                 type="button"
                 role="radio"
                 aria-label={item.name}
+                title={item.name}
                 aria-checked={item.id === color.id}
                 tabIndex={item.id === color.id ? 0 : -1}
                 onClick={() => selectColor(item.id)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-control bg-white px-3 text-body-sm text-ink aria-checked:border-ink aria-checked:ring-2 aria-checked:ring-ink"
+                className="store-teaser-swatch"
               >
-                <span aria-hidden="true" className="h-4 w-4 rounded-full border border-black/15" style={{ backgroundColor: item.hex }} />
-                {item.name}
+                <span aria-hidden="true" style={{ backgroundColor: item.hex }} />
               </button>
             ))}
           </div>
@@ -193,9 +203,11 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
           data-builder-open-full
           className="inline-flex min-h-11 self-start items-center justify-center rounded-md border border-control bg-white px-5 py-3 text-body font-semibold text-ink underline-offset-4 hover:bg-cream hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
-          Open full Builder
+          Customize this look <ArrowRight size={16} aria-hidden="true" className="ml-3" />
         </Link>
       </div>
+      {previewOpen ? <BuilderPreviewDialog colors={colors} stimpies={stimpies} colorId={color.id} stimpieId={stimpie.id}
+        onColorChange={selectColor} onStimpieChange={selectStimpie} onClose={() => setPreviewOpen(false)} returnFocusRef={previewTrigger} /> : null}
     </section>
   );
 }

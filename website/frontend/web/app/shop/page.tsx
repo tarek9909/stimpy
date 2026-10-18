@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { Button, EmptyState, ProductCard, Section } from '@stimpy/ui';
+import Link from 'next/link';
+import { Button, ColorDots, EmptyState, Media, ProductCard, Section, formatCents } from '@stimpy/ui';
 import type { Drop } from '@stimpy/api-client';
 import { getDrops, getHoodies, getStimpies } from '@/lib/data';
 import { must } from '@/lib/api-server';
@@ -7,7 +8,7 @@ import { pageMetadata } from '@/lib/seo';
 import { StimpieAddCard } from '@/features/shop/StimpieAddCard';
 import { ShopTabs, StimpieFilters } from '@/features/shop/ShopControls';
 import { activeFilterCount, parseShopParams, shopHref } from '@/features/shop/params';
-import { Layers, Sparkles } from '@/components/icons';
+import { ArrowRight, Layers, Sparkles } from '@/components/icons';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -38,7 +39,8 @@ export default async function ShopPage({ searchParams }: { searchParams: SearchP
   const filters = { ...params, drop: effectiveDrop };
 
   return (
-    <Section tone="white" heading="Shop" headingLevel={1}>
+    <Section tone="white" heading="The collection." eyebrow="Made for your every day" headingLevel={1} className="store-shop">
+      <p className="store-shop-intro">One essential hoodie. A whole world of Stimpies.</p>
       <ShopTabs params={filters}>
         {params.tab === 'hoodies' ? <HoodiesPanel /> : <StimpiesPanel filters={filters} dropList={dropList} unknownDrop={unknownDrop} />}
       </ShopTabs>
@@ -58,6 +60,20 @@ async function HoodiesPanel() {
       />
     );
   }
+  if (hoodies.length === 1) {
+    const hoodie = hoodies[0]!;
+    const href = `/shop/hoodie/${hoodie.slug}`;
+    return <div className="store-hoodie-feature">
+      <Link href={href} aria-label={`View ${hoodie.name}`}><Media src={hoodie.images[0]} alt={`${hoodie.name}, front view`} ratio="4 / 5" fit="contain" priority sizes="(min-width: 768px) 50vw, 100vw" /></Link>
+      <div><p className="store-eyebrow">The everyday original</p><h2><Link href={href}>{hoodie.name}</Link></h2>
+        <p className="store-hoodie-price">{formatCents(hoodie.priceCents)}</p>
+        <p className="store-hoodie-description">A heavyweight zip hoodie with an interchangeable back. Wear it plain, or make it your own with a Stimpie.</p>
+        <ColorDots colors={hoodie.colors} />
+        <Link href={href} className="store-button">{hoodie.inStock ? 'Choose your hoodie' : 'View hoodie'} <ArrowRight size={17} aria-hidden="true" /></Link>
+        <p className="mt-4 text-body-sm text-fg-muted">Cash on delivery across Lebanon.</p>
+      </div>
+    </div>;
+  }
   return (
     <div className="mt-6">
       <p role="status" className="sr-only">
@@ -66,7 +82,7 @@ async function HoodiesPanel() {
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
         {hoodies.map((h, i) => (
           <li key={h.id}>
-            <ProductCard hoodie={h} priority={i === 0} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
+            <ProductCard hoodie={h} className="store-product-card" priority={i === 0} sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw" />
           </li>
         ))}
       </ul>

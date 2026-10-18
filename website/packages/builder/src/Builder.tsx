@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type Ref,
+  type ReactNode,
 } from 'react';
 import { Button, PriceTag, formatCents, useOptionalToast, useUI } from '@stimpy/ui';
 import type {
@@ -16,11 +17,13 @@ import type {
   BuilderCartSummary,
   BuilderData,
   BuilderHoodie,
+  BuilderStimpie,
   BuilderHandle,
   BuilderView,
   CameraView,
   EnvSignals,
   FallbackReason,
+  JoinedColor,
   ThrottleSimulator,
   Tier,
   TrackFn,
@@ -57,6 +60,16 @@ import { buildShareQuery, buildShareUrl, type ShareParams } from './lib/share';
 import { buildCartSummary, liveAnnouncement, stimpieById } from './lib/summary';
 import type { SwapSample } from './lib/swapMonitor';
 
+export interface BuilderPreviewContext {
+  colors: readonly JoinedColor[];
+  stimpies: readonly BuilderStimpie[];
+  colorId: number;
+  stimpieId: number;
+  disabledStimpieIds: ReadonlySet<number>;
+  onColorChange: (id: number) => void;
+  onStimpieChange: (id: number) => void;
+}
+
 export interface BuilderProps {
   /** The three payloads (+ packs + hoodie detail). The dashboard feeds the same shape built from unsaved form state. */
   data: BuilderData;
@@ -92,6 +105,8 @@ export interface BuilderProps {
   stickyBar?: boolean;
   /** Imperative handle (camera read-out for the dashboard). */
   ref?: Ref<BuilderHandle>;
+  /** Optional host-owned expanded preview, connected to the current selection and pack rules. */
+  renderPreviewAction?: (context: BuilderPreviewContext) => ReactNode;
   className?: string;
 }
 
@@ -132,6 +147,7 @@ export function Builder({
   hrefs,
   stickyBar,
   ref,
+  renderPreviewAction,
   className,
 }: BuilderProps) {
   const compact = surface === 'teaser';
@@ -603,12 +619,20 @@ export function Builder({
               </Canvas3DBoundary>
             ) : null}
 
-            <span
+            {renderPreviewAction && color && stimpie ? renderPreviewAction({
+              colors: visibleColors,
+              stimpies,
+              colorId: color.id,
+              stimpieId: stimpie.id,
+              disabledStimpieIds: disabledIds,
+              onColorChange: onColor,
+              onStimpieChange: onPick,
+            }) : <span
               data-layer="preview-chip"
               className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-ink"
             >
               Preview
-            </span>
+            </span>}
             {showToggle && view !== 'pending' ? (
               <div className="absolute right-3 top-3">
                 <ModeToggle view={view === '3d' ? '3d' : '2d'} onChange={onToggle} />

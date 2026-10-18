@@ -169,7 +169,7 @@ export function PackComposer({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="store-composer flex flex-col gap-6">
       <RadioGroup
         name="pack"
         legend="Choose your set"

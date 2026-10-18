@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { PackCard } from '@stimpy/ui';
+import { PackTile } from './HomeCommerce';
 import type { Pack } from '@stimpy/api-client';
 import { track } from '@/lib/track';
 
@@ -13,19 +13,17 @@ export function HomePackCard({
   pack,
   hoodieSlug,
   effectiveExtraCents,
-  highlight,
 }: {
   pack: Pack;
   hoodieSlug: string | null;
   effectiveExtraCents?: number;
-  highlight?: boolean;
 }) {
   const router = useRouter();
   return (
-    <PackCard
+    <PackTile
       pack={pack}
-      effectiveExtraCents={effectiveExtraCents}
-      highlight={highlight}
+      hoodieSlug={hoodieSlug}
+      extraCents={effectiveExtraCents}
       onChoose={
         hoodieSlug
           ? () => {

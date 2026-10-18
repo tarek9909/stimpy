@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Builder, parseShareParams } from '../src';
+import { Builder, parseShareParams, type BuilderPreviewContext } from '../src';
 import { data } from './fixtures';
 
 const flush = async () => {
@@ -51,6 +51,25 @@ describe('Builder (page, 2D)', () => {
     render(<Builder data={data()} onAddToCart={vi.fn()} />);
     expect(document.querySelector('[data-builder-toggle]')).toBeNull();
     expect(document.querySelector('canvas')).toBeNull();
+  });
+
+  it('connects a host preview action to live colours, Stimpies and pack duplicate rules', () => {
+    const preview = vi.fn((context: BuilderPreviewContext) => <div>
+      <button onClick={() => context.onColorChange(2)}>Preview cream</button>
+      <button onClick={() => context.onStimpieChange(2)}>Preview second Stimpie</button>
+      <button onClick={() => context.onStimpieChange(1)}>Preview duplicate</button>
+    </div>);
+    render(<Builder data={data()} renderPreviewAction={preview} />);
+    expect(document.querySelector('[data-layer="preview-chip"]')).toBeNull();
+    expect(preview.mock.lastCall?.[0]).toMatchObject({ colorId: 1, stimpieId: 1 });
+    expect(preview.mock.lastCall?.[0].disabledStimpieIds.has(1)).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Preview cream' }));
+    expect(preview.mock.lastCall?.[0].colorId).toBe(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Preview second Stimpie' }));
+    expect(preview.mock.lastCall?.[0].stimpieId).toBe(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Preview duplicate' }));
+    expect(preview.mock.lastCall?.[0].stimpieId).toBe(2);
+    expect(within(screen.getByRole('group', { name: 'Pack slots' })).getByRole('button', { name: /In the box/ })).toHaveTextContent('Stimpie 2');
   });
 
   it('carousel: listbox of options, roving tabindex (one tab stop), selected state with aria-selected', () => {

@@ -6,7 +6,7 @@
 
 // Components
 export { Builder } from './Builder';
-export type { BuilderProps } from './Builder';
+export type { BuilderProps, BuilderPreviewContext } from './Builder';
 export { BuilderStage2D } from './BuilderStage2D';
 export type { BuilderStage2DProps, Stage2DArt, Stage2DColor } from './BuilderStage2D';
 export { BuilderCanvas3D, Canvas3DBoundary } from './BuilderCanvas3D';

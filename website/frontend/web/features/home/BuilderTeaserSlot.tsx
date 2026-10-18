@@ -20,10 +20,10 @@ export async function BuilderTeaserSlot({ hoodieImage, stimpies }: { hoodieImage
   const interactive = !!data && joinColors(data.colors, data.config).some(usable2D);
 
   return (
-    <Section tone="white" heading="Try it on" id="builder-teaser" aria-label="Builder preview" data-slot="builder-teaser">
+    <Section tone="white" heading="A look that's yours." className="store-builder-teaser" id="builder-teaser" aria-label="Builder preview" data-slot="builder-teaser">
       {interactive && data ? (
         <div className="flex flex-col gap-6">
-          <p className="text-lead text-fg-muted">Pick a hoodie colour, zip through the Stimpies and see your look before you order.</p>
+          <p className="text-lead text-fg-muted">Your colour. Your artwork. Your Stimpy.</p>
           <BuilderTeaserGate data={data} fallback={<StaticTeaser hoodieImage={hoodieImage} stimpies={shown} />} />
         </div>
       ) : (
@@ -40,7 +40,7 @@ function StaticTeaser({ hoodieImage, stimpies }: { hoodieImage: string | null; s
         <Media src={hoodieImage} alt="The Stimpy hoodie" ratio="4 / 5" className="rounded-xl" sizes="(min-width: 768px) 40vw, 100vw" />
       </div>
       <div className="flex flex-col gap-6">
-        <p className="text-lead text-fg-muted">Pick a hoodie colour, zip through the Stimpies and see your look before you order.</p>
+        <p className="text-lead text-fg-muted">Your colour. Your artwork. Your Stimpy.</p>
         {stimpies.length > 0 ? (
           <ul className="grid grid-cols-3 gap-3" aria-label="Stimpies you can try">
             {stimpies.map((s) => (

@@ -43,7 +43,7 @@ export function OrderSummary({
   const count = cartItemCount(lines);
   const delivery = deliveryLabel(totals.fee);
   return (
-    <details open className="group rounded-lg border border-base bg-surface-base" data-testid="order-summary">
+    <details open className="store-order-summary group rounded-lg border border-base bg-surface-base" data-testid="order-summary">
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <h2 className="text-h3 text-fg">Order summary</h2>
         <span className="text-body-sm text-fg-muted">{pluralize(count, 'item')}</span>

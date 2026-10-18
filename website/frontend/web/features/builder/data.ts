@@ -5,6 +5,27 @@
 import type { BuilderConfig, HoodieDetail, OptionsResponse, Pack, Stimpie } from '@stimpy/api-client';
 import type { BuilderData, BuilderHoodie, BuilderPack, BuilderStimpie } from '@stimpy/builder';
 
+/** Replace legacy seed drawings with guide-free versions; preserve merchant images and calibrations. */
+export function storefrontBuilderConfig(config: BuilderConfig): BuilderConfig {
+  return {
+    ...config,
+    colors: config.colors.map((color) => {
+      const p = color.placement2d;
+      let seedColor: string | undefined;
+      try {
+        seedColor = /^\/uploads\/seed\/builder\/back-(black|cream|stone|coral)-[a-f0-9]+\.webp$/.exec(new URL(color.hoodieImage2d ?? '', 'http://localhost').pathname)?.[1];
+      } catch { /* Non-URL assets retain their configured placement. */ }
+      const starterPlacement = p?.x === 0.5 && p.y === 0.46 && p.width === 0.36 && p.rotation === 0;
+      if (!seedColor) return color;
+      return {
+        ...color,
+        hoodieImage2d: `/images/builder/back-${seedColor}-v2.webp`,
+        placement2d: starterPlacement ? { ...p, y: 0.6, width: 0.3 } : p,
+      };
+    }),
+  };
+}
+
 export function toBuilderStimpie(s: Stimpie): BuilderStimpie {
   return {
     id: s.id,
@@ -55,7 +76,7 @@ export function toBuilderData(args: {
   hoodie: HoodieDetail | null;
 }): BuilderData {
   return {
-    config: args.config,
+    config: storefrontBuilderConfig(args.config),
     colors: args.options.colors.map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: c.images.slice(0, 1) })),
     stimpies: args.stimpies.map(toBuilderStimpie),
     packs: args.packs.map(toBuilderPack),
@@ -77,7 +98,7 @@ export function toTeaserData(args: {
       defaultView: '2D',
       model3d: null,
       stimpieTextures: [],
-      colors: args.config.colors.map((c) => ({ ...c, tint: null, texture3d: null })),
+      colors: storefrontBuilderConfig(args.config).colors.map((c) => ({ ...c, tint: null, texture3d: null })),
     },
     colors: args.options.colors.map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: [] })),
     stimpies: args.stimpies.map(toBuilderStimpie),

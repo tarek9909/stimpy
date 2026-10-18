@@ -532,7 +532,7 @@ export function CheckoutView() {
   const areaIsText = !areasAvailable || values.areaChoice === OTHER_AREA;
 
   return (
-    <form ref={formRef} onSubmit={onFormSubmit} noValidate aria-busy={submitting || undefined} className="pb-28 lg:pb-0" data-testid="checkout-form">
+    <form ref={formRef} onSubmit={onFormSubmit} noValidate aria-busy={submitting || undefined} className="store-checkout-form pb-28 lg:pb-0" data-testid="checkout-form">
       <StickyBarOffset px={88} />
       {/* Honeypot (2.5): off-screen, not display:none; a different DOM name so autofill leaves it alone. */}
       <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 'auto', width: 1, height: 1, overflow: 'hidden' }}>

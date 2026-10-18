@@ -52,7 +52,7 @@ export function StimpieActions({
     <div className="flex flex-col gap-3">
       <Button
         href={`/builder?stimpie=${encodeURIComponent(stimpie.slug)}`}
-        variant="dark"
+        variant="secondary"
         size="lg"
         fullWidth
         onClick={() => track('cta_click', { id: 'stimpie_preview', path: `/shop/stimpie/${stimpie.slug}` })}

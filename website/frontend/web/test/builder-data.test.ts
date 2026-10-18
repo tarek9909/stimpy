@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { toBuilderData, toTeaserData } from '@/features/builder/data';
+import type { BuilderConfig } from '@stimpy/api-client';
+import { storefrontBuilderConfig, toBuilderData, toTeaserData } from '@/features/builder/data';
 
 const config = {
   mode: 'BOTH',
@@ -14,6 +15,28 @@ const options = { colors: [{ id: 1, name: 'Black', hex: '#111111', position: 1, 
 const stimpie = { id: 1, slug: 's', name: 'S', type: 'CORE', priceCents: 1000, story: 'long story', images: ['1', '2'], artworkUrl: 'art', artworkWidth: 800, artworkHeight: 1250, drop: null, status: 'AVAILABLE', remaining: null, purchasable: true } as never;
 
 describe('Builder data mapping', () => {
+  it.each(['cream', 'black', 'stone', 'coral'])('centres the %s starter panel below the hood without mutating the API configuration', (name) => {
+    const original = { ...config as BuilderConfig, colors: [{ ...((config as BuilderConfig).colors[0]!), hoodieImage2d: `http://localhost:4000/uploads/seed/builder/back-${name}-8ce8c4fc.webp`, placement2d: { x: 0.5, y: 0.46, width: 0.36, rotation: 0 } }] };
+    const calibrated = storefrontBuilderConfig(original);
+    expect(calibrated.colors[0]?.placement2d).toEqual({ x: 0.5, y: 0.6, width: 0.3, rotation: 0 });
+    expect(calibrated.colors[0]?.hoodieImage2d).toBe(`/images/builder/back-${name}-v2.webp`);
+    expect(original.colors[0]?.hoodieImage2d).toContain('/uploads/seed/builder/');
+    expect(original.colors[0]?.placement2d?.y).toBe(0.46);
+    expect(toTeaserData({ config: original, options, stimpies: [stimpie] }).config.colors[0]?.placement2d?.y).toBe(0.6);
+  });
+  it('preserves custom artwork placement and merchant-uploaded hoodie images', () => {
+    const original = { ...config as BuilderConfig, colors: [{ ...((config as BuilderConfig).colors[0]!), hoodieImage2d: '/uploads/custom/back.webp', placement2d: { x: 0.5, y: 0.46, width: 0.36, rotation: 0 } }] };
+    expect(storefrontBuilderConfig(original).colors[0]?.placement2d).toEqual(original.colors[0]?.placement2d);
+    expect(storefrontBuilderConfig(original).colors[0]?.hoodieImage2d).toBe('/uploads/custom/back.webp');
+    original.colors[0]!.hoodieImage2d = '/uploads/seed/builder/back-black-eed97999.webp';
+    original.colors[0]!.placement2d.y = 0.57;
+    expect(storefrontBuilderConfig(original).colors[0]?.placement2d?.y).toBe(0.57);
+  });
+  it('keeps the guide-free seed image when mapped repeatedly', () => {
+    const original = { ...config as BuilderConfig, colors: [{ ...((config as BuilderConfig).colors[0]!), hoodieImage2d: '/uploads/seed/builder/back-black-eed97999.webp', placement2d: { x: 0.5, y: 0.46, width: 0.36, rotation: 0 } }] };
+    const mapped = storefrontBuilderConfig(original);
+    expect(storefrontBuilderConfig(mapped)).toEqual(mapped);
+  });
   it('keeps only the fields the Builder needs (no story, no gallery)', () => {
     const d = toBuilderData({ config, options, stimpies: [stimpie], packs: [], hoodie: null });
     expect(Object.keys(d.stimpies[0] ?? {})).not.toContain('story');

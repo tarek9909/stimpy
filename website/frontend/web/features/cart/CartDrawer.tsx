@@ -102,6 +102,7 @@ export function CartDrawer() {
         open={open && hydrated}
         onClose={() => cartStore.getState().closeDrawer()}
         title="Your cart"
+        className="store-cart-drawer"
         initialFocusRef={headingRef}
         footer={
           lines.length > 0 ? (

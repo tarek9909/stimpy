@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Logo, whatsappLink } from '@stimpy/ui';
 import type { Content } from '@stimpy/api-client';
+import { ArrowRight } from '@/components/icons';
 
 type Business = Content['business'] | null;
 
@@ -49,12 +50,16 @@ function columns(business: Business): Column[] {
 export function Footer({ business }: { business: Business }) {
   const cols = columns(business);
   return (
-    <footer className="surface-dark bg-ink text-white">
+    <footer className="store-footer surface-dark bg-ink text-white">
       <div className="container py-12 md:py-16">
+        <div className="store-footer-intro">
+          <div><p className="store-footer-wordmark">STIMPY.</p><p className="mt-3 max-w-sm text-body-sm text-fg-muted">One hoodie. Multiple identities.</p></div>
+          <Link href="/shop" className="store-footer-shop">Find your next identity <ArrowRight size={22} aria-hidden="true" /></Link>
+        </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
           {cols.map((col) => (
             <nav key={col.title} aria-labelledby={`footer-${col.title}`}>
-              <h2 id={`footer-${col.title}`} className="mb-3 text-h4 font-medium">
+              <h2 id={`footer-${col.title}`} className="mb-3 text-body-sm font-medium">
                 {col.title}
               </h2>
               <ul className="flex flex-col">
@@ -64,13 +69,13 @@ export function Footer({ business }: { business: Business }) {
                       <a
                         href={l.href}
                         {...(l.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                        className="inline-flex min-h-11 items-center break-all text-body text-fg-muted hover:text-white hover:underline"
+                        className="inline-flex min-h-11 items-center break-all text-body-sm text-fg-muted hover:text-white hover:underline"
                       >
                         {l.label}
                         {l.href.startsWith('http') ? <span className="sr-only"> (opens in a new tab)</span> : null}
                       </a>
                     ) : (
-                      <Link href={l.href} className="inline-flex min-h-11 items-center text-body text-fg-muted hover:text-white hover:underline">
+                      <Link href={l.href} className="inline-flex min-h-11 items-center text-body-sm text-fg-muted hover:text-white hover:underline">
                         {l.label}
                       </Link>
                     )}

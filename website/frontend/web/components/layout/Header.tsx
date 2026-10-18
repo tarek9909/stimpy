@@ -23,7 +23,7 @@ export function cartLabel(count: number): string {
   return `Cart, ${count} ${count === 1 ? 'item' : 'items'}`;
 }
 
-/** Sticky header. Mobile: logo, cart, menu. `lg`: logo, centred nav, cart. Shrinks after 40 px of scroll. */
+/** Fixed-height sticky navigation keeps shopping controls stable while scrolling. */
 export function Header() {
   const pathname = usePathname();
   const hydrated = useCart((s) => s.hydrated);
@@ -57,14 +57,13 @@ export function Header() {
   return (
     <header
       className={cn(
-        // The margin keeps the page layout identical while the bar shrinks (no layout shift).
-        'sticky top-0 z-30 border-b border-base bg-white transition-[height,margin] duration-fast ease-standard',
-        compact ? 'mb-2 h-12 lg:mb-4 lg:h-14' : 'h-14 lg:h-[72px]',
+        'store-header sticky top-0 z-30 h-16 border-b border-base bg-white lg:h-20',
+        compact && 'store-header-scrolled',
       )}
     >
       <div className="container flex h-full items-center justify-between gap-4">
         <Link href="/" aria-label="Stimpy home" className="inline-flex items-center no-underline hover:no-underline">
-          <Logo variant="full" surface="white" width={compact ? 100 : 112} clearSpace={false} alt="Stimpy" />
+          <Logo variant="full" surface="white" width={124} clearSpace={false} alt="Stimpy" />
         </Link>
 
         <nav aria-label="Main" className="hidden lg:block">
@@ -79,7 +78,7 @@ export function Header() {
                     aria-current={active ? 'page' : undefined}
                     onClick={() => track('nav_click', { item: item.href })}
                     className={cn(
-                      'inline-flex min-h-11 items-center text-body font-medium text-fg underline-offset-8 decoration-coral decoration-4 hover:underline',
+                      'store-nav-link inline-flex min-h-11 items-center text-body-sm font-medium text-fg underline-offset-8 decoration-coral decoration-2 hover:underline',
                       active && 'underline',
                     )}
                   >
@@ -91,12 +90,14 @@ export function Header() {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 lg:gap-6">
+          <Link href="/track" className="hidden min-h-11 items-center text-body-sm text-fg-muted hover:text-fg lg:inline-flex">Track order</Link>
           <button
             ref={cartButton}
             type="button"
             aria-label={cartLabel(shown)}
             aria-haspopup="dialog"
+            title="Open shopping bag"
             onClick={() => cartStore.getState().openDrawer()}
             className="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-fg hover:bg-cream"
           >
@@ -113,6 +114,7 @@ export function Header() {
           <button
             type="button"
             aria-label="Open menu"
+            title="Open menu"
             aria-haspopup="dialog"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(true)}

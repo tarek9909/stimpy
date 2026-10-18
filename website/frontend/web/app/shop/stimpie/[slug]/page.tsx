@@ -68,10 +68,11 @@ export default async function StimpiePage({ params }: { params: Params }) {
           ]),
         ]}
       />
-      <Section tone="white">
+      <Section tone="white" className="store-stimpie-detail">
+        <nav className="store-breadcrumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/shop?tab=stimpies">Stimpies</Link><span aria-hidden="true">/</span><span aria-current="page">{stimpie.name}</span></nav>
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           <StimpieGallery name={stimpie.name} artworkUrl={stimpie.artworkUrl} images={stimpie.images} />
-          <div className="flex flex-col gap-5">
+          <div className="store-stimpie-info flex flex-col gap-5">
             <div className="flex flex-wrap items-center gap-2">
               <Badge kind={stimpie.type === 'CORE' ? 'CORE' : 'LIMITED'} accent={drop?.accentColor ?? null} />
               {statusBadge ? <Badge {...statusBadge} /> : null}

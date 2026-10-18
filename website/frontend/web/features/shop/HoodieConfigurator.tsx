@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { HOODIE_RATIO, PriceTag, RichText } from '@stimpy/ui';
 import type { HoodieDetail, Pack, Stimpie } from '@stimpy/api-client';
 import { Gallery, type GalleryImage } from '@/components/Gallery';
@@ -14,6 +15,17 @@ interface Fresh {
   stimpies: Stimpie[];
 }
 
+/** Legacy seed photos include a placement guide; real product photography stays untouched. */
+function galleryPhoto(url: string): string {
+  try {
+    const color = /^\/uploads\/seed\/hoodies\/photo-back-(black|cream|stone|coral)-[a-f0-9]+\.webp$/
+      .exec(new URL(url, 'http://localhost').pathname)?.[1];
+    return color ? `/images/hoodies/back-${color}-v2.webp` : url;
+  } catch {
+    return url;
+  }
+}
+
 /** Photos for the gallery: the chosen colour's own photos first, then the hoodie's, without duplicates. */
 export function galleryImages(hoodie: HoodieDetail, colorId: number | null): GalleryImage[] {
   const color = hoodie.colors.find((c) => c.id === colorId);
@@ -21,10 +33,11 @@ export function galleryImages(hoodie: HoodieDetail, colorId: number | null): Gal
   const seen = new Set<string>();
   const out: GalleryImage[] = [];
   for (const url of urls) {
-    if (seen.has(url)) continue;
-    seen.add(url);
+    const src = galleryPhoto(url);
+    if (seen.has(src)) continue;
+    seen.add(src);
     const isColorPhoto = color?.images.includes(url);
-    out.push({ src: url, alt: `${hoodie.name}${isColorPhoto && color ? `, ${color.name}` : ''}, photo ${out.length + 1}` });
+    out.push({ src, alt: `${hoodie.name}${isColorPhoto && color ? `, ${color.name}` : ''}, photo ${out.length + 1}` });
   }
   return out;
 }
@@ -70,8 +83,9 @@ export function HoodieConfigurator({ hoodie, packs, stimpies, estimateText }: Ho
   }, []);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-      <div className="lg:sticky lg:top-24 lg:self-start">
+    <><nav className="store-breadcrumbs" aria-label="Breadcrumb"><Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/shop">Shop</Link><span aria-hidden="true">/</span><span aria-current="page">{data.hoodie.name}</span></nav>
+    <div className="store-product-layout grid gap-8 lg:grid-cols-2 lg:gap-12">
+      <div className="store-product-gallery lg:sticky lg:top-24 lg:self-start">
         <Gallery
           images={images}
           index={index}
@@ -82,7 +96,7 @@ export function HoodieConfigurator({ hoodie, packs, stimpies, estimateText }: Ho
           sizes="(min-width: 1024px) 560px, 100vw"
         />
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="store-product-info flex flex-col gap-6">
         <header className="flex flex-col gap-3">
           <h1 className="text-h1 text-fg">{data.hoodie.name}</h1>
           <PriceTag cents={data.hoodie.priceCents} size="lg" />
@@ -98,6 +112,6 @@ export function HoodieConfigurator({ hoodie, packs, stimpies, estimateText }: Ho
           onColorChange={onColorChange}
         />
       </div>
-    </div>
+    </div></>
   );
 }
