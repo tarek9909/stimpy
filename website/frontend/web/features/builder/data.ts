@@ -33,6 +33,7 @@ export function toBuilderStimpie(s: Stimpie): BuilderStimpie {
     name: s.name,
     type: s.type,
     priceCents: s.priceCents,
+    compareAtPriceCents: s.compareAtPriceCents,
     artworkUrl: s.artworkUrl,
     artworkWidth: s.artworkWidth,
     artworkHeight: s.artworkHeight,
@@ -51,6 +52,7 @@ export function toBuilderPack(p: Pack): BuilderPack {
     description: p.description,
     stimpieCount: p.stimpieCount,
     priceCents: p.priceCents,
+    compareAtPriceCents: p.compareAtPriceCents,
     badge: p.badge,
   };
 }
@@ -61,6 +63,7 @@ export function toBuilderHoodie(h: HoodieDetail): BuilderHoodie {
     slug: h.slug,
     name: h.name,
     priceCents: h.priceCents,
+    compareAtPriceCents: h.compareAtPriceCents,
     images: h.images,
     inStock: h.inStock,
     sizes: h.sizes.map((s) => ({ id: s.id, label: s.label, position: s.position })),
@@ -75,9 +78,12 @@ export function toBuilderData(args: {
   packs: readonly Pack[];
   hoodie: HoodieDetail | null;
 }): BuilderData {
+  const hoodieColorIds = args.hoodie ? new Set(args.hoodie.colors.map((color) => color.id)) : null;
   return {
     config: storefrontBuilderConfig(args.config),
-    colors: args.options.colors.map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: c.images.slice(0, 1) })),
+    colors: args.options.colors
+      .filter((color) => hoodieColorIds === null || hoodieColorIds.has(color.id))
+      .map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: c.images.slice(0, 1) })),
     stimpies: args.stimpies.map(toBuilderStimpie),
     packs: args.packs.map(toBuilderPack),
     hoodie: args.hoodie ? toBuilderHoodie(args.hoodie) : null,
@@ -89,7 +95,9 @@ export function toTeaserData(args: {
   config: BuilderConfig;
   options: OptionsResponse;
   stimpies: readonly Stimpie[];
+  hoodie?: Pick<HoodieDetail, 'colors'> | null;
 }): BuilderData {
+  const hoodieColorIds = args.hoodie ? new Set(args.hoodie.colors.map((color) => color.id)) : null;
   return {
     config: {
       ...args.config,
@@ -100,7 +108,9 @@ export function toTeaserData(args: {
       stimpieTextures: [],
       colors: storefrontBuilderConfig(args.config).colors.map((c) => ({ ...c, tint: null, texture3d: null })),
     },
-    colors: args.options.colors.map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: [] })),
+    colors: args.options.colors
+      .filter((color) => hoodieColorIds === null || hoodieColorIds.has(color.id))
+      .map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: [] })),
     stimpies: args.stimpies.map(toBuilderStimpie),
     packs: [],
     hoodie: null,

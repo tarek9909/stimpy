@@ -50,7 +50,7 @@ export function MovementsTab() {
       ),
     },
     { id: 'item', header: 'Item', priority: 'primary', cell: (m) => <span className="font-medium">{m.itemName}</span> },
-    { id: 'field', header: 'Field', mobileLabel: 'Field', cell: (m) => (m.field === 'QUANTITY' ? 'On hand' : 'Reserved') },
+    { id: 'field', header: 'Field', mobileLabel: 'Field', cell: (m) => (m.field === 'QUANTITY' ? 'On hand' : 'Order hold') },
     { id: 'reason', header: 'Reason', cell: (m) => REASON_LABEL[m.reason] },
     {
       id: 'order',

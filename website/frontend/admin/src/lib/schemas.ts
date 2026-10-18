@@ -26,14 +26,6 @@ export function dollarsToCents(value: string): number {
   return cents;
 }
 
-/** `^[a-z0-9]+(-[a-z0-9]+)*$`, up to 140 characters (api-reference 1). */
-export const slugSchema = z
-  .string()
-  .trim()
-  .min(1, 'Enter a slug.')
-  .max(140, 'Use at most 140 characters.')
-  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'Use lowercase letters, numbers and single hyphens.');
-
 /** Turns a name into a slug candidate: `"Midnight Cedar!"` -> `"midnight-cedar"`. */
 export function slugify(input: string): string {
   return input

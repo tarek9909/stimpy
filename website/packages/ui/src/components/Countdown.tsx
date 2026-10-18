@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { useCountdown } from '../clock';
 import { announcementKey, describeRemaining } from '../clockMath';
 import { cn } from '../cn';
-import { SURFACE_CLASSES, accentSurface } from '../surfaces';
+import { SURFACE_CLASSES, accentColorStyle, accentSurface } from '../surfaces';
 import type { AccentColor, ISODate } from '../types';
 
 export interface CountdownProps {
@@ -19,6 +19,8 @@ export interface CountdownProps {
   size?: 'sm' | 'lg';
   /** Strip only: the drop accent as the band colour (black text). Default is the black strip. */
   accent?: AccentColor | null;
+  /** Strip only: exact drop colour. Takes precedence over the legacy enum. */
+  accentHex?: string;
   /** Overrides the offset from <ServerClockProvider>. */
   offsetMs?: number;
   /** Parent already knows the state: show the live/ended label instead of counting. */
@@ -63,6 +65,7 @@ export function Countdown({
   variant,
   size,
   accent,
+  accentHex,
   offsetMs,
   status = 'auto',
   goingLiveLabel = 'Going live...',
@@ -105,7 +108,8 @@ export function Countdown({
     if (!c.done) completed.current = false;
   }, [mounted, status, c.done, onComplete]);
 
-  const surface = resolved === 'strip' ? (accent ? SURFACE_CLASSES[accentSurface(accent)] : SURFACE_CLASSES.black) : '';
+  const customAccent = resolved === 'strip' && !!accentHex;
+  const surface = resolved === 'strip' ? (customAccent ? 'surface-colored' : accent ? SURFACE_CLASSES[accentSurface(accent)] : SURFACE_CLASSES.black) : '';
   const showCounting = mounted && status === 'auto' && !c.done;
   const message = status === 'live' ? liveLabel : status === 'ended' ? endedLabel : mounted && c.done ? goingLiveLabel : null;
 
@@ -167,6 +171,7 @@ export function Countdown({
         resolved === 'large' && 'flex flex-col gap-3 text-fg',
         className,
       )}
+      style={customAccent ? accentColorStyle(accentHex) : undefined}
     >
       <span className={cn(resolved === 'large' ? 'text-lead' : 'text-body-sm font-medium')}>{label}</span>
       <div role="timer" aria-live="off" aria-label={label}>

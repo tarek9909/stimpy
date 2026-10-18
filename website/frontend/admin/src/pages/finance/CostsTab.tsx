@@ -55,7 +55,6 @@ function CostDialog({ kind, row, today, onClose }: { kind: CostKind; row: Row | 
       onClose={onClose}
       title={row ? `Edit ${noun}` : `Add ${noun}`}
       size="md"
-      closeOnBackdrop={false}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Cancel</Button>

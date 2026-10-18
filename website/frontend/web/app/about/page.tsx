@@ -21,7 +21,7 @@ export default async function AboutPage() {
   return (
     <>
       <Section tone="coral" className="!py-14 md:!py-24">
-        <h1 className="text-display max-w-3xl">Two sides. One identity.</h1>
+        <h1 className="text-display max-w-3xl">Keep the hoodie. Change the story.</h1>
       </Section>
 
       <Section tone="white">

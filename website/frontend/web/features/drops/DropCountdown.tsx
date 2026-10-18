@@ -4,7 +4,7 @@ import { Countdown, type AccentColor } from '@stimpy/ui';
 import type { Drop } from '@stimpy/api-client';
 import { useDropHandoff } from './useDropHandoff';
 
-type DropTiming = Pick<Drop, 'slug' | 'name' | 'startsAt' | 'endsAt' | 'state'>;
+type DropTiming = Pick<Drop, 'slug' | 'name' | 'startsAt' | 'endsAt' | 'state' | 'accentColor' | 'accentHex'>;
 
 /**
  * The countdown of one drop, wired to the server (website-pages 2.2): to `startsAt` while UPCOMING, to `endsAt` while
@@ -37,6 +37,7 @@ export function DropCountdown({
         label={toStart ? `${drop.name} starts in` : `${drop.name} ends in`}
         variant={variant}
         accent={accent ?? null}
+        accentHex={drop.accentHex}
         staticText={staticText}
         onComplete={handoff.onComplete}
       />

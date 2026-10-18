@@ -1,10 +1,11 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useOptimistic, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { BottomSheet, Button, FormField, Select, SegmentedControl, Switch, Tabs, TabPanel } from '@stimpy/ui';
+import { BottomSheet, Button, FormField, Select, SegmentedControl, Spinner, Switch, Tabs, TabPanel } from '@stimpy/ui';
 import type { ReactNode } from 'react';
-import { shopHref, type ShopParams } from './params';
+import { PendingContent } from '@/components/PendingContent';
+import { activeFilterCount, shopHref, type ShopParams } from './params';
 
 export interface DropOption {
   slug: string;
@@ -14,6 +15,8 @@ export interface DropOption {
 /** Tabs (Hoodies / Stimpies). The active tab lives in the URL; the server re-renders the matching panel. */
 export function ShopTabs({ params, children }: { params: ShopParams; children: ReactNode }) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [selected, setSelected] = useOptimistic(params.tab);
   return (
     <Tabs
       aria-label="Shop sections"
@@ -21,10 +24,16 @@ export function ShopTabs({ params, children }: { params: ShopParams; children: R
         { id: 'hoodies', label: 'Hoodies' },
         { id: 'stimpies', label: 'Stimpies' },
       ]}
-      value={params.tab}
-      onChange={(id) => router.replace(shopHref({ tab: id === 'stimpies' ? 'stimpies' : 'hoodies' }), { scroll: false })}
+      value={selected}
+      onChange={(id) => startTransition(() => {
+        const tab = id === 'stimpies' ? 'stimpies' : 'hoodies';
+        setSelected(tab);
+        router.replace(shopHref({ tab }), { scroll: false });
+      })}
     >
-      <TabPanel tabId={params.tab}>{children}</TabPanel>
+      <TabPanel tabId={selected}>
+        <PendingContent pending={pending && selected !== params.tab}>{children}</PendingContent>
+      </TabPanel>
     </Tabs>
   );
 }
@@ -70,15 +79,21 @@ function FilterFields({ params, drops, idPrefix, onChange }: { params: ShopParam
 export function StimpieFilters({ params, drops, activeCount }: { params: ShopParams; drops: DropOption[]; activeCount: number }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const [selected, updateSelected] = useOptimistic(params, (current, next: Partial<ShopParams>) => ({ ...current, ...next }));
   const id = useId();
   const apply = (next: Partial<ShopParams>) => {
-    router.replace(shopHref({ ...params, ...next, tab: 'stimpies' }), { scroll: false });
+    startTransition(() => {
+      updateSelected(next);
+      router.replace(shopHref({ ...selected, ...next, tab: 'stimpies' }), { scroll: false });
+    });
   };
+  const count = pending ? activeFilterCount(selected) : activeCount;
   return (
-    <div>
+    <div aria-busy={pending || undefined}>
       <div className="md:hidden">
         <Button variant="secondary" onClick={() => setOpen(true)} aria-haspopup="dialog">
-          Filters{activeCount > 0 ? ` (${activeCount})` : ''}
+          Filters{count > 0 ? ` (${count})` : ''}
         </Button>
         <BottomSheet
           open={open}
@@ -90,11 +105,14 @@ export function StimpieFilters({ params, drops, activeCount }: { params: ShopPar
             </Button>
           }
         >
-          <FilterFields params={params} drops={drops} idPrefix={`${id}-sheet`} onChange={apply} />
+          <FilterFields params={selected} drops={drops} idPrefix={`${id}-sheet`} onChange={apply} />
         </BottomSheet>
       </div>
       <div className="hidden md:block">
-        <FilterFields params={params} drops={drops} idPrefix={`${id}-inline`} onChange={apply} />
+        <FilterFields params={selected} drops={drops} idPrefix={`${id}-inline`} onChange={apply} />
+      </div>
+      <div className="mt-3 min-h-5 text-body-sm text-fg-muted">
+        {pending ? <span className="inline-flex items-center gap-2" role="status"><Spinner size="sm" /> Updating results…</span> : null}
       </div>
     </div>
   );

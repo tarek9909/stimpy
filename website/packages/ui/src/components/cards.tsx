@@ -6,7 +6,7 @@ import { HOODIE_RATIO, STIMPIE_RATIO } from '../constants';
 import { useUI } from '../context';
 import { formatCents, pluralize } from '../format';
 import { Check } from '../icons';
-import { SURFACE_CLASSES, accentSurface } from '../surfaces';
+import { SURFACE_CLASSES, accentColorStyle, accentSurface } from '../surfaces';
 import { isExternalHref } from '../utils';
 import type { DropLike, HoodieSummaryLike, PackLike, StimpieLike } from '../types';
 import { Badge, accentTone, Pill, type BadgeKind } from './badges';
@@ -134,7 +134,7 @@ export function ProductCard({ hoodie, href, priority, sizes, className }: Produc
         <h3 className="text-h4 text-fg">
           <StretchedLink href={link}>{hoodie.name}</StretchedLink>
         </h3>
-        <PriceTag cents={hoodie.priceCents} prefix="from" size="sm" />
+        <PriceTag cents={hoodie.priceCents} compareAtCents={hoodie.compareAtPriceCents ?? undefined} prefix="from" size="sm" />
         <ColorDots colors={hoodie.colors} />
       </div>
     </Card>
@@ -207,7 +207,7 @@ export function StimpieCard({
       </div>
       <div className="absolute left-2 top-2 flex flex-wrap gap-1">
         {/* compact tiles are narrow: one badge only (status wins over type), no "n left" */}
-        {compact && statusKind ? null : <Badge kind={stimpie.type === 'CORE' ? 'CORE' : 'LIMITED'} accent={accent} />}
+        {compact && statusKind ? null : <Badge kind={stimpie.type === 'CORE' ? 'CORE' : 'LIMITED'} accent={accent} style={accentColorStyle(stimpie.drop?.accentHex)} />}
         {statusKind ? (
           <Badge
             kind={statusKind}
@@ -229,9 +229,9 @@ export function StimpieCard({
             <StretchedLink href={href ?? `/shop/stimpie/${stimpie.slug}`}>{stimpie.name}</StretchedLink>
           </h3>
         )}
-        <PriceTag cents={stimpie.priceCents} size="sm" />
+        <PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="sm" />
         {showDrop && stimpie.drop ? (
-          <Pill tone={accentTone(accent)} className="self-start">
+          <Pill tone={accentTone(accent)} className="self-start" style={accentColorStyle(stimpie.drop.accentHex)}>
             {stimpie.drop.name}
           </Pill>
         ) : null}
@@ -316,7 +316,7 @@ export function PackCard({ pack, effectiveExtraCents, highlight, selected, onCho
       ) : null}
       <h3 className="text-h3 text-fg">{pack.name}</h3>
       <p className="text-body text-fg-muted">{pack.description}</p>
-      <PriceTag cents={pack.priceCents} size="lg" />
+      <PriceTag cents={pack.priceCents} compareAtCents={pack.compareAtPriceCents ?? undefined} size="lg" />
       {effectiveExtraCents !== undefined && effectiveExtraCents > 0 ? (
         <p className="text-body-sm text-fg-muted">
           Second Stimpie effectively{' '}
@@ -351,10 +351,10 @@ export interface DropCardProps {
 
 /** Drop tile on the drop's accent colour (black text). One accent per view is the caller's job. */
 export function DropCard({ drop, variant, href, priority, sizes, className }: DropCardProps) {
-  const tone = SURFACE_CLASSES[accentSurface(drop.accentColor)];
+  const tone = drop.accentHex ? 'surface-colored' : SURFACE_CLASSES[accentSurface(drop.accentColor)];
   const link = href ?? `/drops/${drop.slug}`;
   return (
-    <Card className={cn('flex flex-col overflow-hidden border-0', tone, className)}>
+    <Card className={cn('flex flex-col overflow-hidden border-0', tone, className)} style={accentColorStyle(drop.accentHex)}>
       <Media src={drop.teaserImage} alt={`${drop.name} drop`} ratio="4 / 5" priority={priority} sizes={sizes} />
       <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
         <div className="flex flex-wrap items-center gap-2">

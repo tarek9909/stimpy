@@ -28,7 +28,7 @@ function EditNumberById({ orderId, onClose }: { orderId: number; onClose: () => 
   return <EditDeliveryNumberDialog order={query.data} open onClose={onClose} />;
 }
 
-/** Deliveries -> Out for delivery (dashboard-pages 14.1). Groups by delivery number on the loaded page. */
+/** Orders -> Out for delivery. Groups orders by delivery number on the loaded page. */
 export function OutTab() {
   const [p, setP] = useUrlState(params);
   const navigate = useNavigate();
@@ -116,14 +116,14 @@ export function OutTab() {
   const printIds = selectedIds.length > 0 ? selectedIds : (rows ?? []).map((r) => r.orderId);
   const total = query.data?.total ?? 0;
   const empty = (
-    <EmptyState title={p.q ? 'No deliveries match this search' : 'Nothing is out for delivery'} action={!p.q ? <Button variant="primary" onClick={() => setDispatchOpen(true)}>Send out packed orders</Button> : undefined} />
+    <EmptyState title={p.q ? 'No orders match this search' : 'Nothing is out for delivery'} action={!p.q ? <Button variant="primary" onClick={() => setDispatchOpen(true)}>Send out packed orders</Button> : undefined} />
   );
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-60 flex-1 md:max-w-sm">
-          <SearchField label="Search deliveries" placeholder="Search order, delivery no., name, phone" value={p.q} onChange={(q) => setP({ q }, { replace: true })} />
+          <SearchField label="Search orders" placeholder="Search order, delivery no., name, phone" value={p.q} onChange={(q) => setP({ q }, { replace: true })} />
         </div>
         <Switch label="Group by delivery number" checked={showGrouped} onChange={setGrouped} />
         <div className="ml-auto flex flex-wrap items-center gap-2">

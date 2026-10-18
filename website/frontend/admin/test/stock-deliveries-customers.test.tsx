@@ -69,7 +69,7 @@ describe('adjust stock dialog', () => {
     renderAdjust();
     fireEvent.change(screen.getByLabelText(/^Change/), { target: { value: '-3' } });
     const preview = screen.getByTestId('stock-preview');
-    expect(preview).toHaveTextContent('On hand 5 → 2. Reserved 2. Available 0.');
+    expect(preview).toHaveTextContent('On hand 5 → 2. Available 0.');
     expect(preview).toHaveTextContent('This will show as Sold out on the website.');
   });
 
@@ -79,7 +79,7 @@ describe('adjust stock dialog', () => {
     fireEvent.change(screen.getByLabelText(/^Reason/), { target: { value: 'CORRECTION' } });
     fireEvent.change(screen.getByLabelText(/^Note/), { target: { value: 'recount' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save adjustment' }));
-    expect(screen.getByText("You can't go below what's reserved for open orders (reserved: 2).")).toBeInTheDocument();
+    expect(screen.getByText('That would lower stock below the quantity committed to open orders.')).toBeInTheDocument();
   });
 
   it('the server CONFLICT is shown on the field and the dialog stays open', async () => {
@@ -88,7 +88,7 @@ describe('adjust stock dialog', () => {
     fireEvent.change(screen.getByLabelText(/^Reason/), { target: { value: 'DAMAGED' } });
     fireEvent.change(screen.getByLabelText(/^Note/), { target: { value: 'water damage' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save adjustment' }));
-    expect(await screen.findByText("You can't go below what's reserved for open orders (reserved: 2).")).toBeInTheDocument();
+    expect(await screen.findByText('That would lower stock below the quantity committed to open orders.')).toBeInTheDocument();
     expect(closed()).toBe(0);
   });
 
@@ -136,7 +136,7 @@ describe('adjust stock dialog', () => {
     expect(screen.queryByRole('tab', { name: 'Reserved' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Adjust reserved/ })).toBeNull();
     fireEvent.change(screen.getByLabelText(/^Change/), { target: { value: '-1' } });
-    expect(screen.getByTestId('stock-preview')).toHaveTextContent('On hand 5 → 4. Reserved 2. Available 2.');
+    expect(screen.getByTestId('stock-preview')).toHaveTextContent('On hand 5 → 4. Available 2.');
     fireEvent.change(screen.getByLabelText(/^Note/), { target: { value: 'damaged unit' } });
     fireEvent.change(screen.getByLabelText(/^Reason/), { target: { value: 'DAMAGED' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save adjustment' }));
@@ -314,7 +314,7 @@ describe('cash settlement per delivery number', () => {
     const stub = stubFetch({
       'GET /api/v1/admin/finance/cash': () => json({
         outstandingCents: 100,
-        groups: [{ deliveryNumber: 'D-88231', orders: [{ orderId: 101, orderNumber: 'STP-1300', cashDueCents: 100, settled: false }], totalDueCents: 100 }],
+        groups: { items: [{ deliveryNumber: 'D-88231', orders: [{ orderId: 101, orderNumber: 'STP-1300', cashDueCents: 100, settled: false }], totalDueCents: 100 }], page: 1, pageSize: 100, total: 1 },
       }),
       'GET /api/v1/admin/deliveries': (req) => {
         const query = new URL(req.url).searchParams;

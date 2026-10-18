@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, RotateCcw, Send } from 'lucide-react';
 import { Banner, Button, EmptyState, FormField, Input, Modal, Pill, SegmentedControl, Select, Skeleton, Switch, TextLink, Textarea, useToast, cn } from '@stimpy/ui';
@@ -16,6 +16,7 @@ import { enumParam, optionalIntParam, paginationParams, optionalStringParam, use
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { useEmailLog, useEmailTemplates, useWhatsappTemplates, type EmailTemplate, type WhatsappTemplate } from './api';
 import { asToken, insertAtCursor, renderSample, unknownPlaceholders } from './placeholders';
+import { useContentDraft } from './shared';
 
 /** One chip per placeholder of THIS template (chips for other templates are never shown). */
 export function PlaceholderChips({ placeholders, onInsert, label = 'Insert placeholder' }: { placeholders: readonly string[]; onInsert: (token: string) => void; label?: string }) {
@@ -48,6 +49,37 @@ function UnknownNote({ text, allowed }: { text: string; allowed: readonly string
 
 interface PreviewData { subject: string; text: string; html: string }
 
+const EMAIL_TEMPLATE_DETAILS: Record<string, { group: string; trigger: string }> = {
+  order_received: {
+    group: 'Order updates',
+    trigger: 'Sent when an order is placed as New. Orders created as Confirmed receive the confirmation email instead.',
+  },
+  order_confirmed: {
+    group: 'Order updates',
+    trigger: 'Sent when an order is confirmed, including orders created directly as Confirmed.',
+  },
+  order_out_for_delivery: {
+    group: 'Order updates',
+    trigger: 'Sent when an order is marked Out for delivery.',
+  },
+  order_delivered: {
+    group: 'Order updates',
+    trigger: 'Sent when an order is marked Delivered.',
+  },
+  order_cancelled: {
+    group: 'Order updates',
+    trigger: 'Sent when an order is cancelled.',
+  },
+  orders_lookup: {
+    group: 'Customer requests',
+    trigger: 'Sent when a customer asks the storefront to email their recent order numbers.',
+  },
+  marketing_update: {
+    group: 'Campaigns',
+    trigger: 'Used for email campaigns after you confirm a campaign for eligible customers.',
+  },
+};
+
 function Preview({ templateKey, subject, body }: { templateKey: string; subject: string; body: string }) {
   const dSubject = useDebouncedValue(subject, 600);
   const dBody = useDebouncedValue(body, 600);
@@ -73,11 +105,25 @@ function Preview({ templateKey, subject, body }: { templateKey: string; subject:
       ) : null}
       {q.data ? (
         <div className={cn('flex flex-col gap-2', q.isFetching && 'opacity-60')} aria-busy={q.isFetching}>
-          <p className="text-body font-bold" data-testid="preview-subject">{q.data.subject}</p>
           {mode === 'formatted' ? (
-            <iframe title="Email preview" sandbox="" srcDoc={q.data.html} className="h-[28rem] w-full rounded-md border border-base bg-white" data-testid="preview-frame" />
+            <div className="overflow-hidden rounded-md border border-base bg-[#f4f5f7]" data-testid="rendered-email-preview">
+              <div className="border-b border-base bg-white px-4 py-3">
+                <p className="mb-2 text-body-sm font-semibold text-fg-muted">Inbox preview · sample message</p>
+                <dl className="grid grid-cols-[3.5rem_minmax(0,1fr)] gap-x-2 gap-y-1 text-body-sm">
+                  <dt className="text-fg-muted">From</dt><dd>Stimpy</dd>
+                  <dt className="text-fg-muted">To</dt><dd>Rami Haddad (sample)</dd>
+                  <dt className="text-fg-muted">Subject</dt><dd className="font-semibold" data-testid="preview-subject">{q.data.subject}</dd>
+                </dl>
+              </div>
+              <div className="p-3 sm:p-5">
+                <iframe title="Rendered email appearance" sandbox="" srcDoc={q.data.html} className="mx-auto h-[36rem] w-full max-w-[640px] rounded-md border border-base bg-white shadow-sm" data-testid="preview-frame" />
+              </div>
+            </div>
           ) : (
-            <pre className="max-h-[28rem] overflow-auto whitespace-pre-wrap rounded-md border border-base bg-cream p-3 text-body-sm" data-testid="preview-text">{q.data.text}</pre>
+            <div className="overflow-hidden rounded-md border border-base bg-white">
+              <p className="border-b border-base px-4 py-3 text-body font-bold" data-testid="preview-subject">{q.data.subject}</p>
+              <pre className="max-h-[36rem] overflow-auto whitespace-pre-wrap p-4 text-body-sm" data-testid="preview-text">{q.data.text}</pre>
+            </div>
           )}
         </div>
       ) : q.isPending ? (
@@ -137,21 +183,25 @@ function TemplateEditor({ tpl, onDirty }: { tpl: EmailTemplate; onDirty: (d: boo
   const qc = useQueryClient();
   const toast = useToast();
   const notify = useNotifyError();
-  const [subject, setSubject] = useState(tpl.subject);
-  const [body, setBody] = useState(tpl.body);
-  const [enabled, setEnabled] = useState(tpl.enabled);
+  const [subject, setSubject] = useContentDraft(tpl.subject);
+  const [body, setBody] = useContentDraft(tpl.body);
+  const [enabled, setEnabled] = useContentDraft(tpl.enabled);
   const [errors, setErrors] = useState<{ subject?: string; body?: string }>({});
   const [testOpen, setTestOpen] = useState(false);
   const subjectRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const last = useRef<'subject' | 'body'>('body');
   const dirty = subject !== tpl.subject || body !== tpl.body || enabled !== tpl.enabled;
+  const details = EMAIL_TEMPLATE_DETAILS[tpl.key];
   useEffect(() => { onDirty(dirty); return () => onDirty(false); }, [dirty, onDirty]);
 
   const save = useMutation({
-    mutationFn: () => unwrap(api.PUT('/api/v1/admin/email-templates/{key}', { params: { path: { key: tpl.key } }, body: { subject, body, enabled } })),
-    onSuccess: (saved) => {
+    mutationFn: (submitted: { subject: string; body: string; enabled: boolean }) => unwrap(api.PUT('/api/v1/admin/email-templates/{key}', { params: { path: { key: tpl.key } }, body: submitted })),
+    onSuccess: (saved, submitted) => {
       qc.setQueryData(queryKeys.emailTemplates, (old: EmailTemplate[] | undefined) => old?.map((t) => (t.key === saved.key ? { ...t, ...saved } : t)));
+      setSubject((current) => current === submitted.subject ? saved.subject : current);
+      setBody((current) => current === submitted.body ? saved.body : current);
+      setEnabled((current) => current === submitted.enabled ? saved.enabled : current);
     },
   });
   const doSave = async () => {
@@ -159,10 +209,11 @@ function TemplateEditor({ tpl, onDirty }: { tpl: EmailTemplate; onDirty: (d: boo
     if (subject.trim() === '') e.subject = 'Enter a subject.';
     else if (subject.length > 200) e.subject = 'Use at most 200 characters.';
     if (body.trim() === '') e.body = 'Enter the message.';
+    else if (body.length > 5000) e.body = 'Use at most 5000 characters.';
     setErrors(e);
     if (e.subject || e.body) throw new Error('invalid');
     try {
-      await save.mutateAsync();
+      await save.mutateAsync({ subject, body, enabled });
     } catch (err) {
       const a = asApiError(err);
       if (a?.code === 'VALIDATION_ERROR') {
@@ -191,15 +242,28 @@ function TemplateEditor({ tpl, onDirty }: { tpl: EmailTemplate; onDirty: (d: boo
     <div className="flex min-w-0 flex-col gap-4">
       <div>
         <h2 className="text-h4">{tpl.name}</h2>
-        <p className="font-mono text-body-sm text-fg-muted">{tpl.key}</p>
+        <p className="mt-1 text-body-sm text-fg-muted">{details?.trigger ?? 'Customer email template.'}</p>
       </div>
-      <Switch label="Send this email" checked={enabled} onChange={setEnabled} description="Off: this email is not sent automatically." />
+      <div className="flex items-center gap-2">
+        <Pill tone="cream" size="sm">{details?.group ?? 'Customer email'}</Pill>
+        {details?.group === 'Order updates' ? <span className="text-body-sm text-fg-muted">Automatic order update</span> : null}
+      </div>
+      <Switch
+        label="Send this email"
+        checked={enabled}
+        onChange={setEnabled}
+        description={details?.group === 'Order updates'
+          ? 'Off: automatic order updates are skipped. Test emails and manual resends still work.'
+          : details?.group === 'Customer requests'
+            ? 'Off: customer order lookup emails are skipped. Test emails still work.'
+            : 'Off: this template cannot be used for new campaigns. Test emails still work.'}
+      />
       <FormField label="Subject" name="tpl-subject" required error={errors.subject}>
         <Input ref={subjectRef} value={subject} maxLength={200} onFocus={() => { last.current = 'subject'; }} onChange={(e) => setSubject(e.target.value)} autoComplete="off" />
       </FormField>
       <UnknownNote text={subject} allowed={tpl.placeholders} />
       <FormField label="Body" name="tpl-body" required error={errors.body} hint="Plain text. Customer details are filled in from the order.">
-        <Textarea ref={bodyRef} value={body} rows={12} onFocus={() => { last.current = 'body'; }} onChange={(e) => setBody(e.target.value)} className="font-mono" />
+        <Textarea ref={bodyRef} value={body} rows={12} maxLength={5000} onFocus={() => { last.current = 'body'; }} onChange={(e) => setBody(e.target.value)} className="font-mono" />
       </FormField>
       <UnknownNote text={body} allowed={tpl.placeholders} />
       <PlaceholderChips placeholders={tpl.placeholders} onInsert={insert} />
@@ -223,37 +287,58 @@ function EmailTemplates() {
   const online = useOnline();
   const [{ template }, setP] = useUrlState(emailParams);
   const [dirty, setDirty] = useState(false);
+  const [toggling, setToggling] = useState<string | null>(null);
   const guard = useUnsavedChangesGuard(dirty);
   const toggle = async (t: EmailTemplate, enabled: boolean) => {
+    setToggling(t.key);
     const before = q.data;
     qc.setQueryData(queryKeys.emailTemplates, (old: EmailTemplate[] | undefined) => old?.map((x) => (x.key === t.key ? { ...x, enabled } : x)));
     try {
-      await unwrap(api.PUT('/api/v1/admin/email-templates/{key}', { params: { path: { key: t.key } }, body: { subject: t.subject, body: t.body, enabled } }));
+      const saved = await unwrap(api.PUT('/api/v1/admin/email-templates/{key}', { params: { path: { key: t.key } }, body: { subject: t.subject, body: t.body, enabled } }));
+      qc.setQueryData(queryKeys.emailTemplates, (old: EmailTemplate[] | undefined) => old?.map((x) => x.key === saved.key ? saved : x));
     } catch (e) {
       qc.setQueryData(queryKeys.emailTemplates, before);
       notify(e, { fallback: "Couldn't change that. Restored." });
+    } finally {
+      setToggling(null);
     }
   };
   return (
     <QueryBoundary query={q} skeleton={<Skeleton variant="rect" className="h-96" />}>
       {(templates) => {
         const current = templates.find((t) => t.key === template) ?? templates[0];
+        const groups = ['Order updates', 'Customer requests', 'Campaigns'];
         return (
-          <div className="grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-            <nav aria-label="Email templates">
-              <ul className="flex flex-col gap-1">
-                {templates.map((t) => (
-                  <li key={t.key} className={cn('flex items-center justify-between gap-2 rounded-md border px-3 py-2', current?.key === t.key ? 'border-2 border-ink bg-cream' : 'border-base')}>
-                    <button type="button" className="min-h-11 min-w-0 flex-1 text-left" aria-current={current?.key === t.key ? 'true' : undefined} onClick={() => setP({ template: t.key }, { replace: true })}>
-                      <span className="block font-medium">{t.name}</span>
-                      <span className="block font-mono text-body-sm text-fg-muted">{t.key}</span>
-                    </button>
-                    <Switch label={<span className="sr-only">{`${t.name} enabled`}</span>} checked={t.enabled} onChange={(v) => void toggle(t, v)} disabled={!online} className="!min-h-0 !py-0" />
-                  </li>
-                ))}
-              </ul>
-            </nav>
-            {current ? <TemplateEditor key={`${current.key}-${current.subject}-${current.body}`} tpl={current} onDirty={setDirty} /> : null}
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-h4">Customer email templates</h2>
+              <p className="mt-1 text-body-sm text-fg-muted">Browse the messages customers receive, when each one is sent, and a rendered sample. Automatic messages also require customer email delivery to be enabled in Settings.</p>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+              <nav aria-label="Email templates" className="flex flex-col gap-4">
+                {groups.map((group) => {
+                  const groupTemplates = templates.filter((t) => EMAIL_TEMPLATE_DETAILS[t.key]?.group === group);
+                  if (!groupTemplates.length) return null;
+                  return (
+                    <section key={group} aria-label={group}>
+                      <h3 className="mb-2 text-body-sm font-semibold text-fg-muted">{group}</h3>
+                      <ul className="flex flex-col gap-2">
+                        {groupTemplates.map((t) => (
+                          <li key={t.key} className={cn('flex items-start justify-between gap-2 rounded-md border px-3 py-2', current?.key === t.key ? 'border-2 border-ink bg-cream' : 'border-base')}>
+                            <button type="button" className="min-h-11 min-w-0 flex-1 text-left" aria-current={current?.key === t.key ? 'true' : undefined} onClick={() => setP({ template: t.key }, { replace: true })}>
+                              <span className="block font-medium">{t.name}</span>
+                              <span className="mt-0.5 block text-body-sm text-fg-muted">{EMAIL_TEMPLATE_DETAILS[t.key]?.trigger}</span>
+                            </button>
+                            <Switch label={<span className="sr-only">{`${t.name} enabled`}</span>} checked={t.enabled} onChange={(v) => void toggle(t, v)} disabled={!online || toggling !== null} className="!min-h-0 !py-0" />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })}
+              </nav>
+              {current ? <TemplateEditor key={current.key} tpl={current} onDirty={setDirty} /> : null}
+            </div>
             {guard.dialog}
           </div>
         );
@@ -275,13 +360,18 @@ function WhatsappEditor({ items }: { items: WhatsappTemplate[] }) {
   const qc = useQueryClient();
   const toast = useToast();
   const notify = useNotifyError();
-  const [bodies, setBodies] = useState<Record<string, string>>(() => Object.fromEntries(items.map((i) => [i.key, i.body])));
+  const savedBodies = useMemo(() => Object.fromEntries(items.map((i) => [i.key, i.body])), [items]);
+  const [bodies, setBodies] = useContentDraft(savedBodies);
   const refs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const dirty = items.some((i) => bodies[i.key] !== i.body);
   const guard = useUnsavedChangesGuard(dirty);
   const save = useMutation({
-    mutationFn: () => unwrap(api.PUT('/api/v1/admin/whatsapp-templates', { body: items.map((i) => ({ key: i.key, name: i.name, body: bodies[i.key] ?? i.body, placeholders: i.placeholders })) })),
-    onSuccess: (saved) => qc.setQueryData(queryKeys.whatsappTemplates, saved),
+    mutationFn: (submitted: Record<string, string>) => unwrap(api.PUT('/api/v1/admin/whatsapp-templates', { body: items.map((i) => ({ key: i.key, name: i.name, body: submitted[i.key] ?? i.body, placeholders: i.placeholders })) })),
+    onSuccess: (saved, submitted) => {
+      qc.setQueryData(queryKeys.whatsappTemplates, saved);
+      setBodies((current) => Object.fromEntries(saved.map((t) => [t.key, current[t.key] === submitted[t.key] ? t.body : current[t.key] ?? t.body])));
+      void qc.invalidateQueries({ queryKey: ['orders', 'whatsapp'] });
+    },
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   return (
@@ -296,7 +386,7 @@ function WhatsappEditor({ items }: { items: WhatsappTemplate[] }) {
               <p className="font-mono text-body-sm text-fg-muted">{t.key}</p>
             </div>
             <FormField label="Message" name={`wa-body-${t.key}`} error={errors[t.key]}>
-              <Textarea ref={(el) => { refs.current[t.key] = el; }} rows={4} value={value} onChange={(e) => setBodies((b) => ({ ...b, [t.key]: e.target.value }))} />
+              <Textarea ref={(el) => { refs.current[t.key] = el; }} rows={4} maxLength={2000} value={value} onChange={(e) => setBodies((b) => ({ ...b, [t.key]: e.target.value }))} />
             </FormField>
             <UnknownNote text={value} allowed={t.placeholders} />
             <PlaceholderChips
@@ -324,11 +414,19 @@ function WhatsappEditor({ items }: { items: WhatsappTemplate[] }) {
             setErrors(empty);
             if (Object.keys(empty).length) return;
             try {
-              await save.mutateAsync();
+              await save.mutateAsync(bodies);
               toast.success('WhatsApp templates saved.');
             } catch (e) {
               const a = asApiError(e);
-              if (a?.code === 'VALIDATION_ERROR') setErrors(Object.fromEntries(Object.entries(a.fields ?? {}).map(([k, v]) => [k.split('.')[0] ?? k, v])));
+              if (a?.code === 'VALIDATION_ERROR') {
+                const fields = Object.fromEntries(Object.entries(a.fields ?? {}).flatMap(([path, message]) => {
+                  const index = /^(\d+)\./.exec(path)?.[1];
+                  const key = index === undefined ? path.split('.')[0] : items[Number(index)]?.key;
+                  return key && items.some((t) => t.key === key) ? [[key, message]] : [];
+                }));
+                setErrors(fields);
+                if (Object.keys(fields).length === 0) notify(e);
+              }
               else notify(e);
             }
           }}

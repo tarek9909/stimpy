@@ -1,11 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Banner, Button, Pill, TextLink } from '@stimpy/ui';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { FileUpload } from '../../../components/FileUpload';
-import { SearchField } from '../../../components/SearchField';
-import { artworkAspectWarning } from '../../../lib/upload';
-import type { AdminColor, AdminStimpie } from '../../products/api';
+import type { AdminColor } from '../../products/api';
 import { Disclosure } from '../shared';
 import type { AdminBuilder, BuilderColorEntry, FormErrors } from '../builderForm';
 import { PlacementEditor, type SampleStimpie } from './PlacementEditor';
@@ -17,7 +15,6 @@ export function hoodieImageWarning(w: number | null | undefined, h: number | nul
   if (!w || !h) return false;
   return Math.abs(w / h - HOODIE_IMAGE_RATIO) / HOODIE_IMAGE_RATIO > 0.02;
 }
-
 function StatusChip({ ok, okText, missingText }: { ok: boolean; okText: string; missingText: string }) {
   return (
     <Pill tone={ok ? 'success' : 'cream'} size="sm" icon={ok ? <CheckCircle2 size={14} aria-hidden="true" /> : <AlertTriangle size={14} aria-hidden="true" />}>
@@ -172,77 +169,6 @@ export function ColourCards({
           <div className="flex flex-col gap-3 p-3">{hidden.map(render)}</div>
         </details>
       ) : null}
-    </div>
-  );
-}
-
-/** Aspect check of a Stimpie texture against the panel (0.64 or the model's `panelAspect`), builder.md 7.4. */
-export function textureAspectWarning(w: number | null | undefined, h: number | null | undefined, panelAspect: number): boolean {
-  return artworkAspectWarning(w, h, panelAspect);
-}
-
-/** Per-Stimpie 3D texture overrides (collapsed, advanced). */
-export function StimpieTextures({
-  form,
-  stimpies,
-  setTexture,
-  panelAspect,
-  setBusy,
-}: {
-  form: AdminBuilder;
-  stimpies: AdminStimpie[];
-  setTexture: (stimpieId: number, url: string | null) => void;
-  panelAspect: number;
-  setBusy: (busy: boolean) => void;
-}) {
-  const [q, setQ] = useState('');
-  const [dims, setDims] = useState<Record<number, { w: number; h: number }>>({});
-  const rows = useMemo(() => {
-    const n = q.trim().toLowerCase();
-    return n ? stimpies.filter((s) => s.name.toLowerCase().includes(n)) : stimpies;
-  }, [stimpies, q]);
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-body-sm text-fg-muted">By default the Stimpie&apos;s artwork is used on the 3D back panel. Upload a different image only if the print needs adjusting for 3D.</p>
-      <SearchField label="Search Stimpies" placeholder="Search Stimpies" value={q} onChange={setQ} />
-      <ul className="flex flex-col divide-y divide-base rounded-md border border-base" aria-label="Stimpie textures">
-        {rows.map((s) => {
-          const override = form.stimpieTextures.find((t) => t.stimpieId === s.id)?.textureUrl ?? null;
-          const d = dims[s.id];
-          const warn = override && d ? textureAspectWarning(d.w, d.h, panelAspect) : false;
-          return (
-            <li key={s.id} className="flex flex-col gap-2 p-3" data-testid={`texture-row-${s.id}`}>
-              <div className="flex items-center gap-3">
-                <img src={s.artworkUrl} alt="" className="h-16 w-[2.56rem] shrink-0 rounded-sm border border-base object-cover" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{s.name}</p>
-                  <p className="text-body-sm text-fg-muted">{override ? 'Uses an override texture' : 'Uses the artwork'}</p>
-                </div>
-              </div>
-              <FileUpload
-                variant="image"
-                compact
-                label={`Texture override for ${s.name}`}
-                value={override}
-                hint={override ? undefined : 'Optional. Aim for 0.64 wide to tall (1024 x 1600).'}
-                onBusyChange={setBusy}
-                onChange={(r) => {
-                  if (r?.width && r.height) setDims((m) => ({ ...m, [s.id]: { w: r.width as number, h: r.height as number } }));
-                  setTexture(s.id, r?.url ?? null);
-                }}
-              />
-              {override ? <div><Button variant="ghost" size="sm" onClick={() => setTexture(s.id, null)}>Use artwork</Button></div> : null}
-              {warn && d ? (
-                <p className="flex items-start gap-2 rounded-sm bg-butter px-2 py-1 text-body-sm font-medium text-ink" role="status">
-                  <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 shrink-0" />
-                  This texture is {d.w} &times; {d.h} ({(d.w / d.h).toFixed(2)}). The panel is {panelAspect}, so it will be cropped.
-                </p>
-              ) : null}
-            </li>
-          );
-        })}
-        {rows.length === 0 ? <li className="p-3 text-body-sm text-fg-muted">No Stimpies match.</li> : null}
-      </ul>
     </div>
   );
 }

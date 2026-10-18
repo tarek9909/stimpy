@@ -85,7 +85,7 @@ Field paths use dots and numeric array indices: `items.0.sizeId`, `items.1.stimp
 | 409 | `SOLD_OUT` | One or more items ran out while ordering | `{ items: StockProblem[] }` (below) |
 | 409 | `NOT_PURCHASABLE` | Item is hidden, ended, or its drop hasn't started | `{ items: PurchaseProblem[] }` (below) |
 | 409 | `INVALID_TRANSITION` | Status change not allowed from the current status | `{ from, to, allowed: [...] }` |
-| 409 | `CONFLICT` | Duplicate slug, duplicate color/size name, a stock change that would go below reserved units, an `Idempotency-Key` reused with a different request body, etc. | `{ field }` (for the idempotency case `field` is `"Idempotency-Key"`) |
+| 409 | `CONFLICT` | Generated-slug collision during concurrent writes, duplicate color/size name, a stock change that would reduce quantity below open order holds, an `Idempotency-Key` reused with a different request body, etc. | `{ field }` (for the idempotency case `field` is `"Idempotency-Key"`) |
 | 413 | `FILE_TOO_LARGE` | Upload exceeds the size limit for its type | `{ maxBytes }` |
 | 415 | `UNSUPPORTED_FILE_TYPE` | Upload type not allowed (judged by file content, not name) | `{ allowed: string[] }` |
 | 422 | `DELIVERY_NUMBER_REQUIRED` | Tried to mark *Out for delivery* without a delivery number | none |
@@ -116,7 +116,8 @@ type Size = { id: number; label: string; position: number; active: boolean };
 // ---- Catalog ----
 type HoodieSummary = {
   id: number; slug: string; name: string; description: string;
-  priceCents: Cents;                // price of the hoodie on its own
+  priceCents: Cents;                // current price of the hoodie on its own (promotion applied)
+  compareAtPriceCents: Cents | null; // regular price while discounted; otherwise null
   images: string[];
   colors: { id: number; name: string; hex: string }[];   // active colors that have stock, for swatches on cards
   inStock: boolean;                 // any variant available
@@ -134,6 +135,7 @@ type Stimpie = {
   id: number; slug: string; name: string;
   type: 'CORE' | 'LIMITED';
   priceCents: Cents;
+  compareAtPriceCents: Cents | null;
   story: string;
   images: string[];
   artworkUrl: string;               // the back-panel artwork, also used by the Builder
@@ -149,6 +151,7 @@ type Pack = {
   id: number; slug: string; name: string; description: string;
   stimpieCount: number;             // 1 or 2 today
   priceCents: Cents;                // total price of hoodie + its Stimpies
+  compareAtPriceCents: Cents | null;
   badge: string | null;             // e.g. "Most popular"
 };
 
@@ -201,7 +204,7 @@ No authentication. Rate limited. All under `/api/v1`.
 |---|---|
 | `GET /options` | `{ colors: Color[], sizes: Size[] }` (active only, ordered by `position`) |
 | `GET /size-chart` | `{ columns: { id, label, unit }[], rows: { sizeId, label, values: Record<columnId, string> }[], howToMeasure: string }` |
-| `GET /delivery/fees` | `{ defaultFeeCents: Cents, areas: { id, name, feeCents: Cents \| null, estDays: number \| null }[], estimateText: string }`. A `null` `feeCents` means "use the default" |
+| `GET /delivery/fees` | `{ defaultFeeCents: Cents, areas: { id, name, feeCents: Cents \| null, estDays: number \| null }[], estimateText: string }`. A `null` `feeCents` means "use the default". `areas` is the complete active-area option list |
 | `GET /content` | see 3.7 |
 | `GET /builder/config` | see 3.6 |
 
@@ -209,21 +212,22 @@ No authentication. Rate limited. All under `/api/v1`.
 
 | Endpoint | Query | Response |
 |---|---|---|
-| `GET /products/hoodies` | none | `HoodieSummary[]` |
+| `GET /products/hoodies` | `page`, `pageSize` | `Page<HoodieSummary>` |
 | `GET /products/hoodies/:slug` | none | `HoodieDetail` (404 if hidden) |
-| `GET /products/stimpies` | `type=CORE\|LIMITED`, `drop=<slug>`, `includeSoldOut=true\|false` (default `true`), `includeUpcoming=false` (default), `includeEnded=false` (default) | `Stimpie[]`. By default only `AVAILABLE`, `LOW` and `SOLD_OUT` are returned; `UPCOMING` and `ENDED` need their flags. The Builder uses the default |
+| `GET /products/stimpies` | `page`, `pageSize`, `type=CORE\|LIMITED`, `drop=<slug>`, `includeSoldOut=true\|false` (default `true`), `includeUpcoming=false` (default), `includeEnded=false` (default) | `Page<Stimpie>`. By default only `AVAILABLE`, `LOW` and `SOLD_OUT` are returned; `UPCOMING` and `ENDED` need their flags. The Builder uses the default |
 | `GET /products/stimpies/:slug` | none | `Stimpie` |
-| `GET /packs` | none | `Pack[]` (active, ordered) |
+| `GET /packs` | `page`, `pageSize` | `Page<Pack>` (active, ordered) |
+| `GET /promotions` | none | `PublicPromotion[]` (enabled offers within their current start/end window, cached for 5 s) |
 
 Extra Stimpies are sold by their own `priceCents`; hoodie-only uses the hoodie's `priceCents`; a pack uses the pack's `priceCents`.
 
 ### 3.4 Drops
 
-| Endpoint | Response |
-|---|---|
-| `GET /drops` | `{ live: Drop \| null, upcoming: Drop[], archive: Drop[] }`. `archive` holds `SOLD_OUT` and `ENDED` drops, newest first |
-| `GET /drops/:slug` | `Drop` |
-| `POST /drops/:id/subscribe` | Body `{ contact: string, type: 'EMAIL' \| 'WHATSAPP' }`. `204`. Idempotent: subscribing twice is not an error |
+| Endpoint | Query / body | Response |
+|---|---|---|
+| `GET /drops` | Query `page`, `pageSize` | `{ live: Drop \| null, upcoming: Page<Drop>, archive: Page<Drop> }`. Each list is paged independently; `archive` holds `SOLD_OUT` and `ENDED` drops, newest first |
+| `GET /drops/:slug` | none | `Drop` |
+| `POST /drops/:id/subscribe` | Body `{ contact: string, type: 'EMAIL' \| 'WHATSAPP' }` | `204`. Idempotent: subscribing twice is not an error |
 
 Use `GET /drops` to drive the countdown: `live.endsAt`/`upcoming[0].startsAt`. The server is the clock authority: the response includes the `Date` header, and the frontend should compute the offset against it rather than trusting the device clock.
 
@@ -401,9 +405,9 @@ The Stimpies themselves (names, art, prices, availability, artwork size) come fr
     promises: string[];                // quality promises (tested zip cycles, washing, drape), shown as a list
     faqs: { question: string; answer: string }[];
   };
-  faqs: { id: number; question: string; answer: string; group: string | null; showOnHome: boolean }[];
+  faqs: Page<{ id: number; question: string; answer: string; group: string | null; showOnHome: boolean }>;
                                        // `group` is a free label such as "Ordering" or "Sizing"; null = ungrouped; ordered by position
-  reviews: { id: number; name: string; text: string; mediaUrl: string | null }[];
+  reviews: Page<{ id: number; name: string; text: string; mediaUrl: string | null }>;
 }
 ```
 
@@ -547,13 +551,21 @@ Resources (all with `GET` list, `GET /:id`, `POST`, `PATCH /:id`, `DELETE /:id`)
 
 | Resource | Fields (writable) |
 |---|---|
-| `/admin/hoodies` | `name`, `slug`, `description`, `details: string[]`, `priceCents`, `costCents`, `images: string[]`, `active`. Creating a hoodie auto-creates a zero-stock variant per active color × active size |
-| `/admin/stimpies` | `name`, `slug`, `type`, `dropId`, `priceCents`, `costCents`, `quantity` (initial stock, creation only; later changes go through stock adjustments), `story`, `images: string[]`, `artworkUrl`, `active` |
-| `/admin/packs` | `name`, `slug`, `description`, `stimpieCount`, `priceCents`, `badge`, `active`, `position` |
-| `/admin/colors` | `name`, `hex`, `position`, `active`, `images: string[]`, `builderTint`, `builderTexture`. Creating a color creates zero-stock variants for every hoodie × active size |
-| `/admin/sizes` | `label`, `position`, `active`. Creating a size creates zero-stock variants for every hoodie × active color |
+| `/admin/hoodies` | `name`, `description`, `details: string[]`, `priceCents`, `costCents`, `images: string[]`, `active`, `colorIds: number[]`, `sizeIds: number[]`. Each hoodie selects its own colours and sizes; every selected colour × size pair has its own stock quantity. The product editor shows and sets those selections; quantities are managed in Stock. |
+| `/admin/stimpies` | `name`, `type`, `dropId`, `priceCents`, `costCents`, `quantity` (initial stock, creation only; later changes go through stock adjustments), `story`, `images: string[]`, `artworkUrl`, `active` |
+| `/admin/packs` | `name`, `description`, `stimpieCount`, `priceCents`, `badge`, `active`, `position` |
+| `/admin/colors` | `name`, `hex`, `position`, `active`, `images: string[]`, `builderTint`, `builderTexture`. A colour is a shared definition and must be selected on each hoodie that offers it |
+| `/admin/sizes` | `label`, `position`, `active`. A size is a shared definition and must be selected on each hoodie that offers it |
 
-List responses include stock summary fields for convenience (`available`, `reserved`), read-only. **Admin lists include inactive rows**; each has `active`, and `?active=true|false` filters.
+`GET /products/hoodies`, `/products/hoodies/:slug`, `/products/stimpies`, `/products/stimpies/:slug`, and `/packs` return the current promotional `priceCents` plus `compareAtPriceCents` (the regular price, or null). The server recalculates discounts during cart validation and order creation. Percentage and fixed USD discounts are supported; when promotions overlap, the lowest price is used.
+
+### 5.4.1 Promotions
+
+`GET /promotions` is public and returns enabled promotions whose start/end window includes the current time. Each `PublicPromotion` includes its name, discount, `allProducts`, and target product IDs; the storefront joins those IDs to the public catalog. `GET /admin/promotions?page&pageSize`, `GET /admin/promotions/:id`, `POST /admin/promotions`, `PATCH /admin/promotions/:id`, and `DELETE /admin/promotions/:id` manage promotions. Create/update fields: `name`, `discountType: 'PERCENTAGE'|'FIXED'`, `discountValue` (whole percent 1–100, or USD cents), `allProducts`, `targets: { productType: 'HOODIE'|'STIMPIE'|'PACK', productId }[]`, `enabled`, `startsAt`, and `endsAt`. Empty `startsAt` starts immediately; empty `endsAt` leaves it running until paused. `allProducts` applies to current and future catalog items; otherwise select one or more products and packs. `PATCH { enabled: false }` pauses immediately. Responses include derived `state: ACTIVE|SCHEDULED|ENDED|PAUSED`.
+
+All `GET` lists accept `page` and `pageSize` and return `Page<...>`. List responses include `available` stock summaries, read-only. **Admin lists include inactive rows**; each has `active`, and `?active=true|false` filters.
+
+Public slugs are derived from names on create and rename. Spaces and punctuation become dashes; duplicate names receive a numeric suffix. Admin write requests do not accept a `slug` field.
 
 **Reordering:** `PUT /admin/colors/order`, `PUT /admin/sizes/order`, `PUT /admin/packs/order`, `PUT /admin/hoodies/order` and `PUT /admin/faqs/order` each take `{ ids: number[] }` (the full list in the new order, up to 5,000 ids) and return `204`.
 
@@ -569,17 +581,17 @@ List responses include stock summary fields for convenience (`available`, `reser
 
 | Endpoint | Response / request |
 |---|---|
-| `GET /admin/stock/hoodies` | `{ colors: Color[], sizes: Size[], hoodies: { hoodieId, name, cells: { variantId, colorId, sizeId, quantity, reserved, available }[] }[] }` |
-| `GET /admin/stock/stimpies` | `{ items: { stimpieId, name, type, dropName: string \| null, quantity, reserved, available, low: boolean }[] }` |
-| `POST /admin/stock/adjust` | `{ itemType: 'HOODIE_VARIANT' \| 'STIMPIE', itemId, delta: number, reason: 'RESTOCK' \| 'CORRECTION' \| 'DAMAGED', note: string }`. `delta` may be negative. `note` required. Rejects adjustments that would make `quantity` lower than `reserved` (`CONFLICT`). `reserved` is read-only here and changes only through order transitions (confirm/release, deliver/sell, return). Response `{ quantity, reserved, available }` |
-| `POST /admin/stock/set` | `{ itemType, itemId, quantity, note }` : sets the on-hand quantity (recorded as a `CORRECTION` movement for the difference); direct changes to `reserved` are rejected |
+| `GET /admin/stock/hoodies` | Query `page`, `pageSize`. `Page<{ hoodieId, name, colors: Color[], sizes: Size[], cells: { variantId, colorId, sizeId, quantity, available }[] }>`; each hoodie includes only its selected options and stock combinations |
+| `GET /admin/stock/stimpies` | Query `page`, `pageSize`. `Page<{ stimpieId, name, type, dropName: string \| null, quantity, available, low: boolean }>` |
+| `POST /admin/stock/adjust` | `{ itemType: 'HOODIE_VARIANT' \| 'STIMPIE', itemId, delta: number, reason: 'RESTOCK' \| 'CORRECTION' \| 'DAMAGED', note: string }`. `delta` may be negative. `note` required. Rejects adjustments that would lower stock below what open orders need (`CONFLICT`). Response `{ quantity, available }` |
+| `POST /admin/stock/set` | `{ itemType, itemId, quantity, note }` : sets the on-hand quantity (recorded as a `CORRECTION` movement for the difference); order holds are managed by order transitions and are not a stock adjustment option |
 | `GET /admin/stock/movements` | Query: `itemType`, `itemId`, `reason`, `orderId`, `from`, `to`, paged. Items: `{ id, at, itemType, itemId, itemName, field: 'QUANTITY' \| 'RESERVED', delta, reason, orderNumber: string \| null, note, by: string \| null }`. `reason` is one of `INITIAL`, `RESTOCK`, `CORRECTION`, `DAMAGED`, `ORDER_RESERVED`, `ORDER_RELEASED`, `ORDER_SOLD`, `ORDER_RETURNED`, `ORDER_WRITTEN_OFF`; the manual adjust call accepts only `RESTOCK`, `CORRECTION`, `DAMAGED` |
 
 ### 5.6 Drops
 
-`/admin/drops` : `GET` list (`?state=UPCOMING\|LIVE\|ARCHIVE`), `GET /:id`, `POST`, `PATCH /:id`, `DELETE /:id` (only if no orders reference its Stimpies), and `POST /admin/drops/:id/end` (ends immediately).
+`/admin/drops` : `GET` list (`page`, `pageSize`, optional `state=UPCOMING\|LIVE\|ARCHIVE`, `q`, `sort`) returns `Page<AdminDrop>`; `GET /:id`, `POST`, `PATCH /:id`, `DELETE /:id` (only if no orders reference its Stimpies), and `POST /admin/drops/:id/end` (ends immediately).
 
-Writable: `name`, `slug`, `story`, `accentColor`, `startsAt`, `endsAt`, `teaserImage`, `teaserVideo`, `stimpieIds: number[]` (assigns/unassigns Stimpies to the drop).
+Writable: `name`, `story`, `accentHex: '#RRGGBB'` (picked storefront accent), `startsAt`, `endsAt`, `teaserImage`, `teaserVideo`, `stimpieIds: number[]` (assigns/unassigns Stimpies to the drop). Create requires either `accentHex` or legacy `accentColor`; when both are supplied, `accentHex` wins. Responses include the exact `accentHex` and nearest legacy `accentColor` value.
 
 Read adds: `state`, `unitsTotal`, `unitsSold`, `unitsRemaining`, `revenueCents`, `sellOutAt: ISODate | null`, and `stimpies: { ...Stimpie, quantity, sold, remaining }[]`.
 
@@ -626,17 +638,17 @@ Read adds: `state`, `unitsTotal`, `unitsSold`, `unitsRemaining`, `revenueCents`,
 | `GET /admin/deliveries` | Query `tab=OUT\|DELIVERED`, `q`, `page`, `pageSize`. Response is a `Page<...>` whose items are: `{ orderId, orderNumber, deliveryNumber, customerName, phone, areaName, address, cashDueCents, status, cashSettled }` |
 | `POST /admin/deliveries/dispatch` | `{ orders: [{ orderId, deliveryNumber }] }` : sends several `PACKED` orders out at once. Response `{ dispatched: number[], failed: { orderId, code }[] }`. A duplicate delivery number is allowed but listed in `warnings: [{ deliveryNumber, orderIds }]` |
 | `POST /admin/deliveries/:deliveryNumber/settle` | `{ settled: boolean }` : marks cash settled for every order on that delivery number. Response `{ orderIds: number[] }` |
-| `/admin/areas` | `GET`, `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `name`, `feeCents` (nullable), `estDays` (nullable), `active` |
+| `/admin/areas` | `GET` query `page`, `pageSize` (default 100), optional `active=true\|false`; returns `Page<Area>`. `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `name`, `feeCents` (nullable), `estDays` (nullable), `active` |
 | `GET` / `PATCH /admin/settings/delivery` | `{ defaultFeeCents: Cents, estimateText: string }` |
 
 ### 5.9 Finance
 
 | Endpoint | Response |
 |---|---|
-| `GET /admin/finance/profit` | Query `from`, `to`. `{ range, revenueCents, deliveryFeesCents, costOfGoodsCents, expensesCents, adSpendCents, profitCents, ordersCount, byOrder: { orderNumber, date, revenueCents, costCents, profitCents }[], planMargins: { pack35: Cents, pack45: Cents } }`. Revenue counts **delivered** orders in the range |
-| `GET /admin/finance/cash` | `{ outstandingCents, groups: { deliveryNumber: string \| null, orders: { orderId, orderNumber, cashDueCents, settled }[], totalDueCents }[] }` |
-| `/admin/expenses` | `GET` (query `from`, `to`, `category`), `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `category`, `amountCents`, `note`, `spentOn` (date) |
-| `/admin/ad-spend` | Same, with `channel` instead of `category` |
+| `GET /admin/finance/profit` | Query `from`, `to`, `page`, `pageSize`. `{ range, revenueCents, deliveryFeesCents, costOfGoodsCents, expensesCents, adSpendCents, profitCents, ordersCount, byOrder: Page<{ orderNumber, date, revenueCents, costCents, profitCents }>, planMargins: { pack35: Cents, pack45: Cents } }`. Revenue counts **delivered** orders in the range; summary totals cover the full range |
+| `GET /admin/finance/cash` | Query `page`, `pageSize`. `{ outstandingCents, groups: Page<{ deliveryNumber: string \| null, orders: { orderId, orderNumber, cashDueCents, settled }[], totalDueCents }> }` |
+| `/admin/expenses` | `GET` (query `from`, `to`, `category`, `page`, `pageSize`) returns `Page<Expense>` plus `totalCents` for the full filtered range; `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `category`, `amountCents`, `note`, `spentOn` (date) |
+| `/admin/ad-spend` | Same, with `channel` instead of `category`; `GET` returns `Page<AdSpend>` plus full-range `totalCents` |
 
 ### 5.10 Insights
 
@@ -654,9 +666,9 @@ All accept `from`, `to`. **All ratios are fractions from 0 to 1** (not percentag
 | Endpoint | Request / response |
 |---|---|
 | `GET` / `PUT /admin/content/:key` | `key` is one of `announcement`, `homepage`, `policies`, `about`, `how-it-works`. Body/response is the matching part of the public `GET /content` (plus `enabled: boolean` for `announcement`) |
-| `/admin/faqs` | `GET`, `POST`, `PATCH /:id`, `DELETE /:id`, and `PUT /admin/faqs/order` with `{ ids: number[] }`. Fields: `question`, `answer`, `group` (nullable label), `showOnHome` |
-| `/admin/reviews` | `GET`, `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `name`, `text`, `mediaUrl`, `visible` |
-| `GET` / `PUT /admin/builder` | Same shape as the public builder config, but `mode` is returned/accepted as set (not `effectiveMode`), plus read-only `assetsReady: { model3d: boolean; colors2d: { colorId: number; ready: boolean }[]; overlays2d: number; stimpieTextures: number }` so the dashboard can show what's missing. `PUT` takes the **full object** as returned by `GET` (it replaces the stored config); writable are `mode`, `defaultView`, `hoodieId`, `model3d` (url, backPanelMesh, panelAspect, camera, lighting; `sizeBytes` is filled in by the server from the upload), `colors[].hoodieImage2d`, `colors[].overlay2d`, `colors[].placement2d` and `stimpieTextures`. `colors[].tint` / `texture3d` are read-only here (edited via `/admin/colors`). Saving `3D`/`BOTH` without a model is allowed and returns `warnings: string[]`. Saved changes are live immediately |
+| `/admin/faqs` | `GET` query `page`, `pageSize`, optional `group`, `showOnHome`; returns `Page<Faq>`. Also `POST`, `PATCH /:id`, `DELETE /:id`, and `PUT /admin/faqs/order` with `{ ids: number[] }`. Fields: `question`, `answer`, `group` (nullable label), `showOnHome` |
+| `/admin/reviews` | `GET` query `page`, `pageSize`, optional `visible`; returns `Page<Review>`. Also `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `name`, `text`, `mediaUrl`, `visible` |
+| `GET` / `PUT /admin/builder` | Same shape as the public builder config, but `mode` is returned/accepted as set (not `effectiveMode`), plus read-only `assetsReady: { model3d: boolean; colors2d: { colorId: number; ready: boolean }[]; overlays2d: number; stimpieTextures: number }` so the dashboard can show what's missing. `PUT` takes the **full object** as returned by `GET` (it replaces the stored config); writable are `mode`, `defaultView`, `hoodieId`, `model3d` (url, backPanelMesh, panelAspect, camera, lighting; `sizeBytes` is filled in by the server from the upload), `colors[].hoodieImage2d`, `colors[].overlay2d`, `colors[].placement2d` and `stimpieTextures`. `colors[].tint` / `texture3d` are read-only here (edited via `/admin/colors`). Saving `3D`/`BOTH` without a model is allowed and returns `warnings: string[]`. Readiness counts and public colours use the selected hoodie's active colour/size assignments. Saved changes follow the public consumers' cache windows |
 | `POST /admin/email-templates/:key/preview` | `{ subject?, body? }` (unsaved edits optional) → `{ subject, text, html }` rendered by the server with sample data and the real branded layout |
 | `GET /admin/email-templates` | `{ key, name, subject, body, enabled, placeholders: string[] }[]` |
 | `PUT /admin/email-templates/:key` | `{ subject, body, enabled }` |
@@ -699,7 +711,7 @@ Delivery fee and estimate text live under `/admin/settings/delivery` (5.8). User
 |---|---|---|
 | Health | `GET /health` | : |
 | Config | `/options`, `/size-chart`, `/delivery/fees`, `/content`, `/builder/config` | `/admin/colors`, `/admin/sizes`, `/admin/size-chart`, `/admin/content/:key`, `/admin/builder`, `/admin/settings`, `/admin/settings/delivery` |
-| Catalog | `/products/hoodies`, `/products/stimpies`, `/packs` | `/admin/hoodies`, `/admin/stimpies`, `/admin/packs`, `/admin/uploads` |
+| Catalog | `/products/hoodies`, `/products/stimpies`, `/packs` | `/admin/hoodies`, `/admin/stimpies`, `/admin/packs`, `/admin/promotions`, `/admin/uploads` |
 | Drops | `/drops`, `/drops/:slug`, `POST /drops/:id/subscribe` | `/admin/drops` |
 | Orders | `POST /orders`, `POST /cart/validate`, `POST /orders/track`, `POST /orders/find` | `/admin/orders` (+ status, delivery, cash, notes, email, whatsapp, export) |
 | Stock | : | `/admin/stock/*` |

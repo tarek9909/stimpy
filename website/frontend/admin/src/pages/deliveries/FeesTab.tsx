@@ -28,7 +28,7 @@ function toSettingsValues(s: DeliverySettings): SettingsValues {
   return { defaultFee: centsToDollarString(s.defaultFeeCents), estimateText: s.estimateText };
 }
 
-/** Deliveries -> Fees (dashboard-pages 14.3): default fee + estimate text, and area fees. Changes affect new orders only. */
+/** Settings -> Delivery fees: default fee + estimate text, and area fees. Changes affect new orders only. */
 export function FeesTab() {
   const settings = useDeliverySettings();
   const areas = useAreas();
@@ -65,7 +65,7 @@ function DefaultDelivery({ settings }: { settings: DeliverySettings }) {
         <FormSection title="Default delivery" description="Used for every area without its own fee.">
           <div className="grid gap-4 md:grid-cols-2">
             <MoneyField name="defaultFee" label="Default delivery fee" required />
-            <TextField name="estimateText" label="Delivery estimate" maxLength={120} placeholder="2-3 working days" hint="Shown to customers, for example '2-3 working days'." />
+            <TextField name="estimateText" label="Delivery estimate" maxLength={120} placeholder="4-5 business days" hint="Shown to customers, for example '4-5 business days'." />
           </div>
           <div>
             <Button type="submit" variant="primary" loading={form.formState.isSubmitting}>

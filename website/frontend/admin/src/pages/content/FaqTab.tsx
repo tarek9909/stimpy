@@ -43,7 +43,6 @@ function FaqDialog({ faq, groups, onClose }: { faq: AdminFaq | null; groups: str
       onClose={onClose}
       title={faq ? 'Edit question' : 'Add question'}
       size="lg"
-      closeOnBackdrop={false}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Cancel</Button>

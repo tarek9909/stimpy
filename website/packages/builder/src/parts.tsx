@@ -110,6 +110,8 @@ export interface CarouselProps {
   disabledIds: ReadonlySet<number>;
   /** Slot number (1-based) of cards held by a slot, for the caption. */
   slotOf: (id: number) => number | null;
+  /** Slot number (1-based) that the next pick will replace. */
+  focusedSlot?: number;
   onPick: (id: number) => void;
   /** Arrow keys also select (teaser). In the page the arrows move focus and Enter/Space select. */
   selectOnFocus?: boolean;
@@ -126,6 +128,7 @@ export function StimpieCarousel({
   previewId,
   disabledIds,
   slotOf,
+  focusedSlot,
   onPick,
   selectOnFocus = false,
   reducedMotion,
@@ -137,6 +140,7 @@ export function StimpieCarousel({
   useEffect(() => {
     if (previewId !== null) setFocusId(previewId);
   }, [previewId]);
+  const isBlocked = (id: number) => disabledIds.has(id) && !selectedIds.includes(id);
 
   // Keep the previewed card in view (never smooth with reduced motion).
   useEffect(() => {
@@ -154,7 +158,7 @@ export function StimpieCarousel({
     if (!s) return;
     setFocusId(s.id);
     refs.current.get(s.id)?.focus();
-    if (select && !disabledIds.has(s.id)) onPick(s.id);
+    if (select && !isBlocked(s.id)) onPick(s.id);
   };
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const idx = Math.max(0, stimpies.findIndex((s) => s.id === focusId));
@@ -181,7 +185,7 @@ export function StimpieCarousel({
       case ' ': {
         e.preventDefault();
         const s = stimpies[idx];
-        if (s && !disabledIds.has(s.id)) onPick(s.id);
+        if (s && !isBlocked(s.id)) onPick(s.id);
         break;
       }
       default:
@@ -195,18 +199,18 @@ export function StimpieCarousel({
       aria-multiselectable={selectedIds.length > 1 ? true : undefined}
       data-builder-carousel
       onKeyDown={onKey}
-      className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-3 pt-1"
+      className="flex w-full min-w-0 max-w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-1 pb-3 pt-1"
       style={{
-        scrollbarWidth: 'none',
-        WebkitMaskImage: 'linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 28px), transparent 100%)',
-        maskImage: 'linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 28px), transparent 100%)',
+        scrollbarWidth: 'thin',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {stimpies.map((s, i) => {
         const selected = selectedIds.includes(s.id);
-        const disabled = disabledIds.has(s.id);
+        const disabled = isBlocked(s.id);
         const reason = stimpieBlockReason(s);
         const slot = slotOf(s.id);
+        const focused = slot !== null && slot === focusedSlot;
         const accent = s.type === 'LIMITED' ? (s.drop?.accentHex ?? null) : null;
         const outline = selected ? `3px solid ${accent ?? '#111111'}` : '3px solid transparent';
         return (
@@ -220,7 +224,7 @@ export function StimpieCarousel({
             id={`builder-stimpie-${s.id}`}
             aria-selected={selected}
             aria-disabled={disabled ? true : undefined}
-            aria-label={[s.name, formatCents(s.priceCents), reason ?? '', disabled ? 'already chosen' : ''].filter(Boolean).join(', ')}
+            aria-label={[s.name, formatCents(s.priceCents), reason ?? '', slot !== null ? `pack slot ${slot}${focused ? ', selected to replace' : ''}` : '', disabled ? 'already chosen' : ''].filter(Boolean).join(', ')}
             tabIndex={s.id === focusId ? 0 : -1}
             data-stimpie-slug={s.slug}
             data-selected={selected ? 'true' : 'false'}
@@ -249,7 +253,7 @@ export function StimpieCarousel({
                 </span>
               ) : null}
               {slot !== null ? (
-                <span className="absolute bottom-1 left-1 rounded-full bg-white/90 px-2 text-caption text-ink" aria-hidden="true">
+                <span className={cn('absolute bottom-1 left-1 rounded-full px-2 text-caption', focused ? 'bg-ink text-white' : 'bg-white/90 text-ink')} aria-hidden="true">
                   {slot}
                 </span>
               ) : null}
@@ -257,7 +261,10 @@ export function StimpieCarousel({
             <div className="px-1 pb-1 pt-1">
               <p className="truncate text-caption font-medium text-ink">{s.name}</p>
               <div className="flex items-center justify-between gap-1">
-                <span className="text-caption tabular text-ink-70">{formatCents(s.priceCents)}</span>
+                <span className="flex items-baseline gap-1 text-caption tabular text-ink-70">
+                  {formatCents(s.priceCents)}
+                  {s.compareAtPriceCents !== null && s.compareAtPriceCents !== undefined && s.compareAtPriceCents > s.priceCents ? <span className="line-through opacity-70">{formatCents(s.compareAtPriceCents)}</span> : null}
+                </span>
                 <StimpieBadge s={s} />
               </div>
             </div>
@@ -290,19 +297,21 @@ export interface PackSelectorProps {
   /** Pack id, or null for hoodie only. */
   selectedPackId: number | null;
   hoodiePriceCents: number | null;
+  hoodieCompareAtPriceCents?: number | null;
   onSelect: (packId: number | null) => void;
 }
 
 /** Segmented control driven by `GET /packs`, plus "Hoodie only". */
-export function PackSelector({ packs, selectedPackId, hoodiePriceCents, onSelect }: PackSelectorProps) {
+export function PackSelector({ packs, selectedPackId, hoodiePriceCents, hoodieCompareAtPriceCents, onSelect }: PackSelectorProps) {
   const sorted = [...packs].sort((a, b) => a.stimpieCount - b.stimpieCount);
-  const options: { id: number | null; name: string; price: number | null; badge: string | null }[] = sorted.map((p) => ({
+  const options: { id: number | null; name: string; price: number | null; compareAtPrice: number | null; badge: string | null }[] = sorted.map((p) => ({
     id: p.id,
     name: p.name,
     price: p.priceCents,
+    compareAtPrice: p.compareAtPriceCents ?? null,
     badge: p.badge,
   }));
-  if (hoodiePriceCents !== null) options.push({ id: null, name: 'Hoodie only', price: hoodiePriceCents, badge: null });
+  if (hoodiePriceCents !== null) options.push({ id: null, name: 'Hoodie only', price: hoodiePriceCents, compareAtPrice: hoodieCompareAtPriceCents ?? null, badge: null });
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const idx = Math.max(0, options.findIndex((o) => o.id === selectedPackId));
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -340,7 +349,7 @@ export function PackSelector({ packs, selectedPackId, hoodiePriceCents, onSelect
           >
             <span className="text-body-sm font-medium leading-tight">{o.name}</span>
             <span className="flex flex-wrap items-center gap-1 text-caption">
-              {o.price !== null ? <span className="tabular">{formatCents(o.price)}</span> : null}
+              {o.price !== null ? <><span className="tabular">{formatCents(o.price)}</span>{o.compareAtPrice !== null && o.compareAtPrice > o.price ? <span className="tabular line-through opacity-70">{formatCents(o.compareAtPrice)}</span> : null}</> : null}
               {o.badge ? (
                 <span className={cn('rounded-full px-2 py-px text-caption font-medium', selected ? 'bg-coral text-ink' : 'bg-cream text-ink')}>{o.badge}</span>
               ) : null}

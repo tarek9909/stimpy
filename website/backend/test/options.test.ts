@@ -6,8 +6,8 @@ const t = useTestApp();
 
 type Err = { error: { code: string; fields?: Record<string, string>; details: { field?: string } | null } };
 type Page<T> = { items: T[]; page: number; pageSize: number; total: number };
-type Color = { id: number; name: string; hex: string; position: number; active: boolean; images: string[]; builderTint: string | null; builderTexture: string | null; available: number; reserved: number };
-type Size = { id: number; label: string; position: number; active: boolean; available: number; reserved: number };
+type Color = { id: number; name: string; hex: string; position: number; active: boolean; images: string[]; builderTint: string | null; builderTexture: string | null; available: number };
+type Size = { id: number; label: string; position: number; active: boolean; available: number };
 
 const admin = async (): Promise<TestClient> => (await t.adminClient()).client;
 
@@ -75,7 +75,8 @@ describe('/admin/colors', () => {
 
     const a = await c.post('/admin/colors', { name: 'Sage', hex: '#a3b18a' });
     expect(a.status).toBe(201);
-    expect(a.json<Color>()).toMatchObject({ name: 'Sage', hex: '#A3B18A', active: true, images: [], builderTint: null, builderTexture: null, available: 0, reserved: 0, position: 1 });
+    expect(a.json<Color>()).toMatchObject({ name: 'Sage', hex: '#A3B18A', active: true, images: [], builderTint: null, builderTexture: null, available: 0, position: 1 });
+    expect(a.json()).not.toHaveProperty('reserved');
     const b = await c.post('/admin/colors', { name: 'Ink', hex: '#000000', builderTint: '#0a0a0a', builderTexture: 'http://localhost:4000/uploads/2026/10/fabric.webp', images: ['http://localhost:4000/uploads/a.webp'] });
     expect(b.json<Color>()).toMatchObject({ position: 2, builderTint: '#0A0A0A', builderTexture: 'http://localhost:4000/uploads/2026/10/fabric.webp', images: ['http://localhost:4000/uploads/a.webp'] });
   });
@@ -91,7 +92,7 @@ describe('/admin/colors', () => {
     expect(rename.status).toBe(409);
   });
 
-  it('creating a colour creates zero-stock variants for every hoodie x ACTIVE size', async () => {
+  it('a shared colour gets zero-stock variants only when assigned to a specific hoodie and its sizes', async () => {
     const c = await admin();
     const w = await buildWorld(t.prisma, { hoodieStock: 5, withAdmin: false });
     const hidden = await createSize(t.prisma, { label: 'XXS', active: false });
@@ -100,22 +101,33 @@ describe('/admin/colors', () => {
 
     const res = await c.post('/admin/colors', { name: 'Sage', hex: '#A3B18A' });
     const created = res.json<Color>();
+    expect(await t.prisma.hoodieVariant.count({ where: { colorId: created.id } })).toBe(0);
+    expect(await t.prisma.hoodieVariant.count()).toBe(before);
+    const assigned = await c.patch(`/admin/hoodies/${w.hoodie.id}`, {
+      colorIds: [w.colors.black.id, w.colors.cream.id, created.id], sizeIds: [w.sizes.s.id, w.sizes.m.id, w.sizes.l.id],
+    });
+    expect(assigned.status).toBe(200);
     const variants = await t.prisma.hoodieVariant.findMany({ where: { colorId: created.id } });
-    expect(variants).toHaveLength(2 * 3); // 2 hoodies x 3 active sizes (XXS is inactive)
+    expect(variants).toHaveLength(3);
     expect(variants.every((v) => v.quantity === 0 && v.reserved === 0)).toBe(true);
     expect(new Set(variants.map((v) => v.sizeId))).toEqual(new Set([w.sizes.s.id, w.sizes.m.id, w.sizes.l.id]));
-    expect(new Set(variants.map((v) => v.hoodieId))).toEqual(new Set([w.hoodie.id, second.id]));
-    expect(await t.prisma.hoodieVariant.count()).toBe(before + 6);
+    expect(new Set(variants.map((v) => v.hoodieId))).toEqual(new Set([w.hoodie.id]));
+    expect(await t.prisma.hoodieVariant.count({ where: { hoodieId: second.id, colorId: created.id } })).toBe(0);
+    expect(await t.prisma.hoodieVariant.count()).toBe(before + 3);
     expect(variants[0]!.sku).toMatch(/^HOOD-\d+-C\d+-S\d+$/);
     expect(hidden.active).toBe(false);
   });
 
-  it('an inactive colour gets no variants until it is activated', async () => {
+  it('activating a colour preserves assignments and requires an explicit hoodie selection for new ones', async () => {
     const c = await admin();
-    await buildWorld(t.prisma, { withAdmin: false });
+    const w = await buildWorld(t.prisma, { withAdmin: false });
     const created = (await c.post('/admin/colors', { name: 'Later', hex: '#123456', active: false })).json<Color>();
     expect(await t.prisma.hoodieVariant.count({ where: { colorId: created.id } })).toBe(0);
     await c.patch(`/admin/colors/${created.id}`, { active: true });
+    expect(await t.prisma.hoodieVariant.count({ where: { colorId: created.id } })).toBe(0);
+    expect((await c.patch(`/admin/hoodies/${w.hoodie.id}`, {
+      colorIds: [w.colors.black.id, created.id], sizeIds: [w.sizes.s.id, w.sizes.m.id, w.sizes.l.id],
+    })).status).toBe(200);
     expect(await t.prisma.hoodieVariant.count({ where: { colorId: created.id } })).toBe(3);
     // hiding keeps the variants
     await c.patch(`/admin/colors/${created.id}`, { active: false });
@@ -125,6 +137,7 @@ describe('/admin/colors', () => {
   it('lists inactive rows with active flag, filters with ?active=, searches with q, sorts, paginates, and shows stock sums', async () => {
     const c = await admin();
     const w = await buildWorld(t.prisma, { hoodieStock: 5, withAdmin: false });
+    await createHoodie(t.prisma, { slug: 'hidden-stock', active: false, stock: 100 });
     await t.prisma.color.update({ where: { id: w.colors.cream.id }, data: { active: false } });
     await setVariantStock(t.prisma, { hoodieId: w.hoodie.id, colorId: w.colors.black.id, sizeId: w.sizes.s.id }, 5, 2);
 
@@ -132,7 +145,9 @@ describe('/admin/colors', () => {
     expect(all.total).toBe(2);
     expect(all.items.map((x) => [x.name, x.active])).toEqual([['Black', true], ['Cream', false]]);
     const black = all.items[0]!;
-    expect(black).toMatchObject({ available: 3 * 5 - 2, reserved: 2 }); // 3 sizes x 5 units, 2 reserved
+    expect(black).toMatchObject({ available: 3 * 5 - 2 }); // 3 sizes x 5 units, less 2 open-order holds
+    expect(black).not.toHaveProperty('reserved');
+    expect(all.items[1]!.available).toBe(0); // a hidden colour contributes no sellable stock
 
     expect((await c.get('/admin/colors', { query: { active: 'true' } })).json<Page<Color>>().items.map((x) => x.name)).toEqual(['Black']);
     expect((await c.get('/admin/colors', { query: { active: 'false' } })).json<Page<Color>>().items.map((x) => x.name)).toEqual(['Cream']);
@@ -142,6 +157,19 @@ describe('/admin/colors', () => {
     expect(p2).toMatchObject({ page: 2, pageSize: 1, total: 2 });
     expect(p2.items.map((x) => x.name)).toEqual(['Cream']);
     expect((await c.get('/admin/colors', { query: { pageSize: 500 } })).status).toBe(400);
+  });
+
+  it('option availability excludes unassigned pairs, hidden sizes and hidden colours', async () => {
+    const c = await admin();
+    const w = await buildWorld(t.prisma, { hoodieStock: 5, withAdmin: false });
+    await setVariantStock(t.prisma, { hoodieId: w.hoodie.id, colorId: w.colors.black.id, sizeId: w.sizes.s.id }, 5, 2);
+    await t.prisma.hoodieVariant.updateMany({ where: { colorId: w.colors.black.id, sizeId: w.sizes.m.id }, data: { active: false } });
+    await c.patch(`/admin/sizes/${w.sizes.l.id}`, { active: false });
+    await c.patch(`/admin/colors/${w.colors.cream.id}`, { active: false });
+    expect((await c.get(`/admin/colors/${w.colors.black.id}`)).json<Color>().available).toBe(3);
+    expect((await c.get(`/admin/sizes/${w.sizes.s.id}`)).json<Size>().available).toBe(3);
+    expect((await c.get(`/admin/sizes/${w.sizes.m.id}`)).json<Size>().available).toBe(0);
+    expect((await c.get(`/admin/sizes/${w.sizes.l.id}`)).json<Size>().available).toBe(0);
   });
 
   it('GET/PATCH /:id, 404 for unknown ids, builderTint/Texture can be cleared', async () => {
@@ -199,7 +227,8 @@ describe('/admin/sizes', () => {
     const c = await admin();
     const a = await c.post('/admin/sizes', { label: 'M' });
     expect(a.status).toBe(201);
-    expect(a.json<Size>()).toMatchObject({ label: 'M', active: true, position: 1, available: 0, reserved: 0 });
+    expect(a.json<Size>()).toMatchObject({ label: 'M', active: true, position: 1, available: 0 });
+    expect(a.json()).not.toHaveProperty('reserved');
     const dup = await c.post('/admin/sizes', { label: 'm' });
     expect(dup.status).toBe(409);
     expect(dup.json<Err>().error.details).toEqual({ field: 'label' });
@@ -208,14 +237,20 @@ describe('/admin/sizes', () => {
     expect(bad.json<Err>().error.fields).toHaveProperty('label');
   });
 
-  it('creating a size creates zero-stock variants for every hoodie x ACTIVE colour', async () => {
+  it('a shared size gets zero-stock variants only on the hoodie where it is selected', async () => {
     const c = await admin();
     const w = await buildWorld(t.prisma, { withAdmin: false });
+    const second = await createHoodie(t.prisma, { slug: 'other-size-options' });
     await createColor(t.prisma, { name: 'Hidden', active: false });
     const res = (await c.post('/admin/sizes', { label: 'XL' })).json<Size>();
+    expect(await t.prisma.hoodieVariant.count({ where: { sizeId: res.id } })).toBe(0);
+    expect((await c.patch(`/admin/hoodies/${w.hoodie.id}`, {
+      colorIds: [w.colors.black.id, w.colors.cream.id], sizeIds: [w.sizes.s.id, w.sizes.m.id, w.sizes.l.id, res.id],
+    })).status).toBe(200);
     const variants = await t.prisma.hoodieVariant.findMany({ where: { sizeId: res.id } });
     expect(variants).toHaveLength(2); // Black, Cream (Hidden skipped)
     expect(variants.every((v) => v.quantity === 0 && v.hoodieId === w.hoodie.id)).toBe(true);
+    expect(await t.prisma.hoodieVariant.count({ where: { sizeId: res.id, hoodieId: second.id } })).toBe(0);
   });
 
   it('lists inactive sizes, filters by active, reorders, patches, deletes', async () => {

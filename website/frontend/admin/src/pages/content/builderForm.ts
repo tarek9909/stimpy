@@ -9,8 +9,20 @@ export type BuilderColorEntry = AdminBuilder['colors'][number];
 export type Lighting = 'STUDIO' | 'SOFT' | 'NIGHT';
 export type Mode = '2D' | '3D' | 'BOTH';
 
-/** Recommended back-view camera of the seeded model (`hoodie.meta.json`), used by "Reset". */
-export const DEFAULT_CAMERA: BuilderModel['camera'] = { position: [0, 0.02, -2.5], target: [0, 0, 0], fov: 32 };
+type PreviewHoodie = Pick<Schemas['AdminHoodie'], 'id' | 'slug' | 'name' | 'active' | 'colorIds' | 'sizeIds'>;
+
+/** Match the storefront's active hoodie and its assigned options, including hidden sizes. */
+export function builderOptionScope<C extends { id: number; active: boolean }>(
+  hoodieId: number | null,
+  hoodies: readonly PreviewHoodie[],
+  colors: readonly C[],
+  sizes: readonly { id: number; active: boolean }[],
+) {
+  const hoodie = hoodies.find((h) => h.id === hoodieId && h.active) ?? hoodies.find((h) => h.active) ?? null;
+  const hasSize = hoodie?.sizeIds.some((id) => sizes.some((s) => s.id === id && s.active)) ?? false;
+  const assigned = new Set(hasSize ? hoodie?.colorIds : []);
+  return { hoodie, colors: colors.filter((c) => c.active && assigned.has(c.id)) };
+}
 
 export const emptyColorEntry = (colorId: number): BuilderColorEntry => ({
   colorId,
@@ -34,7 +46,7 @@ export function withAllColors(form: AdminBuilder, colorIds: readonly number[]): 
 /**
  * Body of `PUT /admin/builder`: the FULL object (it replaces the stored config). Read-only mirrors
  * (`tint`, `texture3d`, `assetsReady`, `warnings`, `hoodie`) are left out; the server ignores them anyway and
- * `sizeBytes` is filled in from the upload.
+ * `sizeBytes` remains a server-owned value from the configured model upload.
  */
 export function toPutBody(form: AdminBuilder) {
   return {
@@ -91,7 +103,7 @@ export function readinessOf(form: AdminBuilder, activeColorIds: readonly number[
 export function modeNotes(form: AdminBuilder, r: Readiness): string[] {
   const notes: string[] = [];
   if ((form.mode === '3D' || form.mode === 'BOTH') && !r.model3d) {
-    notes.push('No 3D model uploaded yet. The website will fall back to 2D until you upload one.');
+    notes.push('No 3D model is configured. The website will use 2D until the model is configured in code.');
   }
   const missing2d = r.colors2d.filter((c) => !c.ready).length;
   if ((form.mode === '2D' || form.mode === 'BOTH') && r.colors2d.length > 0 && missing2d === r.colors2d.length) {
@@ -102,17 +114,9 @@ export function modeNotes(form: AdminBuilder, r: Readiness): string[] {
 
 export type FormErrors = Record<string, string>;
 
-/** Blocking client validation (builder.md 8). Keys are form paths, e.g. `model3d.camera.fov`, `colors.2.placement2d`. */
+/** Blocking client validation for editable 2D colour placements. */
 export function validateBuilder(form: AdminBuilder): FormErrors {
   const errors: FormErrors = {};
-  const m = form.model3d;
-  if (m) {
-    if (m.backPanelMesh.trim() === '') errors['model3d.backPanelMesh'] = 'Choose the back panel mesh.';
-    if (!(m.panelAspect > 0 && m.panelAspect <= 10)) errors['model3d.panelAspect'] = 'Panel aspect must be above 0 and at most 10.';
-    if (m.camera.position.length !== 3 || m.camera.position.some((n) => !Number.isFinite(n) || Math.abs(n) > 1000)) errors['model3d.camera.position'] = 'Camera position needs three numbers.';
-    if (m.camera.target.length !== 3 || m.camera.target.some((n) => !Number.isFinite(n) || Math.abs(n) > 1000)) errors['model3d.camera.target'] = 'Camera target needs three numbers.';
-    if (!(m.camera.fov >= 10 && m.camera.fov <= 100)) errors['model3d.camera.fov'] = 'Field of view must be between 10 and 100.';
-  }
   form.colors.forEach((c, i) => {
     if (c.placement2d) {
       const problems = validatePlacement(c.placement2d as Placement);

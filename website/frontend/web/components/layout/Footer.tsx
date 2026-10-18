@@ -30,7 +30,7 @@ function columns(business: Business): Column[] {
       title: 'Help',
       links: [
         { href: '/how-it-works', label: 'How it works' },
-        { href: '/delivery-returns', label: 'Delivery & Returns' },
+        { href: '/delivery-returns', label: 'Delivery' },
         { href: '/help', label: 'Size guide & FAQ' },
         { href: '/track', label: 'Track order' },
       ],
@@ -90,7 +90,7 @@ export function Footer({ business }: { business: Business }) {
             <Logo variant="icon" surface="black" width={32} clearSpace={false} alt="Stimpy" />
             <p className="text-body-sm text-fg-muted">Cash on delivery across Lebanon</p>
           </div>
-          <p className="text-body-sm text-fg-muted">&copy; {new Date().getFullYear()} Stimpy</p>
+          <p className="text-body-sm text-fg-muted">&copy; {new Date().getFullYear()} {business?.name.trim() || 'Stimpy'}</p>
         </div>
       </div>
     </footer>

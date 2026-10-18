@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { HoodieDetail, Pack, Stimpie } from '@stimpy/api-client';
 import { Button, ErrorState, Modal, Skeleton, SkeletonGroup } from '@stimpy/ui';
 import { browserApi } from '@/lib/api-browser';
+import { fetchApiAllPages } from '@/lib/pagination';
 import { PackComposer } from '@/features/shop/PackComposer';
 import type { ComposerPreset } from '@/features/shop/composer';
 import { useCart } from './store';
@@ -51,14 +52,14 @@ export function EditLineModal({ lineId, onClose }: { lineId: string | null; onCl
     const api = browserApi();
     void (async () => {
       try {
-        const [h, p, s] = await Promise.all([
+        const [h, packs, stimpies] = await Promise.all([
           api.GET('/api/v1/products/hoodies/{slug}', { params: { path: { slug } }, cache: 'no-store' }),
-          api.GET('/api/v1/packs', { cache: 'no-store' }),
-          api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'true' } }, cache: 'no-store' }),
+          fetchApiAllPages((page, pageSize) => api.GET('/api/v1/packs', { params: { query: { page, pageSize } }, cache: 'no-store' })),
+          fetchApiAllPages((page, pageSize) => api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'true', page, pageSize } }, cache: 'no-store' })),
         ]);
         if (cancelled) return;
-        if (!h.data || !p.data || !s.data) throw new Error('empty');
-        setData({ hoodie: h.data, packs: p.data, stimpies: s.data });
+        if (!h.data) throw new Error('empty');
+        setData({ hoodie: h.data, packs, stimpies });
       } catch {
         if (!cancelled) setFailed(true);
       }

@@ -27,7 +27,7 @@ const phone = z.string().refine((v) => normalizePhone(v) !== null, 'Enter a Leba
 const businessShape = {
   name: z.string().trim().min(1).max(120).default('Stimpy'),
   whatsappNumber: phone.nullable().default(null),
-  supportEmail: email.nullable().default('hello@stimpy.local'),
+  supportEmail: email.nullable().default('info@stimpylb.com'),
   instagramUrl: z.string().url().max(300).nullable().default(null),
   timezone: z.string().refine(isValidTimezone, 'Enter a valid IANA timezone, e.g. Asia/Beirut.').default('Asia/Beirut'),
 };
@@ -42,8 +42,8 @@ const ordersShape = {
 const emailShape = {
   enabled: z.boolean().default(true),
   senderName: z.string().trim().min(1).max(100).default('Stimpy'),
-  senderAddress: email.default('orders@stimpy.local'),
-  replyTo: email.default('hello@stimpy.local'),
+  senderAddress: email.default('info@stimpylb.com'),
+  replyTo: email.default('info@stimpylb.com'),
   footerText: z.string().max(500).default('Stimpy. One hoodie. Multiple identities.'),
   campaignRecipientCap: z.number().int().min(1).max(5_000).default(200),
   smtpHost: z.string().trim().max(255).nullable().default(null),
@@ -58,8 +58,8 @@ const notificationsShape = {
   onLowStock: z.boolean().default(true),
 };
 const deliveryShape = {
-  defaultFeeCents: z.number().int().min(0).max(1_000_000).default(300),
-  estimateText: z.string().trim().min(1).max(200).default('2-3 working days'),
+  defaultFeeCents: z.number().int().min(0).max(1_000_000).default(500),
+  estimateText: z.string().trim().min(1).max(200).default('4–5 business days'),
 };
 const setupShape = {
   reviewed: z.array(z.string().max(60)).max(50).default([]),

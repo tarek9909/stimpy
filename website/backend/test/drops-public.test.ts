@@ -12,7 +12,8 @@ type PDrop = {
   state: string; teaserImage: string | null; teaserVideo: string | null; unitsRemaining: number | null;
   stimpies: { id: number; slug: string; status: string; remaining: number | null; purchasable: boolean; drop: { id: number } | null }[];
 };
-type Overview = { live: PDrop | null; upcoming: PDrop[]; archive: PDrop[] };
+type Page<T> = { items: T[]; page: number; pageSize: number; total: number };
+type Overview = { live: PDrop | null; upcoming: Page<PDrop>; archive: Page<PDrop> };
 
 const DROP_KEYS = ['accentColor', 'accentHex', 'endsAt', 'id', 'name', 'slug', 'startsAt', 'state', 'stimpies', 'story', 'teaserImage', 'teaserVideo', 'unitsRemaining'];
 const T0 = new Date('2026-10-14T10:00:00Z');
@@ -40,16 +41,20 @@ describe('GET /drops', () => {
     expect(Object.keys(body).sort()).toEqual(['archive', 'live', 'upcoming']);
     expect(body.live!.slug).toBe('live');
     expect(Object.keys(body.live!).sort()).toEqual(DROP_KEYS);
-    expect(body.upcoming.map((d) => d.slug)).toEqual(['up-1', 'up-2']);
-    expect(body.archive.map((d) => d.slug)).toEqual(['sold', 'early', 'old']);
-    expect(body.archive.map((d) => d.state)).toEqual(['SOLD_OUT', 'ENDED', 'ENDED']);
-    expect(body.upcoming.map((d) => d.state)).toEqual(['UPCOMING', 'UPCOMING']);
+    expect(body.upcoming.items.map((d) => d.slug)).toEqual(['up-1', 'up-2']);
+    expect(body.archive.items.map((d) => d.slug)).toEqual(['sold', 'early', 'old']);
+    expect(body.archive.items.map((d) => d.state)).toEqual(['SOLD_OUT', 'ENDED', 'ENDED']);
+    expect(body.upcoming.items.map((d) => d.state)).toEqual(['UPCOMING', 'UPCOMING']);
     expect(up2.id).toBeGreaterThan(0);
   });
 
   it('empty database: live null, empty lists', async () => {
     const res = await t.client.get('/drops');
-    expect(res.json()).toEqual({ live: null, upcoming: [], archive: [] });
+    expect(res.json()).toEqual({
+      live: null,
+      upcoming: { items: [], page: 1, pageSize: 25, total: 0 },
+      archive: { items: [], page: 1, pageSize: 25, total: 0 },
+    });
   });
 
   it('live is the most recently started LIVE drop when two overlap', async () => {
@@ -60,8 +65,8 @@ describe('GET /drops', () => {
     await createStimpie(t.prisma, { dropId: b.id });
     const body = (await t.client.get('/drops')).json<Overview>();
     expect(body.live!.slug).toBe('b');
-    expect(body.upcoming).toEqual([]);
-    expect(body.archive).toEqual([]);
+    expect(body.upcoming.items).toEqual([]);
+    expect(body.archive.items).toEqual([]);
   });
 
   it('a drop moves between lists as the (fake) clock advances: UPCOMING -> LIVE -> ENDED', async () => {
@@ -70,13 +75,13 @@ describe('GET /drops', () => {
     await createStimpie(t.prisma, { dropId: d.id, quantity: 12 });
     const get = async () => (await t.client.get('/drops')).json<Overview>();
     let o = await get();
-    expect([o.live, o.upcoming.length, o.archive.length]).toEqual([null, 1, 0]);
+    expect([o.live, o.upcoming.items.length, o.archive.items.length]).toEqual([null, 1, 0]);
     advanceTime(10 * 60_000);
     o = await get();
-    expect([o.live?.slug, o.upcoming.length, o.archive.length]).toEqual(['moving', 0, 0]);
+    expect([o.live?.slug, o.upcoming.items.length, o.archive.items.length]).toEqual(['moving', 0, 0]);
     advanceTime(10 * 60_000);
     o = await get();
-    expect([o.live, o.upcoming.length, o.archive.map((x) => x.slug)]).toEqual([null, 0, ['moving']]);
+    expect([o.live, o.upcoming.items.length, o.archive.items.map((x) => x.slug)]).toEqual([null, 0, ['moving']]);
   });
 });
 

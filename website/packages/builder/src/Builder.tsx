@@ -11,7 +11,7 @@ import {
   type Ref,
   type ReactNode,
 } from 'react';
-import { Button, PriceTag, formatCents, useOptionalToast, useUI } from '@stimpy/ui';
+import { Button, PriceTag, formatCents, useUI } from '@stimpy/ui';
 import type {
   BuilderCartItem,
   BuilderCartSummary,
@@ -31,7 +31,7 @@ import type {
 } from './types';
 import { BuilderStage2D } from './BuilderStage2D';
 import { BuilderCanvas3D, Canvas3DBoundary, type Canvas3DHandle } from './BuilderCanvas3D';
-import { Controls3D, ColorSwatchRow, ModeToggle, PackSelector, SizeSheet, SlotChips, StimpieCarousel, BuilderStaticFallback } from './parts';
+import { Controls3D, ColorSwatchRow, ModeToggle, PackSelector, SizeSheet, StimpieCarousel, BuilderStaticFallback } from './parts';
 import { useInView, useReducedMotion } from './hooks';
 import { DecodedImageCache } from './lib/images';
 import {
@@ -56,7 +56,7 @@ import {
   runningPriceCents,
   selectionReducer,
 } from './lib/selection';
-import { buildShareQuery, buildShareUrl, type ShareParams } from './lib/share';
+import { buildShareQuery, type ShareParams } from './lib/share';
 import { buildCartSummary, liveAnnouncement, stimpieById } from './lib/summary';
 import type { SwapSample } from './lib/swapMonitor';
 
@@ -79,8 +79,6 @@ export interface BuilderProps {
   initialShare?: ShareParams | null;
   /** Keep the URL in sync with the selection through `history.replaceState` (page only). */
   syncUrl?: boolean;
-  /** Absolute URL used by the share button; default is the current page without query. */
-  shareBaseUrl?: string;
   /** Called when the visitor adds to cart. When omitted the purchase UI (price, size, add to cart) is not rendered. */
   onAddToCart?: (item: BuilderCartItem, summary: BuilderCartSummary) => void;
   /** Fetch a fresh hoodie inventory snapshot when the size chooser is opened. */
@@ -97,16 +95,18 @@ export interface BuilderProps {
   debug3d?: boolean;
   /** Test hook: break the swap shader to exercise the cross-fade fallback. */
   breakShader?: boolean;
-  /** Hide "See real photos" links (dashboard preview). */
-  hidePhotoLinks?: boolean;
-  /** Where "See real photos" goes. Defaults to the shop routes. */
-  hrefs?: { stimpie?: (slug: string) => string; hoodie?: (slug: string) => string; fullBuilder?: (s: { colorId: number | null; stimpie: string | null }) => string; sizeGuide?: string; shop?: string };
+  /** Routes used by the host app for Builder navigation. */
+  hrefs?: { fullBuilder?: (s: { colorId: number | null; stimpie: string | null }) => string; sizeGuide?: string; shop?: string };
   /** Sticky mobile bottom bar for price + Add to cart. Default true on the page. */
   stickyBar?: boolean;
   /** Imperative handle (camera read-out for the dashboard). */
   ref?: Ref<BuilderHandle>;
   /** Optional host-owned expanded preview, connected to the current selection and pack rules. */
   renderPreviewAction?: (context: BuilderPreviewContext) => ReactNode;
+  /** Host override for the 2D garment scene (for example, a photo-based campaign mockup). */
+  render2DStage?: (context: { color: JoinedColor; stimpie: BuilderStimpie }) => ReactNode;
+  /** Aspect ratio for the preview frame. Defaults to the standard 4:5 hoodie cutout. */
+  stageAspect?: string;
   className?: string;
 }
 
@@ -134,7 +134,6 @@ export function Builder({
   surface = 'page',
   initialShare = null,
   syncUrl = false,
-  shareBaseUrl,
   onAddToCart,
   refreshInventory,
   track,
@@ -143,16 +142,16 @@ export function Builder({
   throttleSimulator,
   debug3d = false,
   breakShader = false,
-  hidePhotoLinks = false,
   hrefs,
   stickyBar,
   ref,
   renderPreviewAction,
+  render2DStage,
+  stageAspect = '4 / 5',
   className,
 }: BuilderProps) {
   const compact = surface === 'teaser';
   const { Link } = useUI();
-  const toast = useOptionalToast();
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLElement | null>(null);
   const trackRef = useRef(track);
@@ -412,9 +411,11 @@ export function Builder({
     emit('builder_color_select', { color_id: id });
   };
   const onPick = (id: number) => {
-    dispatch({ type: 'pick', stimpieId: id });
+    const existingSlot = selection.slots.indexOf(id);
+    if (existingSlot >= 0) dispatch({ type: 'focus', slot: existingSlot });
+    else dispatch({ type: 'pick', stimpieId: id });
     const s = stimpieById(stimpies, id);
-    if (s) emit('builder_stimpie_select', { stimpie_slug: s.slug, slot: selection.focus + 1, view: view === '3d' ? '3d' : '2d' });
+    if (s) emit('builder_stimpie_select', { stimpie_slug: s.slug, slot: (existingSlot >= 0 ? existingSlot : selection.focus) + 1, view: view === '3d' ? '3d' : '2d' });
   };
   const onPack = (packId: number | null) => {
     dispatch({ type: 'pack', packId, packs });
@@ -481,43 +482,13 @@ export function Builder({
     emit('builder_size_sheet_open');
   };
 
-  const onShare = async () => {
-    if (!color || !stimpie) return;
-    const base = shareBaseUrl ?? `${window.location.origin}${window.location.pathname}`;
-    const first = pack ? stimpieById(stimpies, selection.slots[0] ?? null) : stimpie;
-    const second = pack && pack.stimpieCount > 1 ? stimpieById(stimpies, selection.slots[1] ?? null) : null;
-    const url = buildShareUrl(base, {
-      colorId: color.id,
-      stimpie: first?.slug ?? stimpie.slug,
-      stimpie2: second?.slug ?? null,
-      pack: pack ? pack.slug : packsAll.length > 0 ? 'hoodie-only' : null,
-    });
-    const title = `${stimpie.name} on a Stimpy hoodie`;
-    const nav = navigator as Navigator & { share?: (d: { title: string; url: string }) => Promise<void> };
-    if (typeof nav.share === 'function') {
-      try {
-        await nav.share({ title, url });
-        emit('builder_share', { method: 'native' });
-        return;
-      } catch (e) {
-        if (e instanceof Error && e.name === 'AbortError') return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast?.success('Link copied');
-      emit('builder_share', { method: 'copy' });
-    } catch {
-      toast?.error('Could not copy the link. Copy it from the address bar.');
-    }
-  };
-
   // ----- derived UI -----
   const slotOf = (id: number) => {
     const at = selection.slots.indexOf(id);
     return at >= 0 && selection.slots.length > 1 ? at + 1 : null;
   };
   const selectedIds = selection.slots.length > 0 ? selection.slots.filter((s): s is number => s !== null) : selection.previewId !== null ? [selection.previewId] : [];
+  // Other selected Stimpies stay focusable; clicking one focuses its numbered slot instead of duplicating it.
   const disabledIds = useMemo(() => {
     const out = new Set<number>();
     selection.slots.forEach((id, i) => {
@@ -526,8 +497,6 @@ export function Builder({
     return out;
   }, [selection.slots, selection.focus]);
 
-  const photoStimpieHref = stimpie ? (hrefs?.stimpie?.(stimpie.slug) ?? `/shop/stimpie/${stimpie.slug}`) : null;
-  const photoHoodieHref = config.hoodie ? (hrefs?.hoodie?.(config.hoodie.slug) ?? `/shop/hoodie/${config.hoodie.slug}`) : null;
   const fullHref = hrefs?.fullBuilder
     ? hrefs.fullBuilder({ colorId: color?.id ?? null, stimpie: stimpie?.slug ?? null })
     : `/builder${color && stimpie ? `?${buildShareQuery({ colorId: color.id, stimpie: stimpie.slug })}` : ''}`;
@@ -562,7 +531,7 @@ export function Builder({
             aria-label={`Preview: ${color?.name ?? ''} Stimpy hoodie${stimpie ? ` with the ${stimpie.name} Stimpie` : ''}`}
             data-builder-frame
             className={compact ? 'relative mx-auto w-full max-w-[336px] bg-cream md:max-w-[384px]' : 'relative w-full bg-cream'}
-            style={{ aspectRatio: '4 / 5' }}
+            style={{ aspectRatio: stageAspect }}
           >
             <div
               className="absolute inset-0"
@@ -573,18 +542,21 @@ export function Builder({
               }}
               aria-hidden={show3d && threeReady ? true : undefined}
             >
-              <BuilderStage2D
-                color={stage2dColor}
-                art={stage2dArt}
-                instant={reduced || show3d}
-                priority={!compact}
-                active={compact ? inView : true}
-                preload={neighbours.map((n) => n.artworkUrl)}
-                cache={cache.current}
-                chip={false}
-                className="h-full"
-                onSwapDone={(s) => reportSwap('2d', s)}
-              />
+              {render2DStage && color && stimpie ? render2DStage({ color, stimpie }) : (
+                <BuilderStage2D
+                  color={stage2dColor}
+                  art={stage2dArt}
+                  instant={reduced || show3d}
+                  priority={!compact}
+                  active={compact ? inView : true}
+                  preload={neighbours.map((n) => n.artworkUrl)}
+                  cache={cache.current}
+                  chip={false}
+                  aspect={stageAspect}
+                  className="h-full"
+                  onSwapDone={(s) => reportSwap('2d', s)}
+                />
+              )}
             </div>
 
             {show3d && model && color && canvasCamera ? (
@@ -679,17 +651,14 @@ export function Builder({
         </div>
 
         {/* ---------------- controls ---------------- */}
-        <div className={compact ? 'flex flex-col gap-4' : 'mt-4 flex flex-col gap-5 lg:mt-0'}>
+        <div className={compact ? 'flex min-w-0 flex-col gap-4' : 'mt-4 flex min-w-0 flex-col gap-5 lg:mt-0'}>
           <ColorSwatchRow colors={visibleColors} selectedId={color?.id ?? null} soldOutIds={soldOutIds} onSelect={onColor} />
-
-          {pack && pack.stimpieCount > 1 ? (
-            <SlotChips slots={selection.slots} focus={selection.focus} stimpies={stimpies} onFocus={(s) => dispatch({ type: 'focus', slot: s })} />
-          ) : null}
 
           <StimpieCarousel
             stimpies={stimpies}
             selectedIds={selectedIds}
             previewId={selection.previewId}
+            focusedSlot={selection.focus + 1}
             disabledIds={disabledIds}
             slotOf={slotOf}
             onPick={onPick}
@@ -697,6 +666,8 @@ export function Builder({
             reducedMotion={reduced}
             eagerCount={compact ? 0 : 4}
           />
+          {!compact && pack && pack.stimpieCount > 1 ? <p className="text-caption text-fg-muted">Choose Stimpies in order. Tap a numbered card to replace it.</p> : null}
+          {!compact && stimpies.length > 4 ? <p className="text-caption text-fg-muted">Swipe or scroll sideways to browse all Stimpies.</p> : null}
 
           {/* Non-visual alternative to the carousel (website-pages 4.5 accessibility) */}
           <div className="sr-only">
@@ -710,7 +681,7 @@ export function Builder({
               }}
             >
               {stimpies.map((s) => (
-                <option key={s.id} value={s.id} disabled={disabledIds.has(s.id)}>
+                <option key={s.id} value={s.id} disabled={disabledIds.has(s.id) && !selectedIds.includes(s.id)}>
                   {s.name}
                   {stimpieBlockReason(s) ? ` (${stimpieBlockReason(s)})` : ''}
                 </option>
@@ -719,7 +690,7 @@ export function Builder({
           </div>
 
           {!compact && (packs.length > 0 || hoodie) ? (
-            <PackSelector packs={packs} selectedPackId={selection.packId} hoodiePriceCents={hoodie?.priceCents ?? null} onSelect={onPack} />
+            <PackSelector packs={packs} selectedPackId={selection.packId} hoodiePriceCents={hoodie?.priceCents ?? null} hoodieCompareAtPriceCents={hoodie?.compareAtPriceCents} onSelect={onPack} />
           ) : null}
 
           {compact ? (
@@ -741,7 +712,7 @@ export function Builder({
             >
               <div className="mx-auto flex max-w-[560px] flex-col gap-2 lg:max-w-none">
                 <div className="hidden items-baseline justify-between gap-3 lg:flex">
-                  {priceCents !== null ? <PriceTag cents={priceCents} size="lg" data-builder-price /> : <span />}
+                  {priceCents !== null ? <PriceTag cents={priceCents} compareAtCents={(pack?.compareAtPriceCents ?? (selection.packId === null ? hoodie?.compareAtPriceCents : null)) ?? undefined} size="lg" data-builder-price /> : <span />}
                   <span className="text-body-sm text-fg-muted">{pack?.description ?? hoodie?.name ?? ''}</span>
                 </div>
                 <Button
@@ -752,17 +723,13 @@ export function Builder({
                   disabled={!addState.ok || refreshingInventory}
                   onClick={onAdd}
                   data-builder-add
-                  aria-describedby={addState.hint ? 'builder-add-hint' : undefined}
                 >
                   {priceCents !== null ? `Add to cart - ${priceLabel}` : 'Add to cart'}
                 </Button>
-                {addState.hint ? (
-                  <p id="builder-add-hint" className="text-body-sm text-fg-muted" data-builder-hint-text>
-                    {addState.hint}
-                  </p>
-                ) : (
-                  <p className="text-caption text-fg-muted">Pay cash on delivery. Extra Stimpies are bought separately.</p>
-                )}
+                {!addState.hint ? <p className="text-caption text-fg-muted">Pay cash on delivery. Extra Stimpies are bought separately.</p> : null}
+                <Link href={hrefs?.sizeGuide ?? '/help?tab=size'} target="_blank" rel="noopener" className="self-end text-caption font-medium underline">
+                  Size guide
+                </Link>
               </div>
             </div>
           ) : null}
@@ -776,30 +743,6 @@ export function Builder({
               >
                 See the upcoming drop
               </Link>
-            ) : null}
-            {!hidePhotoLinks && photoStimpieHref ? (
-              <Link
-                href={photoStimpieHref}
-                className="inline-flex min-h-tap items-center text-body-sm font-medium underline"
-                data-builder-see-photos
-                onClick={() => emit('builder_see_photos', { target: 'stimpie' })}
-              >
-                See real photos
-              </Link>
-            ) : null}
-            {!hidePhotoLinks && photoHoodieHref && !compact ? (
-              <Link
-                href={photoHoodieHref}
-                className="inline-flex min-h-tap items-center text-body-sm underline"
-                onClick={() => emit('builder_see_photos', { target: 'hoodie' })}
-              >
-                Hoodie photos
-              </Link>
-            ) : null}
-            {!compact ? (
-              <button type="button" className="inline-flex min-h-tap items-center text-body-sm underline" onClick={onShare} data-builder-share>
-                Share this look
-              </button>
             ) : null}
           </div>
         </div>
@@ -821,7 +764,7 @@ export function Builder({
           onSelect={setSizeId}
           confirmLabel={priceCents !== null ? `Add to cart - ${priceLabel}` : 'Add to cart'}
           onConfirm={() => sizeId !== null && finalize(sizeId)}
-          sizeGuideHref={hrefs?.sizeGuide ?? '/help'}
+          sizeGuideHref={hrefs?.sizeGuide ?? '/help?tab=size'}
         />
       ) : null}
     </section>

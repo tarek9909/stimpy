@@ -120,7 +120,21 @@ async function load(db: Db) {
     db.color.findMany(),
     db.stimpie.findMany({ select: { id: true, active: true } }),
   ]);
-  return { stored, colors: colors.sort(byPosition), stimpies, hoodie: await resolveHoodie(db, null) };
+  const hoodie = await resolveHoodie(db, stored.hoodieId);
+  const variants = hoodie ? await db.hoodieVariant.findMany({
+    where: { hoodieId: hoodie.id, active: true, size: { active: true } },
+    select: { colorId: true },
+    distinct: ['colorId'],
+  }) : [];
+  const assignedColors = new Set(variants.map((v) => v.colorId));
+  const orderedColors = colors.sort(byPosition);
+  return {
+    stored,
+    colors: orderedColors,
+    hoodieColors: orderedColors.filter((c) => c.active && assignedColors.has(c.id)),
+    stimpies,
+    hoodie,
+  };
 }
 
 const entryFor = (c: Color, s: StoredColor | undefined) => ({
@@ -139,8 +153,7 @@ const lookIsSet = (c: Color, s: StoredColor | undefined): boolean =>
 // ================================================================ public
 
 export async function getPublicBuilderConfig(ctx: AppContext) {
-  const { stored, colors, stimpies } = await load(ctx.prisma);
-  const hoodie = await resolveHoodie(ctx.prisma, stored.hoodieId);
+  const { stored, hoodieColors, stimpies, hoodie } = await load(ctx.prisma);
   const effectiveMode = resolveEffectiveMode(stored.mode, stored.model3d);
   const byColor = new Map(stored.colors.map((c) => [c.colorId, c]));
   const activeStimpies = new Set(stimpies.filter((s) => s.active).map((s) => s.id));
@@ -150,7 +163,7 @@ export async function getPublicBuilderConfig(ctx: AppContext) {
     defaultView: resolveDefaultView(stored.defaultView, effectiveMode),
     hoodie,
     model3d: modelReady(stored.model3d) ? stored.model3d : null,
-    colors: colors.filter((c) => c.active && lookIsSet(c, byColor.get(c.id))).map((c) => entryFor(c, byColor.get(c.id))),
+    colors: hoodieColors.filter((c) => lookIsSet(c, byColor.get(c.id))).map((c) => entryFor(c, byColor.get(c.id))),
     stimpieTextures: stored.stimpieTextures.filter((t) => activeStimpies.has(t.stimpieId)),
   };
 }
@@ -169,17 +182,18 @@ function warningsFor(stored: Stored, hoodie: { id: number } | null, colors: Colo
   if (active.length > 0 && readyCount === 0) out.push('No active colour has a 2D image and placement yet, so the 2D Builder cannot show a hoodie.');
   else if (readyCount < active.length) out.push(`${active.length - readyCount} of ${active.length} active colours have no 2D image and placement yet; they are hidden in the 2D Builder.`);
   if (!hoodie) out.push('No active hoodie exists for the Builder to sell.');
-  else if (stored.hoodieId !== null && stored.hoodieId !== hoodie.id) out.push('The chosen hoodie is hidden or deleted, so the Builder sells the first active hoodie instead.');
+  else {
+    if (active.length === 0) out.push('No active colours and sizes are assigned to the Builder hoodie. Choose them in Products first.');
+    if (stored.hoodieId !== null && stored.hoodieId !== hoodie.id) out.push('The chosen hoodie is hidden or deleted, so the Builder sells the first active hoodie instead.');
+  }
   return out;
 }
 
 export async function getAdminBuilder(ctx: AppContext) {
-  const { stored, colors, stimpies } = await load(ctx.prisma);
-  const hoodie = await resolveHoodie(ctx.prisma, stored.hoodieId);
+  const { stored, colors, hoodieColors, stimpies, hoodie } = await load(ctx.prisma);
   const byColor = new Map(stored.colors.map((c) => [c.colorId, c]));
   const existing = new Set(stimpies.map((s) => s.id));
   const textures = stored.stimpieTextures.filter((t) => existing.has(t.stimpieId));
-  const active = colors.filter((c) => c.active);
   return {
     mode: stored.mode,
     defaultView: stored.defaultView,
@@ -190,11 +204,11 @@ export async function getAdminBuilder(ctx: AppContext) {
     stimpieTextures: textures,
     assetsReady: {
       model3d: modelReady(stored.model3d),
-      colors2d: active.map((c) => ({ colorId: c.id, ready: ready2d(byColor.get(c.id)) })),
-      overlays2d: active.filter((c) => byColor.get(c.id)?.overlay2d != null).length,
+      colors2d: hoodieColors.map((c) => ({ colorId: c.id, ready: ready2d(byColor.get(c.id)) })),
+      overlays2d: hoodieColors.filter((c) => byColor.get(c.id)?.overlay2d != null).length,
       stimpieTextures: textures.length,
     },
-    warnings: warningsFor(stored, hoodie, colors),
+    warnings: warningsFor(stored, hoodie, hoodieColors),
   };
 }
 

@@ -48,15 +48,35 @@ function OrderNumberCopy({ number }: { number: string }) {
 
 function ItemRow({ item }: { item: OrderItem }) {
   const details = [item.details.hoodie, item.details.color, item.details.size].filter(Boolean).join(' / ');
+  const hoodieImg = (item.details as any).hoodieImage;
+  const stimpieImgs: Array<{ name: string; imageUrl?: string | null }> = (item.details as any).stimpieImages ?? [];
+
   return (
     <li className="flex items-start justify-between gap-4 border-b border-base py-3 last:border-b-0" data-testid="order-item">
-      <div className="min-w-0">
-        <p className="text-body font-medium text-fg">
-          {item.name}
-          {item.qty > 1 ? <span className="font-normal text-fg-muted"> x {item.qty}</span> : null}
-        </p>
-        {details ? <p className="text-body-sm text-fg-muted">{details}</p> : null}
-        {item.details.stimpies.length > 0 ? <p className="text-body-sm text-fg-muted">{item.details.stimpies.join(', ')}</p> : null}
+      <div className="flex items-center gap-3 min-w-0">
+        {hoodieImg || stimpieImgs.length > 0 ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {hoodieImg ? (
+              <img src={hoodieImg} alt="Hoodie" className="h-11 w-11 rounded-md border border-line object-cover" />
+            ) : null}
+            {hoodieImg && stimpieImgs.length > 0 ? (
+              <span className="text-[10px] font-bold text-fg-muted">+</span>
+            ) : null}
+            {stimpieImgs.map((s, idx) =>
+              s.imageUrl ? (
+                <img key={idx} src={s.imageUrl} alt={s.name} className="h-11 w-8 rounded border border-line object-cover" title={s.name} />
+              ) : null,
+            )}
+          </div>
+        ) : null}
+        <div className="min-w-0">
+          <p className="text-body font-medium text-fg">
+            {item.name}
+            {item.qty > 1 ? <span className="font-normal text-fg-muted"> x {item.qty}</span> : null}
+          </p>
+          {details ? <p className="text-body-sm text-fg-muted">{details}</p> : null}
+          {item.details.stimpies.length > 0 ? <p className="text-body-sm text-fg-muted">{item.details.stimpies.join(', ')}</p> : null}
+        </div>
       </div>
       <p className="shrink-0 tabular-nums text-body font-medium text-fg">{formatCents(item.lineTotalCents)}</p>
     </li>

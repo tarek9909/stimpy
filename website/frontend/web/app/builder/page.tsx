@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Button, Section } from '@stimpy/ui';
 import type { BuilderConfig, HoodieDetail, OptionsResponse, Pack, Stimpie } from '@stimpy/api-client';
-import { parseShareParams } from '@stimpy/builder';
+import { parseShareParams } from '@stimpy/builder/src/lib/share';
 import { getBuilderConfig, getHoodie, getOptions, getPacks, getStimpies } from '@/lib/data';
 import { pageMetadata } from '@/lib/seo';
 import { BuilderClient } from '@/features/builder/BuilderClient';
@@ -21,12 +21,13 @@ async function loadBuilder(includeSharedUpcoming = false): Promise<{
   hoodie: HoodieDetail | null;
 } | null> {
   try {
-    const config = await getBuilderConfig();
-    const [options, stimpies, packs, hoodie] = await Promise.all([
+    const configPromise = getBuilderConfig();
+    const [config, options, stimpies, packs, hoodie] = await Promise.all([
+      configPromise,
       getOptions(),
       getStimpies({ includeSoldOut: true, includeUpcoming: includeSharedUpcoming, includeEnded: false }),
       getPacks().catch((): Pack[] => []),
-      config.hoodie ? getHoodie(config.hoodie.slug).catch(() => null) : Promise.resolve(null),
+      configPromise.then((config) => config.hoodie ? getHoodie(config.hoodie.slug).catch(() => null) : null),
     ]);
     return { config, options, stimpies, packs, hoodie };
   } catch {

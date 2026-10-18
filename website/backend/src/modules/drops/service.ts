@@ -5,12 +5,13 @@ import { now } from '../../lib/clock';
 import { isUniqueViolation, type Db } from '../../lib/db';
 import { iso, isoOrNull, ymdInTz } from '../../lib/dates';
 import { AppError } from '../../lib/errors';
-import { parseSort, toPage, toSkipTake, type Page } from '../../lib/http';
+import { parseSort, toPage, toSkipTake, type Page, type PageQuery } from '../../lib/http';
 import { normalizePhone } from '../../lib/phone';
 import { uniqueSlug } from '../../lib/slug';
 import { escapeLike } from '../../lib/sql-like';
 import {
   ACCENT_HEX,
+  accentColorFromHex,
   availableUnits,
   deriveDropState,
   dropStartsWithin,
@@ -59,17 +60,23 @@ export async function dropCacheControl(ctx: AppContext): Promise<string> {
   return (await dropStartsWithin(ctx.prisma, now())) ? 'no-store' : 'public, max-age=10';
 }
 
-export async function listPublicDrops(ctx: AppContext) {
+export async function listPublicDrops(ctx: AppContext, q: PageQuery) {
   const at = now();
   const threshold = (await ctx.settings.get('orders')).lowStockThreshold;
   const rows = await loadDrops(ctx.prisma);
   const drops = rows.map((r) => toPublicDrop(r, threshold, at));
   const byStart = (a: { startsAt: string }, b: { startsAt: string }): number => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const live = drops.filter((d) => d.state === 'LIVE').sort((a, b) => byStart(b, a))[0] ?? null; // most recently started
+  const upcoming = drops.filter((d) => d.state === 'UPCOMING').sort(byStart);
+  const archive = drops.filter((d) => d.state === 'SOLD_OUT' || d.state === 'ENDED').sort((a, b) => byStart(b, a));
+  const page = (items: typeof drops) => {
+    const offset = (q.page - 1) * q.pageSize;
+    return toPage(items.slice(offset, offset + q.pageSize), items.length, q);
+  };
   return {
     live,
-    upcoming: drops.filter((d) => d.state === 'UPCOMING').sort(byStart),
-    archive: drops.filter((d) => d.state === 'SOLD_OUT' || d.state === 'ENDED').sort((a, b) => byStart(b, a)),
+    upcoming: page(upcoming),
+    archive: page(archive),
   };
 }
 
@@ -195,7 +202,7 @@ async function toAdminDrop(ctx: AppContext, row: DropRow, stats: Stats, at: Date
     name: row.name,
     story: row.story,
     accentColor: row.accentColor,
-    accentHex: ACCENT_HEX[row.accentColor],
+    accentHex: row.accentHex,
     startsAt: iso(row.startsAt),
     endsAt: isoOrNull(row.endsAt),
     endedAt: isoOrNull(row.endedAt),
@@ -277,18 +284,20 @@ function assertWindow(startsAt: Date, endsAt: Date | null): void {
 
 export async function createDrop(ctx: AppContext, input: z.infer<typeof dropCreateBody>): Promise<AdminDropDto> {
   const endsAt = input.endsAt ?? null;
+  const accentHex = (input.accentHex ?? ACCENT_HEX[input.accentColor ?? 'BUTTER']).toUpperCase();
   assertWindow(input.startsAt, endsAt);
   try {
     const id = await ctx.prisma.$transaction(async (tx) => {
       const stimpieIds = input.stimpieIds ?? [];
       if (stimpieIds.length) await assertAssignable(tx, stimpieIds, null);
-      const slug = input.slug ?? (await uniqueSlug(input.name, async (s) => (await tx.drop.count({ where: { slug: s } })) > 0));
+      const slug = await uniqueSlug(input.name, async (s) => (await tx.drop.count({ where: { slug: s } })) > 0);
       const row = await tx.drop.create({
         data: {
           name: input.name,
           slug,
           story: input.story ?? '',
-          accentColor: input.accentColor,
+          accentColor: accentColorFromHex(accentHex),
+          accentHex,
           startsAt: input.startsAt,
           endsAt,
           teaserImage: input.teaserImage ?? null,
@@ -319,8 +328,17 @@ export async function updateDrop(ctx: AppContext, id: number, input: z.infer<typ
     await ctx.prisma.$transaction(async (tx) => {
       const existing = await tx.drop.findUnique({ where: { id } });
       if (!existing) throw AppError.notFound('Drop not found.');
+      const slug = input.name === undefined ? undefined : await uniqueSlug(input.name, async (s) => (await tx.drop.count({ where: { slug: s, id: { not: id } } })) > 0);
+      if (slug !== undefined && slug !== existing.slug) {
+        const homepage = await tx.contentBlock.findUnique({ where: { key: 'homepage' }, select: { value: true } });
+        const value = homepage?.value;
+        if (value && typeof value === 'object' && !Array.isArray(value) && value.featuredDropSlug === existing.slug) {
+          await tx.contentBlock.update({ where: { key: 'homepage' }, data: { value: { ...value, featuredDropSlug: slug } } });
+        }
+      }
       const startsAt = input.startsAt ?? existing.startsAt;
       const endsAt = input.endsAt !== undefined ? input.endsAt : existing.endsAt;
+      const accentHex = input.accentHex?.toUpperCase() ?? (input.accentColor !== undefined ? ACCENT_HEX[input.accentColor] : undefined);
       assertWindow(startsAt, endsAt);
       if (input.startsAt && isDropStarted(existing, at) && input.startsAt.getTime() > at.getTime()) {
         throw AppError.validation({ startsAt: "A drop that has started can't be moved to a later launch time." });
@@ -337,10 +355,9 @@ export async function updateDrop(ctx: AppContext, id: number, input: z.infer<typ
       await tx.drop.update({
         where: { id },
         data: {
-          ...(input.name !== undefined ? { name: input.name } : {}),
-          ...(input.slug !== undefined ? { slug: input.slug } : {}),
+          ...(input.name !== undefined ? { name: input.name, slug } : {}),
           ...(input.story !== undefined ? { story: input.story } : {}),
-          ...(input.accentColor !== undefined ? { accentColor: input.accentColor } : {}),
+          ...(accentHex !== undefined ? { accentHex, accentColor: accentColorFromHex(accentHex) } : {}),
           ...(input.startsAt !== undefined ? { startsAt: input.startsAt } : {}),
           ...(input.endsAt !== undefined ? { endsAt: input.endsAt } : {}),
           ...(input.teaserImage !== undefined ? { teaserImage: input.teaserImage } : {}),

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { Banner, Button, Input, Skeleton, Textarea, TextLink, useToast } from '@stimpy/ui';
 import { useNotifyError } from '../../api/errors';
+import { queryKeys } from '../../api/queryKeys';
 import { FileUpload } from '../../components/FileUpload';
 import { QueryBoundary } from '../../components/QueryBoundary';
 import { moveItem } from '../../lib/reorder';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { useContentBlock, useSaveContent, type HowItWorksBlock, type PoliciesBlock } from './api';
-import { Disclosure, EditPreview } from './shared';
+import { Disclosure, EditPreview, useContentDraft } from './shared';
 
 type DirtyMap = Record<string, boolean>;
 
@@ -20,8 +22,11 @@ function useDirtyReport(id: string, dirty: boolean, report: (id: string, dirty: 
 
 function PolicySection({ field, title, data, report }: { field: keyof PoliciesBlock; title: string; data: PoliciesBlock; report: (id: string, dirty: boolean) => void }) {
   const save = useSaveContent('policies');
+  const qc = useQueryClient();
+  const savingPolicies = useIsMutating({ mutationKey: queryKeys.content('policies') }) > 0;
   const toast = useToast();
-  const [value, setValue] = useState(data[field]);
+  const notify = useNotifyError();
+  const [value, setValue] = useContentDraft(data[field]);
   const dirty = value !== data[field];
   useDirtyReport(`policy-${field}`, dirty, report);
   return (
@@ -31,10 +36,17 @@ function PolicySection({ field, title, data, report }: { field: keyof PoliciesBl
         <Button
           variant="primary"
           loading={save.isPending}
+          disabled={savingPolicies && !save.isPending}
           onClick={async () => {
-            // The API replaces the whole block: send the other sections as last saved.
-            await save.mutateAsync({ ...data, [field]: value });
-            toast.success(`${title} saved.`);
+            try {
+              // The API replaces the whole block: keep the latest saved sibling sections.
+              const latest = qc.getQueryData<PoliciesBlock>(queryKeys.content('policies')) ?? data;
+              const saved = await save.mutateAsync({ ...latest, [field]: value });
+              setValue((current) => current === value ? saved[field] : current);
+              toast.success(`${title} saved.`);
+            } catch (e) {
+              notify(e);
+            }
           }}
         >
           Save {title}
@@ -47,14 +59,23 @@ function PolicySection({ field, title, data, report }: { field: keyof PoliciesBl
 function AboutSection({ about, report }: { about: string; report: (id: string, dirty: boolean) => void }) {
   const save = useSaveContent('about');
   const toast = useToast();
-  const [value, setValue] = useState(about);
+  const notify = useNotifyError();
+  const [value, setValue] = useContentDraft(about);
   const dirty = value !== about;
   useDirtyReport('about', dirty, report);
   return (
     <Disclosure title="About" dirty={dirty} summary="The About page text">
       <EditPreview label="About" value={value} onChange={setValue} rows={10} maxLength={20000} id="about-text" />
       <div>
-        <Button variant="primary" loading={save.isPending} onClick={async () => { await save.mutateAsync({ about: value }); toast.success('About saved.'); }}>
+        <Button variant="primary" loading={save.isPending} onClick={async () => {
+          try {
+            const saved = await save.mutateAsync({ about: value });
+            setValue((current) => current === value ? saved.about : current);
+            toast.success('About saved.');
+          } catch (e) {
+            notify(e);
+          }
+        }}>
           Save About
         </Button>
       </div>
@@ -95,7 +116,7 @@ function HowItWorksSection({ data, report }: { data: HowItWorksBlock; report: (i
   const save = useSaveContent('how-it-works');
   const toast = useToast();
   const notify = useNotifyError();
-  const [draft, setDraft] = useState<HowItWorksBlock>(data);
+  const [draft, setDraft] = useContentDraft(data);
   const [errors, setErrors] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(data), [draft, data]);
@@ -163,7 +184,8 @@ function HowItWorksSection({ data, report }: { data: HowItWorksBlock; report: (i
             setErrors(problems);
             if (problems.length) return;
             try {
-              await save.mutateAsync(draft);
+              const saved = await save.mutateAsync(draft);
+              setDraft((current) => JSON.stringify(current) === JSON.stringify(draft) ? saved : current);
               toast.success('How it works saved.');
             } catch (e) {
               notify(e);
@@ -186,7 +208,7 @@ function PoliciesBody({ policies, about, how }: { policies: PoliciesBlock; about
       <p className="text-body-sm text-fg-muted">
         How to measure is edited with the size chart: <TextLink href="/products?tab=size-chart">Products &rarr; Size chart</TextLink>.
       </p>
-      <PolicySection field="deliveryReturns" title="Delivery & returns" data={policies} report={report} />
+      <PolicySection field="deliveryReturns" title="Delivery" data={policies} report={report} />
       <PolicySection field="care" title="Care" data={policies} report={report} />
       <PolicySection field="terms" title="Terms" data={policies} report={report} />
       <PolicySection field="privacy" title="Privacy" data={policies} report={report} />

@@ -1,11 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowRight, CalendarDays, ChevronDown, ChevronRight, ChevronUp, CircleCheck, Circle, ClipboardCheck, Clock, DollarSign, Mail, Package, PackageX, ShoppingBag, Table2, Truck, Wallet, type LucideIcon } from 'lucide-react';
-import { Button, Checkbox, Pill, ProgressBar, Skeleton, StatusPill, TextLink, cn, useUI } from '@stimpy/ui';
-import { api, unwrap } from '../../api/client';
-import { queryKeys } from '../../api/queryKeys';
-import { useNotifyError } from '../../api/errors';
+import { AlertTriangle, ArrowRight, CalendarDays, ChevronDown, ChevronRight, ChevronUp, CircleCheck, Clock, DollarSign, Mail, Package, PackageX, ShoppingBag, Table2, Truck, Wallet, type LucideIcon } from 'lucide-react';
+import { Button, ProgressBar, Skeleton, StatusPill, TextLink, cn, useUI } from '@stimpy/ui';
 import { DataTable, type Column } from '../../components/DataTable';
 import { PageHeader } from '../../components/PageHeader';
 import { QueryBoundary } from '../../components/QueryBoundary';
@@ -15,18 +11,6 @@ import { OrderNumber } from '../orders/parts';
 import type { AdminOrderSummary } from '../orders/api';
 
 type Attention = Overview['attention'][number];
-type SetupItem = Overview['setup']['items'][number];
-
-const COLLAPSE_KEY = 'stimpy.setup.collapsed';
-
-function readCollapsed(): boolean {
-  try {
-    return window.localStorage.getItem(COLLAPSE_KEY) !== '0';
-  } catch {
-    return true;
-  }
-}
-
 /** Where an attention row goes (dashboard-pages 4). The row label is shown verbatim and never parsed. */
 export function attentionLink(a: Attention): string {
   switch (a.type) {
@@ -53,7 +37,7 @@ const ATTENTION_ICON: Record<Attention['type'], { Icon: LucideIcon; label: strin
   LOW_STOCK: { Icon: PackageX, label: 'Low stock' },
 };
 
-/** Overview (dashboard-pages 4): setup checklist, today, needs attention, live drop, last 7 days, recent orders. */
+/** Overview (dashboard-pages 4): today, needs attention, live drop, last 7 days, recent orders. */
 export default function OverviewPage() {
   const query = useOverview({ refetchInterval: 60_000 });
   const f = useFormatters();
@@ -107,7 +91,6 @@ function OverviewBody({ data }: { data: Overview }) {
           </Link>
         ))}
       </section>
-      {!data.setup.complete ? <SetupCard setup={data.setup} /> : null}
       <div className="overview-workspace">
         <div className="overview-side-column">
           <AttentionCard items={data.attention} />
@@ -133,85 +116,6 @@ function Panel({ title, children, id, action }: { title: string; children: React
       </div>
       {children}
     </section>
-  );
-}
-
-/* ------------------------------------------------------------------------------------ setup */
-
-function SetupCard({ setup }: { setup: Overview['setup'] }) {
-  const [collapsed, setCollapsed] = useState(readCollapsed);
-  const required = setup.items.filter((i) => i.required);
-  const done = required.filter((i) => i.status === 'DONE').length;
-  const toggle = () => {
-    const next = !collapsed;
-    setCollapsed(next);
-    try {
-      window.localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0');
-    } catch {
-      /* per-viewer convenience only */
-    }
-  };
-  return (
-    <section aria-labelledby="setup-h" className="overview-setup" data-testid="setup-card">
-      <div className="overview-setup-header">
-        <span className="overview-setup-icon"><ClipboardCheck size={18} aria-hidden="true" /></span>
-        <div className="overview-setup-copy">
-          <h2 id="setup-h">
-            Finish setting up your store
-          </h2>
-          <p className="text-body-sm text-fg-muted tabular-nums">
-            {done} of {required.length} required steps done
-          </p>
-        </div>
-        <div className="overview-setup-progress"><ProgressBar value={done} max={Math.max(1, required.length)} aria-label="Required setup steps done" /></div>
-        <Button variant="ghost" size="sm" onClick={toggle} aria-expanded={!collapsed} aria-controls="setup-items" rightIcon={collapsed ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronUp size={14} aria-hidden="true" />}>
-          {collapsed ? 'Review setup' : 'Hide steps'}
-        </Button>
-      </div>
-      <div id="setup-items" hidden={collapsed}>
-        <ul className="mt-3 border-t border-base">
-          {setup.items.map((item) => (
-            <SetupRow key={item.key} item={item} />
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function SetupRow({ item }: { item: SetupItem }) {
-  const qc = useQueryClient();
-  const notify = useNotifyError();
-  const mark = useMutation({
-    mutationFn: (done: boolean) => unwrap(api.POST('/api/v1/admin/setup/{key}/done', { params: { path: { key: item.key } }, body: { done } })),
-    // Pessimistic: the row changes when the overview is refetched after the call succeeded.
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.overview }),
-    onError: (e) => notify(e),
-  });
-  const isDone = item.status === 'DONE';
-  const Icon = isDone ? CircleCheck : Circle;
-  return (
-    <li className="overview-setup-row" data-setup-key={item.key}>
-      <Icon size={20} className={isDone ? 'text-success' : 'text-fg-muted'} aria-hidden="true" />
-      <div className="overview-setup-row-copy">
-        <p className="flex flex-wrap items-center gap-2 font-medium">
-          {item.label}
-          <span className={cn('text-caption font-medium', isDone ? 'text-success' : 'text-fg-muted')}>{isDone ? 'Done' : 'To do'}</span>
-          {!item.required ? (
-            <Pill tone="outline" size="sm">
-              Optional
-            </Pill>
-          ) : null}
-        </p>
-        <p className="text-body-sm text-fg-muted">{item.hint}</p>
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        {item.kind === 'REVIEW' ? (
-          <Checkbox label="Mark as done" checked={isDone} disabled={mark.isPending} onChange={(e) => mark.mutate(e.target.checked)} className="!min-h-0" />
-        ) : null}
-        <Button variant="ghost" size="sm" href={item.link} iconOnly aria-label={`Open ${item.label}`} title={`Open ${item.label}`}><ArrowRight size={16} aria-hidden="true" /></Button>
-      </div>
-    </li>
   );
 }
 

@@ -12,22 +12,23 @@ export interface ApiPage<T> {
  * Reject inconsistent/overlapping pages so a concurrent list change can never turn a partial
  * snapshot into a destructive full-list request.
  */
-export async function fetchAllPages<T>(
-  loadPage: (page: number, pageSize: number) => Promise<ApiPage<T>>,
+export async function fetchAllPages<P extends ApiPage<any>>(
+  loadPage: (page: number, pageSize: number) => Promise<P>,
   pageSize = ADMIN_PAGE_SIZE,
-  getId: (item: T) => number = (item) => {
-    const id = (item as { id?: unknown } | null)?.id;
-    if (typeof id !== 'number') throw new Error('A stable numeric id is required to verify a complete list.');
-    return id;
+  getId: (item: P['items'][number]) => string | number = (item) => {
+    const id = (item as { id?: unknown; hoodieId?: unknown; stimpieId?: unknown } | null);
+    const resolved = id?.id ?? id?.hoodieId ?? id?.stimpieId;
+    if (typeof resolved !== 'number') throw new Error('A stable numeric id is required to verify a complete list.');
+    return resolved as number;
   },
-): Promise<ApiPage<T>> {
+): Promise<P> {
   if (!Number.isInteger(pageSize) || pageSize < 1) throw new Error('Page size must be a positive integer.');
 
   const first = await loadPage(1, pageSize);
   validatePage(first, 1, pageSize);
   const pages = Math.ceil(first.total / pageSize);
   const items = [...first.items];
-  const ids = new Set(items.map(getId));
+  const ids = new Set<string | number>(items.map(getId));
   if (ids.size !== items.length) throw new Error('The list changed while it was loading. Refresh and try again.');
 
   for (let page = 2; page <= pages; page += 1) {
@@ -50,7 +51,7 @@ export async function fetchAllPages<T>(
   if (
     verifiedFirst.total !== first.total ||
     verifiedFirst.items.length !== first.items.length ||
-    verifiedFirst.items.some((item, index) => getId(item) !== (first.items[index] ? getId(first.items[index] as T) : undefined))
+    verifiedFirst.items.some((item, index) => getId(item) !== (first.items[index] ? getId(first.items[index]) : undefined))
   ) {
     throw new Error('The list changed while it was loading. Refresh and try again.');
   }
@@ -71,7 +72,7 @@ function validatePage<T>(page: ApiPage<T>, requestedPage: number, requestedSize:
   }
 }
 
-function appendUnique<T>(items: T[], ids: Set<number>, nextItems: T[], getId: (item: T) => number): void {
+function appendUnique<T>(items: T[], ids: Set<string | number>, nextItems: T[], getId: (item: T) => string | number): void {
   for (const item of nextItems) {
     const id = getId(item);
     if (ids.has(id)) throw new Error('The list changed while it was loading. Refresh and try again.');

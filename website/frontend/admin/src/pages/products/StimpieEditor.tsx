@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,7 +15,7 @@ import { FileUpload } from '../../components/FileUpload';
 import { QueryBoundary } from '../../components/QueryBoundary';
 import { Select } from '@stimpy/ui';
 import { centsToDollarString } from '../../lib/format';
-import { dollarsToCents, intStringSchema, moneySchema, slugify, slugSchema } from '../../lib/schemas';
+import { dollarsToCents, intStringSchema, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { STIMPIE_PANEL_ASPECT, artworkAspectWarning } from '../../lib/upload';
 import { invalidateFor, useAllDrops, useStimpie, type AdminStimpie } from './api';
@@ -24,7 +24,6 @@ import type { EditorProps } from './HoodieEditor';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Enter a name.').max(120, 'Use at most 120 characters.'),
-  slug: slugSchema,
   type: z.enum(['CORE', 'LIMITED']),
   dropId: z.string(),
   price: moneySchema(),
@@ -37,10 +36,9 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-const NEW_DEFAULTS: Values = { name: '', slug: '', type: 'CORE', dropId: '', price: '10.00', cost: '6.00', quantity: '0', story: '', images: [], artworkUrl: '', active: true };
+const NEW_DEFAULTS: Values = { name: '', type: 'CORE', dropId: '', price: '10.00', cost: '6.00', quantity: '0', story: '', images: [], artworkUrl: '', active: true };
 const toValues = (s: AdminStimpie): Values => ({
   name: s.name,
-  slug: s.slug,
   type: s.type,
   dropId: s.dropId === null ? '' : String(s.dropId),
   price: centsToDollarString(s.priceCents),
@@ -74,21 +72,14 @@ function StimpieForm({ initial, onClose, crumbs }: { initial: AdminStimpie | nul
   const draft = useFormDraft(form);
   const [uploading, setUploading] = useState(false);
   const [dims, setDims] = useState<{ w: number | null; h: number | null }>({ w: initial?.artworkWidth ?? null, h: initial?.artworkHeight ?? null });
-  const slugTouched = useRef(initial !== null);
-  const name = useWatch({ control: form.control, name: 'name' });
   const type = useWatch({ control: form.control, name: 'type' });
   const dropId = useWatch({ control: form.control, name: 'dropId' });
   const artworkUrl = useWatch({ control: form.control, name: 'artworkUrl' });
-
-  useEffect(() => {
-    if (!slugTouched.current) form.setValue('slug', slugify(name));
-  }, [name, form]);
 
   const warn = artworkUrl !== '' && artworkAspectWarning(dims.w, dims.h);
 
   const common = (v: Values) => ({
     name: v.name,
-    slug: v.slug,
     type: v.type,
     dropId: v.dropId === '' ? null : Number(v.dropId),
     priceCents: dollarsToCents(v.price),
@@ -155,10 +146,7 @@ function StimpieForm({ initial, onClose, crumbs }: { initial: AdminStimpie | nul
       >
         <FormSection title="Details">
           <TextField name="name" label="Name" required maxLength={120} autoComplete="off" />
-          <div onChange={() => { slugTouched.current = true; }}>
-            <TextField name="slug" label="Slug" required autoComplete="off" hint="Lowercase letters, numbers and hyphens." />
-          </div>
-          <Field name="type" label="Type" required hint="Core is always available. Limited is never restocked.">
+          <Field name="type" label="Type" required hint="Core designs are not tied to a drop. Limited designs are grouped with a drop; check their schedule and stock before publishing.">
             {(p) => (
               <RadioGroup
                 name="type"

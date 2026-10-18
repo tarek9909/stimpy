@@ -43,8 +43,23 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 :is(button, a).select-none.bg-transparent { box-shadow: none; }
 :is(button, a).select-none.border-fg { border-color: #cdd3dd; }
 :is(button, a).select-none.border-fg:hover { background: #f5f7fa; color: var(--fg); }
-input:not([type='checkbox']):not([type='radio']), select { min-height: 40px; }
-[role='tablist'] { gap: 24px; }
+[role='tablist'] {
+  gap: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+[role='tablist']::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+@media (min-width: 768px) {
+  [role='tablist'] {
+    overflow: visible;
+  }
+}
 [role='tab'] { font-size: 13px; border-bottom-width: 2px; }
 .admin-shell [role='tab'][aria-selected='true']:not(.rounded-full) { color: var(--action); border-color: var(--action); }
 [role='tab'] > span { font-size: 11px; }

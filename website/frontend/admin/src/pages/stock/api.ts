@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { api, unwrap, type Schemas } from '../../api/client';
 import { queryKeys } from '../../api/queryKeys';
+import { fetchAllPages } from '../../lib/pagination';
 
 export type StockSnapshot = Schemas['StockSnapshot'];
 export type ItemType = 'HOODIE_VARIANT' | 'STIMPIE';
@@ -19,24 +20,37 @@ export const REASON_LABEL: Record<MovementReason, string> = {
 };
 export const REASONS = Object.keys(REASON_LABEL) as MovementReason[];
 
-export function useStockHoodies() {
+export function useStockHoodies({ enabled = true }: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.stockHoodies,
-    queryFn: () => unwrap(api.GET('/api/v1/admin/stock/hoodies')),
+    enabled,
+    queryFn: () => {
+      const loadPage = (page: number, pageSize: number) =>
+        unwrap(api.GET('/api/v1/admin/stock/hoodies', { params: { query: { page, pageSize } } }));
+      return fetchAllPages(loadPage, 100, (hoodie) => hoodie.hoodieId);
+    },
     staleTime: 15_000,
   });
 }
 export type StockHoodies = NonNullable<ReturnType<typeof useStockHoodies>['data']>;
-export type StockCell = StockHoodies['hoodies'][number]['cells'][number];
+export type StockCell = StockHoodies['items'][number]['cells'][number];
 
 export function useStockStimpies() {
   return useQuery({
     queryKey: queryKeys.stockStimpies,
-    queryFn: () => unwrap(api.GET('/api/v1/admin/stock/stimpies')),
+    queryFn: () => fetchAllPages(
+      (page, pageSize) => unwrap(api.GET('/api/v1/admin/stock/stimpies', { params: { query: { page, pageSize } } })),
+      100,
+      (stimpie) => stimpie.stimpieId,
+    ),
     staleTime: 15_000,
   });
 }
-export type StockStimpie = NonNullable<ReturnType<typeof useStockStimpies>['data']>['items'][number];
+export type StockStimpie = NonNullable<ReturnType<typeof useStockStimpies>['data']>['items'][number] & {
+  artworkUrl?: string | null;
+  imageUrl?: string | null;
+  reserved?: number;
+};
 
 export interface MovementFilters {
   itemType?: ItemType;
@@ -101,7 +115,7 @@ export function useStockChange() {
     onSuccess: (snapshot, input) => {
       if (input.itemType === 'HOODIE_VARIANT') {
         qc.setQueryData<StockHoodies>(queryKeys.stockHoodies, (old) =>
-          old ? { ...old, hoodies: old.hoodies.map((h) => ({ ...h, cells: h.cells.map((c) => (c.variantId === input.itemId ? { ...c, ...snapshot } : c)) })) } : old,
+          old ? { ...old, items: old.items.map((h) => ({ ...h, cells: h.cells.map((c) => (c.variantId === input.itemId ? { ...c, ...snapshot } : c)) })) } : old,
         );
       } else {
         qc.setQueryData<{ items: StockStimpie[] }>(queryKeys.stockStimpies, (old) =>

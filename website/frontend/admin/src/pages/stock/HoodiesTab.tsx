@@ -50,12 +50,12 @@ export function HoodiesTab({ highlight }: { highlight: number | null }) {
     <>
       <QueryBoundary query={query} skeleton={<Skeleton variant="rect" className="h-72" />}>
         {(data) =>
-          data.hoodies.length === 0 ? (
+          data.items.length === 0 ? (
             <EmptyState title="No hoodies yet" text="Create one in Products." action={<Button href="/products?tab=hoodies" variant="secondary">Go to Products</Button>} />
           ) : (
             <div className="flex flex-col gap-6">
-              {data.hoodies.map((h) => (
-                <HoodieGrid key={h.hoodieId} data={data} hoodie={h} threshold={threshold} highlight={highlight} onAdjust={setTarget} />
+              {data.items.map((h) => (
+                <HoodieGrid key={h.hoodieId} hoodie={h} threshold={threshold} highlight={highlight} onAdjust={setTarget} />
               ))}
             </div>
           )
@@ -67,29 +67,26 @@ export function HoodiesTab({ highlight }: { highlight: number | null }) {
 }
 
 function HoodieGrid({
-  data,
   hoodie,
   threshold,
   highlight,
   onAdjust,
 }: {
-  data: StockHoodies;
-  hoodie: StockHoodies['hoodies'][number];
+  hoodie: StockHoodies['items'][number];
   threshold: number;
   highlight: number | null;
   onAdjust: (t: AdjustTarget) => void;
 }) {
   const isMd = useIsMdUp();
   const byKey = new Map(hoodie.cells.map((c) => [`${c.colorId}:${c.sizeId}`, c]));
-  const colorName = new Map(data.colors.map((c) => [c.id, c.name]));
-  const sizeLabel = new Map(data.sizes.map((s) => [s.id, s.label]));
+  const colorName = new Map(hoodie.colors.map((c) => [c.id, c.name]));
+  const sizeLabel = new Map(hoodie.sizes.map((s) => [s.id, s.label]));
   const adjust = (cell: StockCell) =>
     onAdjust({
       itemType: 'HOODIE_VARIANT',
       itemId: cell.variantId,
       name: `${hoodie.name}, ${colorName.get(cell.colorId) ?? ''}, ${sizeLabel.get(cell.sizeId) ?? ''}`,
       quantity: cell.quantity,
-      reserved: cell.reserved,
       available: cell.available,
     });
 
@@ -109,6 +106,7 @@ function HoodieGrid({
       <h2 id={`hoodie-${hoodie.hoodieId}`} className="mb-3 text-h4">
         {hoodie.name}
       </h2>
+      {hoodie.colors.length === 0 || hoodie.sizes.length === 0 ? <p className="text-body-sm text-fg-muted">No colour and size combinations are assigned yet. Choose them in Products → Hoodies.</p> : null}
       {isMd ? (
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-2 text-center">
@@ -116,7 +114,7 @@ function HoodieGrid({
             <thead>
               <tr>
                 <th scope="col" className="text-left text-body-sm font-medium text-fg-muted">Colour</th>
-                {data.sizes.map((s) => (
+                {hoodie.sizes.map((s) => (
                   <th key={s.id} scope="col" className="text-body-sm font-medium text-fg-muted">
                     {s.label}
                   </th>
@@ -124,13 +122,13 @@ function HoodieGrid({
               </tr>
             </thead>
             <tbody>
-              {data.colors.map((color) => (
+              {hoodie.colors.map((color) => (
                 <tr key={color.id}>
                   <th scope="row" className="whitespace-nowrap pr-2 text-left text-body font-medium">
                     <span className="mr-2 inline-block h-4 w-4 rounded-full border border-base align-[-2px]" style={{ backgroundColor: color.hex }} aria-hidden="true" />
                     {color.name}
                   </th>
-                  {data.sizes.map((size) => {
+                  {hoodie.sizes.map((size) => {
                     const cell = byKey.get(`${color.id}:${size.id}`);
                     if (!cell) return <td key={size.id} className="text-fg-muted">—</td>;
                     const state = cellState(cell.available, threshold);
@@ -140,7 +138,7 @@ function HoodieGrid({
                           type="button"
                           data-variant-id={cell.variantId}
                           onClick={() => adjust(cell)}
-                          aria-label={`${color.name}, ${size.label}: available ${cell.available}, on hand ${cell.quantity}, reserved ${cell.reserved}. Adjust stock`}
+                          aria-label={`${color.name}, ${size.label}: available ${cell.available}, quantity ${cell.quantity}. Adjust stock`}
                           className={cn(
                             'flex min-h-16 w-full min-w-16 flex-col items-center justify-center rounded-md border-2 px-2 py-1 transition hover:border-fg',
                             STATE_CLASS[state],
@@ -149,7 +147,7 @@ function HoodieGrid({
                         >
                           <span className="text-h4 font-bold leading-none tabular-nums">{cell.available}</span>
                           <span className="mt-1 text-caption tabular-nums text-fg-muted">
-                            {cell.quantity} / {cell.reserved}
+                            {cell.quantity} on hand
                           </span>
                           <StateTag state={state} />
                         </button>
@@ -160,12 +158,12 @@ function HoodieGrid({
               ))}
             </tbody>
           </table>
-          <p className="mt-2 text-caption text-fg-muted">Big number: available. Small: on hand / reserved. Click a cell to adjust.</p>
+          <p className="mt-2 text-caption text-fg-muted">Available to sell is shown above the on-hand quantity. Click a cell to adjust its quantity.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {data.colors.map((color) => (
-            <ColorAccordion key={color.id} color={color} hoodie={hoodie} data={data} threshold={threshold} highlight={highlight} onAdjust={adjust} />
+          {hoodie.colors.map((color) => (
+            <ColorAccordion key={color.id} color={color} hoodie={hoodie} threshold={threshold} highlight={highlight} onAdjust={adjust} />
           ))}
         </div>
       )}
@@ -176,24 +174,22 @@ function HoodieGrid({
 function ColorAccordion({
   color,
   hoodie,
-  data,
   threshold,
   highlight,
   onAdjust,
 }: {
-  color: StockHoodies['colors'][number];
-  hoodie: StockHoodies['hoodies'][number];
-  data: StockHoodies;
+  color: StockHoodies['items'][number]['colors'][number];
+  hoodie: StockHoodies['items'][number];
   threshold: number;
   highlight: number | null;
   onAdjust: (cell: StockCell) => void;
 }) {
-  const cells = data.sizes.map((s) => hoodie.cells.find((c) => c.colorId === color.id && c.sizeId === s.id)).filter((c): c is StockCell => !!c);
+  const cells = hoodie.sizes.map((s) => hoodie.cells.find((c) => c.colorId === color.id && c.sizeId === s.id)).filter((c): c is StockCell => !!c);
   const hasHighlight = highlight !== null && cells.some((c) => c.variantId === highlight);
   const problems = cells.filter((c) => cellState(c.available, threshold) !== 'ok').length;
   const [open, setOpen] = useState(hasHighlight);
   const id = `acc-${hoodie.hoodieId}-${color.id}`;
-  const sizeLabel = new Map(data.sizes.map((s) => [s.id, s.label]));
+  const sizeLabel = new Map(hoodie.sizes.map((s) => [s.id, s.label]));
   return (
     <div className="rounded-md border border-base">
       <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen((v) => !v)} className="flex min-h-12 w-full items-center justify-between gap-2 px-3 text-left">
@@ -219,7 +215,7 @@ function ColorAccordion({
                     {sizeLabel.get(cell.sizeId)} <span className="ml-2 tabular-nums">Available {cell.available}</span>
                   </p>
                   <p className="text-body-sm tabular-nums text-fg-muted">
-                    (qty {cell.quantity}, reserved {cell.reserved}) <StateTag state={state} />
+                    (on hand {cell.quantity}) <StateTag state={state} />
                   </p>
                 </div>
                 <Button variant="secondary" size="sm" onClick={() => onAdjust(cell)} aria-label={`Adjust ${color.name}, ${sizeLabel.get(cell.sizeId)}`}>

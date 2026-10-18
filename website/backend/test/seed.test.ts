@@ -26,14 +26,14 @@ describe('seed (data-model section 8)', () => {
     await runSeed(t.ctx, { minimal: true, ...quiet });
     const first = await counts();
     expect(first).toMatchObject({
-      admins: 1, colors: 4, sizes: 4, columns: 3, values: 12, hoodies: 1, variants: 16, packs: 2, areas: 6,
-      emailTemplates: 7, waTemplates: 5, faqs: 8, settings: 6, counters: 1, stimpies: 0, drops: 0,
+      admins: 1, colors: 4, sizes: 6, columns: 4, values: 24, hoodies: 1, variants: 24, packs: 2, areas: 6,
+      emailTemplates: 7, waTemplates: 5, faqs: 13, settings: 6, counters: 1, stimpies: 0, drops: 0,
     });
     expect(first.content).toBe(6); // announcement, homepage, about, how_it_works, policies, size_chart_howto
 
     const s = await t.ctx.settings.getAll();
     expect(s.orders).toMatchObject({ numberPrefix: 'STP', firstNumber: 1001, stockHoldHours: 12, autoExpireUnconfirmed: false, lowStockThreshold: 10, hardwareCostCents: 100 });
-    expect(s.delivery).toEqual({ defaultFeeCents: 300, estimateText: '2-3 working days' });
+    expect(s.delivery).toEqual({ defaultFeeCents: 500, estimateText: '4–5 business days' });
     expect(s.setup.reviewed).toEqual([]);
     expect((await t.prisma.counter.findUniqueOrThrow({ where: { name: 'order_number' } })).value).toBe(1000);
 
@@ -44,7 +44,7 @@ describe('seed (data-model section 8)', () => {
     expect((await t.prisma.pack.findUniqueOrThrow({ where: { slug: 'hoodie-1-stimpie' } })).priceCents).toBe(3500);
     const hoodie = await t.prisma.hoodie.findFirstOrThrow();
     expect(hoodie).toMatchObject({ priceCents: 2500, costCents: 1000 });
-    expect((await t.prisma.size.findMany({ orderBy: { position: 'asc' } })).map((x) => x.label)).toEqual(['S', 'M', 'L', 'XL']);
+    expect((await t.prisma.size.findMany({ orderBy: { position: 'asc' } })).map((x) => x.label)).toEqual(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']);
     expect((await t.prisma.emailTemplate.findMany()).map((x) => x.key).sort()).toEqual(['marketing_update', 'order_cancelled', 'order_confirmed', 'order_delivered', 'order_out_for_delivery', 'order_received', 'orders_lookup']);
     expect((await t.prisma.whatsappTemplate.findMany()).map((x) => x.key).sort()).toEqual(['delivered', 'marketing_update', 'order_confirmation', 'out_for_delivery', 'ready_for_delivery']);
 
@@ -56,7 +56,7 @@ describe('seed (data-model section 8)', () => {
 
     // the public endpoints work on the seeded database
     expect((await t.client.get('/options')).json<{ colors: unknown[]; sizes: unknown[] }>()).toMatchObject({ colors: expect.any(Array) });
-    expect((await t.client.get('/size-chart')).json<{ rows: unknown[] }>().rows).toHaveLength(4);
+    expect((await t.client.get('/size-chart')).json<{ rows: unknown[] }>().rows).toHaveLength(6);
 
     // idempotent: a second run changes nothing, and does not overwrite edits
     await t.prisma.setting.update({ where: { key: 'delivery' }, data: { value: { defaultFeeCents: 999, estimateText: 'edited' } } });

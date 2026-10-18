@@ -9,11 +9,11 @@ type Err = { error: { code: string; fields?: Record<string, string> } };
 describe('settings service (typed groups, defaults, cache)', () => {
   it('returns documented defaults on an empty database', async () => {
     const s = await t.ctx.settings.getAll();
-    expect(s.business).toEqual({ name: 'Stimpy', whatsappNumber: null, supportEmail: 'hello@stimpy.local', instagramUrl: null, timezone: 'Asia/Beirut' });
+    expect(s.business).toEqual({ name: 'Stimpy', whatsappNumber: null, supportEmail: 'info@stimpylb.com', instagramUrl: null, timezone: 'Asia/Beirut' });
     expect(s.orders).toEqual({ numberPrefix: 'STP', firstNumber: 1001, stockHoldHours: 12, autoExpireUnconfirmed: false, lowStockThreshold: 10, hardwareCostCents: 100 });
-    expect(s.email).toMatchObject({ enabled: true, senderName: 'Stimpy', senderAddress: 'orders@stimpy.local', replyTo: 'hello@stimpy.local' });
+    expect(s.email).toMatchObject({ enabled: true, senderName: 'Stimpy', senderAddress: 'info@stimpylb.com', replyTo: 'info@stimpylb.com' });
     expect(s.notifications).toEqual({ founderEmail: null, onNewOrder: true, onLowStock: true });
-    expect(s.delivery).toEqual({ defaultFeeCents: 300, estimateText: '2-3 working days' });
+    expect(s.delivery).toEqual({ defaultFeeCents: 500, estimateText: '4–5 business days' });
     expect(s.setup).toEqual({ reviewed: [] });
     expect(SETTINGS_DEFAULTS.orders.lowStockThreshold).toBe(10);
   });

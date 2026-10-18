@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Pill, cn } from '@stimpy/ui';
-import { ACCENTS, STATE_LABEL, accentLabel, type Accent, type DropState } from './dropForm';
+import { STATE_LABEL, type DropState } from './dropForm';
 
-/** Accent chip: the swatch AND the colour name in text (never colour alone). */
-export function AccentChip({ accent, className }: { accent: Accent; className?: string }) {
-  const hex = ACCENTS.find((a) => a.value === accent)?.hex;
+/** Accent chip shows both the swatch and its exact selected hex value. */
+export function AccentChip({ accentHex, className }: { accentHex: string; className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-2 text-body-sm', className)}>
-      <span aria-hidden="true" className="h-4 w-4 rounded-full border border-ink/30" style={{ backgroundColor: hex }} />
-      {accentLabel(accent)}
+      <span aria-hidden="true" className="h-4 w-4 rounded-full border border-ink/30" style={{ backgroundColor: accentHex }} />
+      {accentHex.toUpperCase()}
     </span>
   );
 }

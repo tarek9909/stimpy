@@ -86,14 +86,14 @@ async function emailAttention(ctx: AppContext): Promise<AttentionItem[]> {
 }
 
 /**
- * Items at or below the low-stock threshold. Zero-stock variants that were never stocked (auto-created for a new colour or
- * size) are not alerts; an item with zero available is listed only if it ever held stock.
+ * Items at or below the low-stock threshold. Zero-stock variants that were never stocked are not alerts;
+ * an item with zero available is listed only if it ever held stock.
  */
 async function lowStockAttention(ctx: AppContext, t: Date): Promise<AttentionItem[]> {
   const threshold = (await ctx.settings.get('orders')).lowStockThreshold;
   const [variants, stimpies, stocked] = await Promise.all([
     ctx.prisma.hoodieVariant.findMany({
-      where: { hoodie: { active: true }, color: { active: true }, size: { active: true } },
+      where: { active: true, hoodie: { active: true }, color: { active: true }, size: { active: true } },
       select: { id: true, quantity: true, reserved: true, hoodie: { select: { name: true } }, color: { select: { name: true, position: true } }, size: { select: { label: true, position: true } } },
     }),
     ctx.prisma.stimpie.findMany({
@@ -159,19 +159,18 @@ type Def = { key: string; kind: 'AUTO' | 'REVIEW'; required: boolean; label: str
 
 export const SETUP_DEFS: Def[] = [
   { key: 'business_whatsapp', kind: 'AUTO', required: true, label: 'Add your WhatsApp number', hint: "Customers' WhatsApp confirmation opens a chat with this number.", link: '/settings?tab=business' },
-  { key: 'contact_emails', kind: 'AUTO', required: true, label: 'Set your contact emails', hint: 'The support email, sender address and reply-to must be real addresses, not the placeholder ones ending in @stimpy.local.', link: '/settings?tab=business' },
+  { key: 'contact_emails', kind: 'AUTO', required: true, label: 'Set your contact emails', hint: 'Use an address customers can reach and that your mail provider allows you to send from.', link: '/settings?tab=business' },
   { key: 'founder_alerts', kind: 'AUTO', required: false, label: 'Turn on new-order alerts', hint: 'Add the email address that should get a message for every new order.', link: '/settings?tab=notifications' },
-  { key: 'colors', kind: 'REVIEW', required: true, label: 'Review the hoodie colours', hint: 'The seeded colours are placeholders. Keep, rename or replace them.', link: '/products?tab=options' },
-  { key: 'sizes', kind: 'REVIEW', required: true, label: 'Review the sizes', hint: 'Check the size list matches what you really sell.', link: '/products?tab=options' },
-  { key: 'size_chart', kind: 'REVIEW', required: true, label: 'Review the size chart', hint: 'The measurements are placeholders. Enter the real numbers.', link: '/products?tab=size-chart' },
+  { key: 'colors', kind: 'REVIEW', required: true, label: 'Review the hoodie colours', hint: 'Check each listed colour and swatch matches the hoodie you will fulfil.', link: '/products?tab=options' },
+  { key: 'sizes', kind: 'REVIEW', required: true, label: 'Review the sizes', hint: 'Check the size list and stock reflect the sizes you can currently ship.', link: '/products?tab=options' },
+  { key: 'size_chart', kind: 'REVIEW', required: true, label: 'Review the size chart', hint: 'The approved garment measurements are published. Compare them with a production sample when available.', link: '/products?tab=size-chart' },
   { key: 'hoodie_price', kind: 'REVIEW', required: true, label: 'Review the hoodie price, cost and photos', hint: 'Check the price, your cost per hoodie and the product photos.', link: '/products?tab=hoodies' },
   { key: 'packs_prices', kind: 'REVIEW', required: true, label: 'Review the packs and Stimpie prices', hint: 'Check every pack price and the price and cost of each Stimpie.', link: '/products?tab=packs' },
-  { key: 'delivery_fee', kind: 'REVIEW', required: true, label: 'Review the delivery fee and estimate text', hint: 'The default fee and the delivery estimate are placeholders.', link: '/deliveries?tab=fees' },
-  { key: 'policies', kind: 'REVIEW', required: true, label: 'Review the policies', hint: 'Delivery and returns, care, terms and privacy texts are placeholders.', link: '/content?tab=policies' },
+  { key: 'delivery_fee', kind: 'REVIEW', required: true, label: 'Review the delivery fee and estimate text', hint: 'The current default is $5 with an estimate of 4–5 business days. Review any area-specific overrides.', link: '/settings?tab=delivery' },
+  { key: 'policies', kind: 'REVIEW', required: true, label: 'Review the policies', hint: 'Read the published delivery, care, terms and privacy information and update it when your business details change.', link: '/content?tab=policies' },
   { key: 'email_texts', kind: 'REVIEW', required: false, label: 'Review the email and WhatsApp texts', hint: 'Read the automatic messages your customers will receive and adjust the wording.', link: '/content?tab=emails' },
   { key: 'first_stock', kind: 'AUTO', required: true, label: 'Add your first stock', hint: 'At least one hoodie variant and one Stimpie need units in stock.', link: '/stock' },
   { key: 'builder_2d', kind: 'AUTO', required: false, label: 'Set up the 2D Builder', hint: 'Add a back-view hoodie image and placement for at least one colour.', link: '/content?tab=builder' },
-  { key: 'builder_3d', kind: 'AUTO', required: false, label: 'Set up the 3D Builder', hint: 'Upload a 3D model and name its back-panel mesh.', link: '/content?tab=builder' },
 ];
 export const REVIEW_KEYS = SETUP_DEFS.filter((d) => d.kind === 'REVIEW').map((d) => d.key);
 const PLACEHOLDER_EMAIL = /@stimpy\.local$/i;
@@ -181,27 +180,24 @@ async function builderValue(ctx: AppContext, key: string): Promise<unknown> {
 }
 
 async function autoStatuses(ctx: AppContext): Promise<Record<string, boolean>> {
-  const [business, email, notifications, variants, stimpies, colors, builderColors, model3d] = await Promise.all([
+  const [business, email, notifications, variants, stimpies, colors, builderColors] = await Promise.all([
     ctx.settings.get('business'),
     ctx.settings.get('email'),
     ctx.settings.get('notifications'),
-    ctx.prisma.hoodieVariant.findMany({ where: { quantity: { gt: 0 }, hoodie: { active: true } }, select: { quantity: true, reserved: true } }),
+    ctx.prisma.hoodieVariant.findMany({ where: { active: true, quantity: { gt: 0 }, hoodie: { active: true } }, select: { quantity: true, reserved: true } }),
     ctx.prisma.stimpie.findMany({ where: { quantity: { gt: 0 }, active: true }, select: { quantity: true, reserved: true } }),
     ctx.prisma.color.findMany({ where: { active: true }, select: { id: true } }),
     builderValue(ctx, 'colors'),
-    builderValue(ctx, 'model3d'),
   ]);
   const real = (v: string | null | undefined): boolean => Boolean(v && v.trim() && !PLACEHOLDER_EMAIL.test(v.trim()));
   const activeIds = new Set(colors.map((c) => c.id));
   const colorEntries = (Array.isArray(builderColors) ? builderColors : []) as { colorId?: unknown; hoodieImage2d?: unknown; placement2d?: unknown }[];
-  const m = (model3d && typeof model3d === 'object' ? model3d : null) as { url?: unknown; backPanelMesh?: unknown } | null;
   return {
     business_whatsapp: Boolean(business.whatsappNumber),
     contact_emails: real(business.supportEmail) && real(email.senderAddress) && real(email.replyTo),
     founder_alerts: Boolean(notifications.founderEmail),
     first_stock: variants.some((v) => v.quantity - v.reserved > 0) && stimpies.some((s) => s.quantity - s.reserved > 0),
     builder_2d: colorEntries.some((c) => typeof c.colorId === 'number' && activeIds.has(c.colorId) && typeof c.hoodieImage2d === 'string' && c.hoodieImage2d !== '' && c.placement2d && typeof c.placement2d === 'object'),
-    builder_3d: Boolean(m && typeof m.url === 'string' && m.url && typeof m.backPanelMesh === 'string' && m.backPanelMesh.trim()),
   };
 }
 

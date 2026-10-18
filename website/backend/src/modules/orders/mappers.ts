@@ -11,9 +11,26 @@ import type { adminOrderSchema, adminOrderSummarySchema, orderItemSchema } from 
  * cannot leak because every public/admin shape is built field by field here.
  */
 
-export const summaryInclude = { items: { orderBy: { id: 'asc' } } } satisfies Prisma.OrderInclude;
+const itemsWithStockInclude = {
+  orderBy: { id: 'asc' },
+  include: {
+    stockLines: {
+      include: {
+        stimpie: true,
+        variant: {
+          include: {
+            hoodie: true,
+            color: true,
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+export const summaryInclude = { items: itemsWithStockInclude } satisfies Prisma.OrderInclude;
 export const detailInclude = {
-  items: { orderBy: { id: 'asc' } },
+  items: itemsWithStockInclude,
   customer: true,
   events: { include: { user: { select: { name: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
   notesList: { include: { user: { select: { name: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] },
@@ -22,14 +39,48 @@ export const detailInclude = {
 
 export type OrderWithItems = Prisma.OrderGetPayload<{ include: typeof summaryInclude }>;
 export type OrderDetailRow = Prisma.OrderGetPayload<{ include: typeof detailInclude }>;
-type ItemRow = OrderWithItems['items'][number];
+export type ItemRow = Prisma.OrderItemGetPayload<{}> & { stockLines?: unknown };
 
 export type OrderItemDto = z.infer<typeof orderItemSchema>;
 export type AdminOrderSummaryDto = z.infer<typeof adminOrderSummarySchema>;
 export type AdminOrderDto = z.infer<typeof adminOrderSchema>;
 
+function extractItemMedia(i: unknown) {
+  const stockLines = (i as {
+    stockLines?: Array<{
+      itemType: string;
+      stimpie?: { name: string; artworkUrl: string | null; images: string[] } | null;
+      variant?: {
+        hoodie?: { name: string; images: string[] } | null;
+        color?: { name: string; images: string[] } | null;
+      } | null;
+    }>;
+  })?.stockLines;
+
+  let hoodieImage: string | null = null;
+  const stimpieImages: Array<{ name: string; imageUrl: string | null }> = [];
+
+  if (Array.isArray(stockLines)) {
+    for (const line of stockLines) {
+      if (line.itemType === 'HOODIE_VARIANT' && line.variant) {
+        if (!hoodieImage) {
+          hoodieImage = line.variant.color?.images?.[0] || line.variant.hoodie?.images?.[0] || null;
+        }
+      } else if (line.itemType === 'STIMPIE' && line.stimpie) {
+        stimpieImages.push({
+          name: line.stimpie.name,
+          imageUrl: line.stimpie.artworkUrl || line.stimpie.images?.[0] || null,
+        });
+      }
+    }
+  }
+
+  return { hoodieImage, stimpieImages };
+}
+
 export function toOrderItem(i: ItemRow): OrderItemDto {
   const d = itemDetail(i.detail);
+  const media = extractItemMedia(i);
   return {
     id: i.id,
     kind: i.kind,
@@ -37,7 +88,14 @@ export function toOrderItem(i: ItemRow): OrderItemDto {
     qty: i.qty,
     unitPriceCents: i.unitPriceCents,
     lineTotalCents: i.unitPriceCents * i.qty,
-    details: { hoodie: d.hoodie, color: d.color, size: d.size, stimpies: d.stimpies },
+    details: {
+      hoodie: d.hoodie,
+      color: d.color,
+      size: d.size,
+      stimpies: d.stimpies,
+      hoodieImage: media.hoodieImage,
+      stimpieImages: media.stimpieImages.length > 0 ? media.stimpieImages : undefined,
+    },
   };
 }
 

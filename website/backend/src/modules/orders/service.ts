@@ -242,7 +242,7 @@ export async function trackOrder(ctx: AppContext, input: { orderNumber: string; 
   const id = await findOrderIdByNumber(ctx, ctx.prisma, input.orderNumber);
   const order = await ctx.prisma.order.findUnique({
     where: { id: id ?? 0 },
-    include: { items: { orderBy: { id: 'asc' } }, events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+    include: { ...summaryInclude, events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
   });
   const matches = timingSafeEqual(sha(phone), sha(order?.contactPhone ?? DUMMY_PHONE)) && order !== null;
   if (!matches || !order) throw AppError.notFound(NOT_FOUND_MESSAGE);

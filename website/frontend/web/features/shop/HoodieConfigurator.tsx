@@ -6,6 +6,7 @@ import { HOODIE_RATIO, PriceTag, RichText } from '@stimpy/ui';
 import type { HoodieDetail, Pack, Stimpie } from '@stimpy/api-client';
 import { Gallery, type GalleryImage } from '@/components/Gallery';
 import { browserApi } from '@/lib/api-browser';
+import { fetchApiAllPages } from '@/lib/pagination';
 import { useFreshData } from '@/lib/useFreshData';
 import { initialState, parsePreset, type ComposerPreset } from './composer';
 import { PackComposer } from './PackComposer';
@@ -64,12 +65,12 @@ export function HoodieConfigurator({ hoodie, packs, stimpies, estimateText }: Ho
   const initial = useMemo<Fresh>(() => ({ hoodie, stimpies }), [hoodie, stimpies]);
   const { data } = useFreshData<Fresh>(initial, async (signal) => {
     const api = browserApi();
-    const [h, s] = await Promise.all([
+    const [h, stimpies] = await Promise.all([
       api.GET('/api/v1/products/hoodies/{slug}', { params: { path: { slug: hoodie.slug } }, cache: 'no-store', signal }),
-      api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'true' } }, cache: 'no-store', signal }),
+      fetchApiAllPages((page, pageSize) => api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'true', page, pageSize } }, cache: 'no-store', signal })),
     ]);
-    if (!h.data || !s.data) throw new Error('empty response');
-    return { hoodie: h.data, stimpies: s.data };
+    if (!h.data) throw new Error('empty response');
+    return { hoodie: h.data, stimpies };
   });
 
   // Same starting colour as the composer, so the server-rendered first photo (the LCP image) does not change.
@@ -99,7 +100,7 @@ export function HoodieConfigurator({ hoodie, packs, stimpies, estimateText }: Ho
       <div className="store-product-info flex flex-col gap-6">
         <header className="flex flex-col gap-3">
           <h1 className="text-h1 text-fg">{data.hoodie.name}</h1>
-          <PriceTag cents={data.hoodie.priceCents} size="lg" />
+          <PriceTag cents={data.hoodie.priceCents} compareAtCents={data.hoodie.compareAtPriceCents ?? undefined} size="lg" />
           <RichText text={data.hoodie.description} />
         </header>
         <PackComposer

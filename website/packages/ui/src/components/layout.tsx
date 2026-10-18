@@ -2,7 +2,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../cn';
 import { HOODIE_RATIO } from '../constants';
 import { Banknote, RefreshCw, Truck, Video } from '../icons';
-import { SURFACE_CLASSES, accentSurface, type SurfaceTone } from '../surfaces';
+import { SURFACE_CLASSES, accentColorStyle, accentSurface, type SurfaceTone } from '../surfaces';
 import type { AccentColor, ReviewLike } from '../types';
 import { Media } from './Media';
 import { ZipWipe, type ZipColor, type ZipDirection } from './ZipWipe';
@@ -14,9 +14,9 @@ export type SectionTone = 'white' | 'cream' | 'black' | 'coral' | 'accent';
 export interface SectionProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
   /** Background and its brand text pair: black on white/cream/coral/accent, white on black. */
   tone?: SectionTone;
-  /** `accent`: the drop colour. Preferred: pass the enum so tokens drive the styling. */
+  /** `accent`: the drop colour. */
   accentColor?: AccentColor | null;
-  /** Fallback when only the API hex is at hand. Text stays black. Prefer `accentColor`. */
+  /** Exact user-picked colour; takes precedence over the legacy enum. */
   accentHex?: string;
   heading?: ReactNode;
   eyebrow?: ReactNode;
@@ -50,18 +50,18 @@ export const Section = forwardRef<HTMLElement, SectionProps>(function Section(
 ) {
   const surface: SurfaceTone = tone === 'accent' ? accentSurface(accentColor) : tone;
   const classes = SURFACE_CLASSES[surface];
-  const useHex = tone === 'accent' && !accentColor && !!accentHex;
+  const useHex = tone === 'accent' && !!accentHex;
   const H = `h${headingLevel}` as 'h1' | 'h2';
   const section = (
     <section
       ref={ref}
       className={cn(
         classes,
-        useHex && 'surface-colored text-ink',
+        useHex && 'surface-colored',
         'py-12 md:py-16 lg:py-20',
         className,
       )}
-      style={useHex ? { backgroundColor: accentHex, ...style } : style}
+      style={useHex ? { ...accentColorStyle(accentHex), ...style } : style}
       {...rest}
     >
       <div className="container">

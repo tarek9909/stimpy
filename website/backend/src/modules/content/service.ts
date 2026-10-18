@@ -3,7 +3,7 @@ import type { z } from 'zod';
 import type { AppContext } from '../../context';
 import { jsonStringArray, type Db } from '../../lib/db';
 import { AppError } from '../../lib/errors';
-import { toPage, toSkipTake } from '../../lib/http';
+import { toPage, toSkipTake, type PageQuery } from '../../lib/http';
 import { applyOrder } from '../../lib/reorder';
 import { parseOrThrow } from '../../lib/zod-errors';
 import {
@@ -45,7 +45,7 @@ async function readBlock(db: Db, key: ContentKey): Promise<Obj> {
 }
 
 export type AnnouncementBlock = { enabled: boolean; text: string; linkUrl: string | null };
-export type HomepageBlock = { heroHeadline: string; heroSubheadline: string; heroVideoUrl: string | null; heroImageUrl: string | null; featuredDropSlug: string | null };
+export type HomepageBlock = { heroHeadline: string; heroSubheadline: string; heroVideoUrl: string | null; heroImageUrl: string | null; featuredDropSlug: string | null; featuredStimpieSlug: string | null; showDropSections: boolean };
 export type PoliciesBlock = { deliveryReturns: string; care: string; terms: string; privacy: string };
 export type HowItWorksBlock = {
   steps: { title: string; text: string; mediaUrl: string | null }[];
@@ -65,6 +65,8 @@ export async function readHomepage(db: Db): Promise<HomepageBlock> {
     heroVideoUrl: strOrNull(v.heroVideoUrl),
     heroImageUrl: strOrNull(v.heroImageUrl),
     featuredDropSlug: strOrNull(v.featuredDropSlug),
+    featuredStimpieSlug: strOrNull(v.featuredStimpieSlug),
+    showDropSections: v.showDropSections !== false,
   };
 }
 export async function readPolicies(db: Db): Promise<PoliciesBlock> {
@@ -85,16 +87,20 @@ export async function readHowItWorks(db: Db): Promise<HowItWorksBlock> {
 }
 
 /** `GET /content` (public). */
-export async function getPublicContent(ctx: AppContext) {
-  const [business, announcement, homepage, policies, about, howItWorks, faqs, reviews] = await Promise.all([
+export async function getPublicContent(ctx: AppContext, q: PageQuery) {
+  const faqWhere = {};
+  const reviewWhere = { visible: true };
+  const [business, announcement, homepage, policies, about, howItWorks, faqs, faqTotal, reviews, reviewTotal] = await Promise.all([
     ctx.settings.get('business'),
     readAnnouncement(ctx.prisma),
     readHomepage(ctx.prisma),
     readPolicies(ctx.prisma),
     readAbout(ctx.prisma),
     readHowItWorks(ctx.prisma),
-    ctx.prisma.faq.findMany({ orderBy: [{ position: 'asc' }, { id: 'asc' }] }),
-    ctx.prisma.review.findMany({ where: { visible: true }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] }),
+    ctx.prisma.faq.findMany({ where: faqWhere, orderBy: [{ position: 'asc' }, { id: 'asc' }], ...toSkipTake(q) }),
+    ctx.prisma.faq.count({ where: faqWhere }),
+    ctx.prisma.review.findMany({ where: reviewWhere, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], ...toSkipTake(q) }),
+    ctx.prisma.review.count({ where: reviewWhere }),
   ]);
   return {
     business: {
@@ -110,8 +116,8 @@ export async function getPublicContent(ctx: AppContext) {
     policies,
     about,
     howItWorks,
-    faqs: faqs.map((f) => ({ id: f.id, question: f.question, answer: f.answer, group: f.group, showOnHome: f.showOnHome })),
-    reviews: reviews.map((r) => ({ id: r.id, name: r.name, text: r.text, mediaUrl: r.mediaUrl })),
+    faqs: toPage(faqs.map((f) => ({ id: f.id, question: f.question, answer: f.answer, group: f.group, showOnHome: f.showOnHome })), faqTotal, q),
+    reviews: toPage(reviews.map((r) => ({ id: r.id, name: r.name, text: r.text, mediaUrl: r.mediaUrl })), reviewTotal, q),
   };
 }
 
@@ -146,6 +152,9 @@ export async function putContentBlock(ctx: AppContext, key: ContentKey, body: un
       const v = parseOrThrow(homepagePut, body);
       if (v.featuredDropSlug && !(await ctx.prisma.drop.findUnique({ where: { slug: v.featuredDropSlug }, select: { id: true } }))) {
         throw AppError.validation({ featuredDropSlug: 'That drop does not exist.' });
+      }
+      if (v.featuredStimpieSlug && !(await ctx.prisma.stimpie.findUnique({ where: { slug: v.featuredStimpieSlug }, select: { id: true } }))) {
+        throw AppError.validation({ featuredStimpieSlug: 'That Stimpie does not exist.' });
       }
       await writeBlock(ctx.prisma, key, v);
       return readHomepage(ctx.prisma);

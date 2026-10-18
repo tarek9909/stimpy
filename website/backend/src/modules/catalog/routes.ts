@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { errorResponses, idParams, pageSchema, publicCache } from '../../lib/http';
 import { noContent } from '../auth/schemas';
@@ -11,6 +10,8 @@ import {
   hoodieCreateBody,
   hoodieDetailSchema,
   hoodieListQuery,
+  publicHoodieQuery,
+  publicPackQuery,
   hoodieSummarySchema,
   hoodieUpdateBody,
   packCreateBody,
@@ -32,29 +33,29 @@ const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   const tags = ['catalog'];
 
   app.get('/products/hoodies', {
-    schema: { tags, summary: 'Active hoodies', response: { 200: z.array(hoodieSummarySchema) } },
-  }, async (_req, reply) => {
-    publicCache(reply);
-    return svc.listPublicHoodies(app.ctx);
+    schema: { tags, summary: 'Active hoodies (paginated)', querystring: publicHoodieQuery, response: { 200: pageSchema(hoodieSummarySchema), ...errorResponses } },
+  }, async (req, reply) => {
+    publicCache(reply, 5);
+    return svc.listPublicHoodies(app.ctx, req.query);
   });
 
   app.get('/products/hoodies/:slug', {
     schema: { tags, summary: 'One hoodie with colours, sizes and per-variant stock (404 if hidden)', params: slugParams, response: { 200: hoodieDetailSchema, ...errorResponses } },
   }, async (req, reply) => {
     const out = await svc.getPublicHoodie(app.ctx, req.params.slug);
-    publicCache(reply);
+    publicCache(reply, 5);
     return out;
   });
 
   app.get('/products/stimpies', {
     schema: {
       tags,
-      summary: 'Stimpies (default: AVAILABLE, LOW and SOLD_OUT)',
+      summary: 'Stimpies (default: AVAILABLE, LOW and SOLD_OUT; paginated)',
       querystring: publicStimpieQuery,
-      response: { 200: z.array(publicStimpieSchema), ...errorResponses },
+      response: { 200: pageSchema(publicStimpieSchema), ...errorResponses },
     },
   }, async (req, reply) => {
-    publicCache(reply);
+    publicCache(reply, 5);
     return svc.listPublicStimpies(app.ctx, req.query);
   });
 
@@ -62,15 +63,15 @@ const publicRoutes: FastifyPluginAsyncZod = async (app) => {
     schema: { tags, summary: 'One Stimpie (any status; 404 if hidden)', params: slugParams, response: { 200: publicStimpieSchema, ...errorResponses } },
   }, async (req, reply) => {
     const out = await svc.getPublicStimpie(app.ctx, req.params.slug);
-    publicCache(reply);
+    publicCache(reply, 5);
     return out;
   });
 
   app.get('/packs', {
-    schema: { tags, summary: 'Active packs, ordered', response: { 200: z.array(packSchema) } },
-  }, async (_req, reply) => {
-    publicCache(reply);
-    return svc.listPublicPacks(app.ctx);
+    schema: { tags, summary: 'Active packs, ordered (paginated)', querystring: publicPackQuery, response: { 200: pageSchema(packSchema), ...errorResponses } },
+  }, async (req, reply) => {
+    publicCache(reply, 5);
+    return svc.listPublicPacks(app.ctx, req.query);
   });
 };
 
@@ -85,7 +86,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
   }, async (req) => svc.listHoodies(app.ctx, req.query));
 
   app.post('/hoodies', {
-    schema: { tags, summary: 'Create a hoodie (creates zero-stock variants)', body: hoodieCreateBody, response: { 201: adminHoodieSchema, ...errorResponses } },
+    schema: { tags, summary: 'Create a hoodie with its selected colours and sizes', body: hoodieCreateBody, response: { 201: adminHoodieSchema, ...errorResponses } },
   }, async (req, reply) => reply.code(201).send(await svc.createHoodie(app.ctx, req.body)));
 
   app.put('/hoodies/order', {

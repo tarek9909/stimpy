@@ -1,19 +1,22 @@
 'use client';
 
-import Link from 'next/link';
 import { Button, Drawer } from '@stimpy/ui';
 import { PRIMARY_NAV, SECONDARY_NAV, isActivePath } from '@/lib/nav';
 import { track } from '@/lib/track';
+import { useSaveData } from '@/lib/useSaveData';
+import { NavigationLink as Link } from '../NavigationLink';
 
 export function MobileMenu({ open, onClose, pathname }: { open: boolean; onClose: () => void; pathname: string | null }) {
+  const saveData = useSaveData();
   return (
-    <Drawer open={open} onClose={onClose} title="Menu" className="store-mobile-menu !max-w-drawer !rounded-none">
+    <Drawer open={open} onClose={onClose} title="Menu" className="store-mobile-menu !max-w-drawer">
       <nav aria-label="Mobile">
         <ul className="flex flex-col">
           {PRIMARY_NAV.map((item) => (
             <li key={item.href} className="border-b border-base">
               <Link
                 href={item.href}
+                prefetch={!saveData}
                 aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
                 onClick={() => {
                   track('nav_click', { item: item.href });

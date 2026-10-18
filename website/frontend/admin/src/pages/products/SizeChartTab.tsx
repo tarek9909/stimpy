@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useForm, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useForm, useFieldArray, useController, useFormContext, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -36,7 +36,13 @@ const schema = z
 type Values = z.infer<typeof schema>;
 
 let counter = 0;
-const newKey = () => `c${(counter += 1)}`;
+const newKey = (columns: Values['columns']) => {
+  let key: string;
+  do {
+    key = `new-${(counter += 1)}`;
+  } while (columns.some((column) => column.key === key));
+  return key;
+};
 
 export function chartToValues(chart: AdminSizeChart): Values {
   const columns = [...chart.columns].sort((a, b) => a.position - b.position).map((c) => ({ key: `c${c.id}`, id: c.id, label: c.label, unit: c.unit }));
@@ -140,7 +146,7 @@ function SizeChartForm({ chart }: { chart: AdminSizeChart }) {
                     </th>
                   ))}
                   <th scope="col" className="px-2 py-2 align-top">
-                    <Button variant="secondary" size="sm" disabled={cols.fields.length >= MAX_COLUMNS} leftIcon={<Plus size={16} aria-hidden="true" />} onClick={() => cols.append({ key: newKey(), id: null, label: '', unit: 'cm' })}>
+                    <Button variant="secondary" size="sm" disabled={cols.fields.length >= MAX_COLUMNS} leftIcon={<Plus size={16} aria-hidden="true" />} onClick={() => cols.append({ key: newKey(columns), id: null, label: '', unit: 'cm' })}>
                       Add column
                     </Button>
                   </th>
@@ -168,7 +174,7 @@ function SizeChartForm({ chart }: { chart: AdminSizeChart }) {
                 <ColumnHeader index={i} count={cols.fields.length} onMove={move} onRemove={() => (filledIn(f.key) > 0 ? setRemoveAt(i) : cols.remove(i))} />
               </div>
             ))}
-            <Button variant="secondary" disabled={cols.fields.length >= MAX_COLUMNS} leftIcon={<Plus size={16} aria-hidden="true" />} onClick={() => cols.append({ key: newKey(), id: null, label: '', unit: 'cm' })}>
+            <Button variant="secondary" disabled={cols.fields.length >= MAX_COLUMNS} leftIcon={<Plus size={16} aria-hidden="true" />} onClick={() => cols.append({ key: newKey(columns), id: null, label: '', unit: 'cm' })}>
               Add column
             </Button>
             {rows.map((r) => (
@@ -215,15 +221,17 @@ function SizeChartForm({ chart }: { chart: AdminSizeChart }) {
 }
 
 function ColumnHeader({ index, count, onMove, onRemove }: { index: number; count: number; onMove: (i: number, d: -1 | 1) => void; onRemove: () => void }) {
-  const { register, formState } = useFormContext<Values>();
+  const { control, formState } = useFormContext<Values>();
+  const label = useController({ control, name: `columns.${index}.label` });
+  const unit = useController({ control, name: `columns.${index}.unit` });
   const err = formState.errors.columns?.[index];
   return (
     <div className="flex flex-col gap-1.5">
       <label className="sr-only" htmlFor={`field-columns.${index}.label`}>Column {index + 1} name</label>
-      <Input id={`field-columns.${index}.label`} {...register(`columns.${index}.label`)} placeholder="Chest" invalid={!!err?.label} aria-describedby={err?.label ? `col-${index}-err` : undefined} autoComplete="off" />
+      <Input id={`field-columns.${index}.label`} name={label.field.name} value={label.field.value} onChange={label.field.onChange} onBlur={label.field.onBlur} ref={label.field.ref} placeholder="Chest" invalid={!!err?.label} aria-describedby={err?.label ? `col-${index}-err` : undefined} autoComplete="off" />
       <div className="flex items-center gap-1">
         <label className="sr-only" htmlFor={`field-columns.${index}.unit`}>Column {index + 1} unit</label>
-        <Input id={`field-columns.${index}.unit`} {...register(`columns.${index}.unit`)} placeholder="cm" invalid={!!err?.unit} className="!w-20" autoComplete="off" />
+        <Input id={`field-columns.${index}.unit`} name={unit.field.name} value={unit.field.value} onChange={unit.field.onChange} onBlur={unit.field.onBlur} ref={unit.field.ref} placeholder="cm" invalid={!!err?.unit} className="!w-20" autoComplete="off" />
         <Button variant="ghost" iconOnly size="sm" aria-label={`Move column ${index + 1} left`} disabled={index === 0} onClick={() => onMove(index, -1)}><ArrowLeft size={16} aria-hidden="true" /></Button>
         <Button variant="ghost" iconOnly size="sm" aria-label={`Move column ${index + 1} right`} disabled={index === count - 1} onClick={() => onMove(index, 1)}><ArrowRight size={16} aria-hidden="true" /></Button>
         <Button variant="ghost" iconOnly size="sm" aria-label={`Remove column ${index + 1}`} disabled={count <= 1} onClick={onRemove}><Trash2 size={16} aria-hidden="true" /></Button>
@@ -234,12 +242,13 @@ function ColumnHeader({ index, count, onMove, onRemove }: { index: number; count
 }
 
 function CellInput({ sizeId, colKey, label, narrow }: { sizeId: number; colKey: string; label: string; narrow?: boolean }) {
-  const { register, formState } = useFormContext<Values>();
+  const { control, formState } = useFormContext<Values>();
   const name = `cells.s${sizeId}.${colKey}` as const;
+  const { field } = useController({ name, control });
   const err = formState.errors.cells?.[`s${sizeId}`]?.[colKey]?.message;
   return (
     <div>
-      <Input id={`field-${name}`} aria-label={label} {...register(name)} inputMode="decimal" maxLength={CELL_MAX} autoComplete="off" invalid={!!err} className={cn(narrow && '!w-28')} />
+      <Input id={`field-${name}`} name={field.name} value={(field.value as string | null | undefined) ?? ''} onChange={(event) => field.onChange(event.target.value)} onBlur={field.onBlur} ref={field.ref} aria-label={label} inputMode="decimal" maxLength={CELL_MAX} autoComplete="off" invalid={!!err} className={cn(narrow && '!w-28')} />
       {err ? <p className="mt-1 text-caption font-medium text-fg-danger">{err}</p> : null}
     </div>
   );

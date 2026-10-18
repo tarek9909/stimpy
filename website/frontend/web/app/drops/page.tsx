@@ -14,8 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const drops = await getDrops().catch(() => null);
   const first = drops?.live ?? drops?.upcoming[0] ?? null;
   return pageMetadata({
-    title: 'Drops: limited Stimpies, never restocked',
-    description: "Current and upcoming Stimpy drops. When a drop sells out, it won't return.",
+    title: 'Explore Stimpy drops',
+    description: 'Discover current and upcoming Stimpie collections. Pick your next back panel.',
     path: '/drops',
     image: first?.teaserImage ?? null,
   });
@@ -34,7 +34,7 @@ export default async function DropsPage() {
           <EmptyState
             icon={<Sparkles width={32} height={32} />}
             title="No drops announced yet"
-            text="Follow us on Instagram to hear first."
+            text={instagram ? 'Follow us on Instagram for future drop announcements.' : 'Check back for future drop announcements.'}
             action={
               instagram ? (
                 <Button href={instagram} variant="dark" leftIcon={<Instagram width={20} height={20} aria-hidden="true" />}>
@@ -50,7 +50,7 @@ export default async function DropsPage() {
             text="The next one is below."
           />
         ) : (
-          <p className="max-w-prose text-lead text-fg-muted">Limited Stimpies. When a drop sells out, it won&apos;t return.</p>
+          <p className="max-w-prose text-lead text-fg-muted">New collections. Fresh perspectives. Find the Stimpie that feels like you.</p>
         )}
       </Section>
 
@@ -68,13 +68,13 @@ export default async function DropsPage() {
         </Section>
       ) : !nothingAnnounced ? (
         <Section tone="white" heading="Upcoming">
-          <EmptyState title="Nothing scheduled yet" text="The next drop is coming. Follow us to hear first." />
+          <EmptyState title="Nothing scheduled yet" text="Future drop announcements will appear here." />
         </Section>
       ) : null}
 
       <Section tone="cream" heading="Archive">
         {archive.length === 0 ? (
-          <EmptyState title="The archive starts with Drop 01" />
+          <EmptyState title="Past drops will appear here." />
         ) : (
           <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
             {archive.map((d) => (

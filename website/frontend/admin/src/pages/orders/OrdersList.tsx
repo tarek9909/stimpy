@@ -37,7 +37,12 @@ import { exportOrdersCsv, useBulkStatus, useOrderCounts, useOrdersList, type Adm
 import { BulkResultDialog, type BulkFailure } from './BulkResultDialog';
 import { printPath, type PrintGroup, type PrintView } from './printPath';
 import { HoldExpiredBadge, OrderNumber, PaymentState, RowWhatsappButton, ordersListMemory, useOpenWhatsapp } from './parts';
+import { OrderListItemsCell } from './media';
+import { OutTab } from '../deliveries/OutTab';
+import { DeliveredTab } from '../deliveries/DeliveredTab';
+import { OrderStatusDialog } from './StatusActions';
 import {
+  ACTION_LABEL,
   BULK_ACTIONS,
   ORDER_TABS,
   SOURCES,
@@ -50,6 +55,20 @@ import {
   type BulkTarget,
   type OrderTab,
 } from './status';
+
+const ROW_NEXT_ACTION: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> = {
+  NEW: { to: 'CONFIRMED', label: 'Confirm' },
+  CONFIRMED: { to: 'PACKED', label: 'Pack' },
+  PACKED: { to: 'OUT_FOR_DELIVERY', label: 'Send out' },
+  OUT_FOR_DELIVERY: { to: 'DELIVERED', label: 'Deliver' },
+  DELIVERED: { to: 'RETURNED', label: 'Return' },
+};
+const ROW_SECONDARY_ACTION: Partial<Record<OrderStatus, OrderStatus>> = {
+  NEW: 'CANCELLED',
+  CONFIRMED: 'CANCELLED',
+  PACKED: 'CANCELLED',
+  OUT_FOR_DELIVERY: 'RETURNED',
+};
 
 const params = {
   status: enumParam(ORDER_TABS, 'ALL'),
@@ -66,6 +85,11 @@ const params = {
   page: intParam(1, { min: 1 }),
 };
 
+const workspaceParams = {
+  view: enumParam(['orders', 'out', 'delivered'] as const, 'orders'),
+  page: intParam(1, { min: 1 }),
+};
+
 const FILTER_KEYS = ['q', 'source', 'areaId', 'dropId', 'from', 'to', 'deliveryNumber', 'holdExpired'] as const;
 const SORTABLE = ['placedAt', 'totalCents', 'number', 'status'] as const;
 
@@ -79,11 +103,38 @@ const SORT_OPTIONS = [
   { value: 'status', label: 'Status' },
 ];
 
-/** Orders list (dashboard-pages 5): tabs with live counts, filters in the URL, sort, bulk actions, export. */
+/** Orders and delivery work now share one dashboard area. */
 export function OrdersList() {
+  const [{ view }, setWorkspace] = useUrlState(workspaceParams);
+  const location = useLocation();
+  useEffect(() => {
+    ordersListMemory.search = location.search;
+  }, [location.search]);
+  const tabs = [
+    { id: 'orders', label: 'Orders' },
+    { id: 'out', label: 'Out for delivery' },
+    { id: 'delivered', label: 'Delivered' },
+  ];
+  return (
+    <>
+      <PageHeader
+        title="Orders"
+        actions={
+          <Button href="/orders/new" variant="primary" leftIcon={<Plus size={20} aria-hidden="true" />}>
+            New order
+          </Button>
+        }
+      />
+      <Tabs aria-label="Order views" tabs={tabs} value={view} onChange={(v) => setWorkspace({ view: v as typeof workspaceParams.view.defaultValue })} />
+      {view === 'orders' ? <OrdersTable /> : <div className="pt-4">{view === 'out' ? <OutTab /> : <DeliveredTab />}</div>}
+    </>
+  );
+}
+
+/** Orders list (dashboard-pages 5): status tabs, filters, sorting, bulk actions and export. */
+function OrdersTable() {
   const [p, setP] = useUrlState(params);
   const navigate = useNavigate();
-  const location = useLocation();
   const f = useFormatters();
   const isMd = useIsMdUp();
   const toast = useToast();
@@ -94,11 +145,6 @@ export function OrdersList() {
   const bulk = useBulkStatus();
   const selection = useRowSelection();
   const whatsapp = useOpenWhatsapp();
-
-  // The detail page's Esc / back link returns to this exact view.
-  useEffect(() => {
-    ordersListMemory.search = location.search;
-  }, [location.search]);
 
   const sort = SORTABLE.includes(fromSortParam(p.sort)?.field as (typeof SORTABLE)[number]) ? p.sort : '-placedAt';
   const filters: OrderListFilters = {
@@ -129,6 +175,7 @@ export function OrdersList() {
 
   const [confirm, setConfirm] = useState<{ to: BulkTarget; ids: number[] } | null>(null);
   const [result, setResult] = useState<{ updated: number; failed: BulkFailure[] } | null>(null);
+  const [statusAction, setStatusAction] = useState<{ orderId: number; to: OrderStatus } | null>(null);
 
   const runBulk = async () => {
     if (!confirm) return;
@@ -276,13 +323,9 @@ export function OrdersList() {
     {
       id: 'items',
       header: 'Items',
-      mobileLabel: '',
-      className: 'max-w-[8rem]',
-      cell: (o) => (
-        <span className="block truncate" title={o.itemsSummary}>
-          {o.itemsSummary}
-        </span>
-      ),
+      mobileLabel: 'Items',
+      className: 'min-w-[14rem] max-w-[24rem]',
+      cell: (o) => <OrderListItemsCell order={o} />,
     },
     {
       id: 'delivery',
@@ -303,14 +346,6 @@ export function OrdersList() {
 
   return (
     <>
-      <PageHeader
-        title="Orders"
-        actions={
-          <Button href="/orders/new" variant="primary" leftIcon={<Plus size={20} aria-hidden="true" />}>
-            New order
-          </Button>
-        }
-      />
       <Tabs aria-label="Order status" tabs={tabs} value={p.status} onChange={(t) => { setP({ status: t as OrderTab }); selection.clear(); }} />
       <div className="flex flex-col gap-4 pt-4">
         <FilterBar
@@ -406,23 +441,48 @@ export function OrdersList() {
           onSelectionChange={selection.onSelectionChange}
           onRowClick={(o) => navigate(`/orders/${o.id}`)}
           rowClassName={(o) => (o.holdExpired ? 'border-l-4 border-l-danger' : undefined)}
-          rowActions={(o) => (
-            <span className="flex items-center justify-end">
-              {isMd ? <RowWhatsappButton order={o} /> : null}
-              <Menu
-                label={`Actions for ${o.number}`}
-                items={[
-                  { id: 'open', label: 'Open', href: `/orders/${o.id}` },
-                  { id: 'label', label: 'Print label', icon: <Printer size={18} aria-hidden="true" />, href: `/orders/${o.id}/label` },
-                  { id: 'invoice', label: 'Print invoice', icon: <Printer size={18} aria-hidden="true" />, href: `/orders/${o.id}/invoice` },
-                  ...(defaultWhatsappTemplate(o.status)
-                    ? [{ id: 'wa', label: 'Message on WhatsApp', icon: <MessageCircle size={18} aria-hidden="true" />, onSelect: () => void whatsapp.open(o.id, defaultWhatsappTemplate(o.status)!) }]
-                    : []),
-                  { id: 'copy', label: 'Copy order number', onSelect: () => void navigator.clipboard?.writeText(o.number).then(() => toast.success('Copied')).catch(() => toast.error("Couldn't copy. Select the number and copy it.")) },
-                ]}
-              />
-            </span>
-          )}
+          rowActions={(o) => {
+            const nextAction = ROW_NEXT_ACTION[o.status];
+            const secondaryAction = ROW_SECONDARY_ACTION[o.status];
+            return (
+              <span className="flex flex-wrap items-center justify-end gap-1">
+                {nextAction ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="whitespace-nowrap"
+                    title={`${ACTION_LABEL[nextAction.to]} — ${o.number}`}
+                    aria-label={`${ACTION_LABEL[nextAction.to]} for ${o.number}`}
+                    onClick={() => setStatusAction({ orderId: o.id, to: nextAction.to })}
+                  >
+                    {nextAction.label}
+                  </Button>
+                ) : null}
+                {isMd ? <RowWhatsappButton order={o} /> : null}
+                <Menu
+                  label={`Actions for ${o.number}`}
+                  items={[
+                    { id: 'open', label: 'Open', href: `/orders/${o.id}` },
+                    { id: 'label', label: 'Print label', icon: <Printer size={18} aria-hidden="true" />, href: `/orders/${o.id}/label` },
+                    { id: 'invoice', label: 'Print invoice', icon: <Printer size={18} aria-hidden="true" />, href: `/orders/${o.id}/invoice` },
+                    ...(secondaryAction
+                      ? [{
+                          id: `status-${secondaryAction.toLowerCase()}`,
+                          label: ACTION_LABEL[secondaryAction] ?? STATUS_LABEL[secondaryAction],
+                          tone: 'danger' as const,
+                          separatorBefore: true,
+                          onSelect: () => setStatusAction({ orderId: o.id, to: secondaryAction }),
+                        }]
+                      : []),
+                    ...(defaultWhatsappTemplate(o.status)
+                      ? [{ id: 'wa', label: 'Message on WhatsApp', icon: <MessageCircle size={18} aria-hidden="true" />, onSelect: () => void whatsapp.open(o.id, defaultWhatsappTemplate(o.status)!) }]
+                      : []),
+                    { id: 'copy', label: 'Copy order number', onSelect: () => void navigator.clipboard?.writeText(o.number).then(() => toast.success('Copied')).catch(() => toast.error("Couldn't copy. Select the number and copy it.")) },
+                  ]}
+                />
+              </span>
+            );
+          }}
           empty={
             noOrdersAtAll ? (
               <EmptyState
@@ -511,6 +571,7 @@ export function OrdersList() {
           setResult(null);
         }}
       />
+      {statusAction !== null ? <OrderStatusDialog orderId={statusAction.orderId} to={statusAction.to} onClose={() => setStatusAction(null)} /> : null}
     </>
   );
 }

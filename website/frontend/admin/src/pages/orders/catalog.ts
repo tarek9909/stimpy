@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { HoodieDetail, HoodieSummary, Pack, Stimpie } from '@stimpy/api-client';
 import { getPublicApi, unwrap } from '../../api/client';
+import { fetchAllPages } from '../../lib/pagination';
 
 /**
  * Read-only catalog data for the manual order form (dashboard-pages 5.6). These are the PUBLIC
@@ -11,7 +12,7 @@ const STALE = 30_000;
 export function useCatalogHoodies() {
   return useQuery({
     queryKey: ['order-form', 'hoodies'] as const,
-    queryFn: () => unwrap(getPublicApi().GET('/api/v1/products/hoodies')) as Promise<HoodieSummary[]>,
+    queryFn: async () => (await fetchAllPages((page, pageSize) => unwrap(getPublicApi().GET('/api/v1/products/hoodies', { params: { query: { page, pageSize } } })))).items as HoodieSummary[],
     staleTime: STALE,
   });
 }
@@ -28,7 +29,7 @@ export function useCatalogHoodie(slug: string | null) {
 export function useCatalogStimpies() {
   return useQuery({
     queryKey: ['order-form', 'stimpies'] as const,
-    queryFn: () => unwrap(getPublicApi().GET('/api/v1/products/stimpies', { params: { query: {} } })) as Promise<Stimpie[]>,
+    queryFn: async () => (await fetchAllPages((page, pageSize) => unwrap(getPublicApi().GET('/api/v1/products/stimpies', { params: { query: { page, pageSize } } })))).items as Stimpie[],
     staleTime: STALE,
   });
 }
@@ -36,7 +37,7 @@ export function useCatalogStimpies() {
 export function useCatalogPacks() {
   return useQuery({
     queryKey: ['order-form', 'packs'] as const,
-    queryFn: () => unwrap(getPublicApi().GET('/api/v1/packs')) as Promise<Pack[]>,
+    queryFn: async () => (await fetchAllPages((page, pageSize) => unwrap(getPublicApi().GET('/api/v1/packs', { params: { query: { page, pageSize } } })))).items as Pack[],
     staleTime: STALE,
   });
 }

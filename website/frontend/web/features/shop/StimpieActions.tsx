@@ -68,7 +68,7 @@ export function StimpieActions({
   if (stimpie.status === 'ENDED') {
     return (
       <div className="flex flex-col gap-4" data-testid="stimpie-status-ended">
-        <PriceTag cents={stimpie.priceCents} size="lg" />
+        <PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="lg" />
         <p className="text-body font-medium text-fg">This drop has ended.</p>
         <Button href="/shop" variant="dark" size="lg" fullWidth>
           Back to the shop
@@ -80,7 +80,7 @@ export function StimpieActions({
   if (stimpie.status === 'UPCOMING') {
     return (
       <div className="flex flex-col gap-4" data-testid="stimpie-status-upcoming">
-        <PriceTag cents={stimpie.priceCents} size="lg" />
+        <PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="lg" />
         <p className="text-body font-medium text-fg">Coming soon</p>
         {drop ? (
           <>
@@ -105,7 +105,7 @@ export function StimpieActions({
   if (stimpie.status === 'SOLD_OUT' || !stimpie.purchasable) {
     return (
       <div className="flex flex-col gap-4" data-testid="stimpie-status-sold-out">
-        <PriceTag cents={stimpie.priceCents} size="lg" />
+        <PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="lg" />
         <p className="text-body font-medium text-fg">Sold out</p>
         {stimpie.type === 'LIMITED' ? <p className="text-body-sm text-fg-muted">Limited Stimpies never come back.</p> : null}
         {sharedLinks}
@@ -116,7 +116,7 @@ export function StimpieActions({
   return (
     <div className="flex flex-col gap-4" data-testid="stimpie-status-available">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <PriceTag cents={stimpie.priceCents} size="lg" />
+        <PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="lg" />
         {remaining ? (
           <span className="text-body font-medium text-fg" data-testid="remaining">
             {remaining}

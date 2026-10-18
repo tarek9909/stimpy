@@ -33,7 +33,7 @@ class PreviewBoundary extends Component<{ children: ReactNode; resetKey: string 
 export default function PreviewPanel({ data, throttle, handleRef, debug }: { data: BuilderData; throttle: ThrottleSimulator; handleRef: Ref<BuilderHandle>; debug?: boolean }) {
   return (
     <PreviewBoundary resetKey={data.config.model3d?.url ?? 'none'}>
-      <Builder data={data} surface="page" force3d throttleSimulator={throttle} hidePhotoLinks stickyBar={false} ref={handleRef} debug3d={debug} />
+      <Builder data={data} surface="page" force3d throttleSimulator={throttle} stickyBar={false} ref={handleRef} debug3d={debug} />
     </PreviewBoundary>
   );
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { boolQuery, pageQuerySchema, slugField } from '../../lib/http';
+import { boolQuery, pageQuerySchema, pageSchema, slugField } from '../../lib/http';
 import { assetUrl, longText } from '../catalog/schemas';
 
 // ---------------------------------------------------------------- text limits (api-reference section 1)
@@ -39,12 +39,14 @@ export const publicContentSchema = z
       heroVideoUrl: z.string().nullable(),
       heroImageUrl: z.string().nullable(),
       featuredDropSlug: z.string().nullable(),
+      featuredStimpieSlug: z.string().nullable(),
+      showDropSections: z.boolean(),
     }),
     policies: z.object({ deliveryReturns: z.string(), care: z.string(), terms: z.string(), privacy: z.string() }),
     about: z.string(),
     howItWorks: howItWorksSchema,
-    faqs: z.array(z.object({ id: z.number().int(), question: z.string(), answer: z.string(), group: z.string().nullable(), showOnHome: z.boolean() })),
-    reviews: z.array(z.object({ id: z.number().int(), name: z.string(), text: z.string(), mediaUrl: z.string().nullable() })),
+    faqs: pageSchema(z.object({ id: z.number().int(), question: z.string(), answer: z.string(), group: z.string().nullable(), showOnHome: z.boolean() })),
+    reviews: pageSchema(z.object({ id: z.number().int(), name: z.string(), text: z.string(), mediaUrl: z.string().nullable() })),
   })
   .meta({ id: 'Content' });
 
@@ -61,6 +63,8 @@ export const homepageShape = z.object({
   heroVideoUrl: z.string().nullable(),
   heroImageUrl: z.string().nullable(),
   featuredDropSlug: z.string().nullable(),
+  featuredStimpieSlug: z.string().nullable(),
+  showDropSections: z.boolean(),
 });
 export const policiesShape = z.object({ deliveryReturns: z.string(), care: z.string(), terms: z.string(), privacy: z.string() });
 export const aboutShape = z.object({ about: z.string() });
@@ -98,6 +102,8 @@ export const homepagePut = z.strictObject({
   heroVideoUrl: assetUrl.nullable().default(null),
   heroImageUrl: assetUrl.nullable().default(null),
   featuredDropSlug: slugField.nullable().default(null),
+  featuredStimpieSlug: slugField.nullable().default(null),
+  showDropSections: z.boolean().default(true),
 });
 
 export const policiesPut = z.strictObject({

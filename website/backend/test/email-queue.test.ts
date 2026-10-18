@@ -50,7 +50,7 @@ describe('enqueueOrderEmail', () => {
     expect(row.bodyHtml).toContain(`href="${t.config.webUrl}/track?order=STP-1042"`);
     expect(row.bodyHtml).toContain('Track your order'); // blue button
     expect(row.bodyHtml).toContain('#2E63FF');
-    expect(row.bodyHtml).toContain('hello@stimpy.local'); // support address in the footer
+    expect(row.bodyHtml).toContain('info@stimpylb.com'); // support address in the footer
   });
 
   it('escapes customer-supplied values in HTML but keeps them verbatim in the text part', async () => {
@@ -333,8 +333,8 @@ describe('real SMTP into Mailpit', () => {
     const msg = await mailpitMessage(summary!.ID);
     expect(msg.Subject).toBe('We got your order STP-1042');
     expect(msg.To[0]!.Address).toBe(to);
-    expect(msg.ReplyTo[0]!.Address).toBe('hello@stimpy.local');
-    expect(summary!.From.Address).toBe('orders@stimpy.local');
+    expect(msg.ReplyTo[0]!.Address).toBe('info@stimpylb.com');
+    expect(summary!.From.Address).toBe('info@stimpylb.com');
     expect(summary!.From.Name).toBe('Stimpy');
     expect(msg.Text).toContain('Hi Rami <b>Haddad</b>,');
     expect(msg.Text).toContain('Total to pay at the door: $68.00');

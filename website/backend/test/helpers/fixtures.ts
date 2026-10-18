@@ -77,7 +77,7 @@ export async function setVariantStock(
 
 export function createDrop(
   prisma: PrismaClient,
-  o: Partial<{ name: string; slug: string; accentColor: AccentColor; startsAt: Date; endsAt: Date | null; endedAt: Date | null }> = {},
+  o: Partial<{ name: string; slug: string; accentColor: AccentColor; accentHex: string; startsAt: Date; endsAt: Date | null; endedAt: Date | null }> = {},
 ): Promise<Drop> {
   const n = next();
   return prisma.drop.create({
@@ -86,6 +86,7 @@ export function createDrop(
       slug: o.slug ?? `drop-${n}`,
       story: 'Test drop',
       accentColor: o.accentColor ?? 'BUTTER',
+      accentHex: o.accentHex ?? (o.accentColor === 'SKY' ? '#5CC8FF' : o.accentColor === 'LILAC' ? '#C9B6FF' : '#FFE45C'),
       startsAt: o.startsAt ?? new Date(now().getTime() - 3_600_000),
       endsAt: o.endsAt ?? null,
       endedAt: o.endedAt ?? null,

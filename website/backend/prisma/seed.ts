@@ -22,6 +22,7 @@ import { SETTINGS_DEFAULTS, SETTING_GROUPS } from '../src/services/settings';
 import { upsertAdminUser } from '../src/services/auth';
 import { ensureVariants } from '../src/services/variants';
 import { SEED_PLACEMENT_2D, seedBinary, seedBuilderBack, seedBuilderOverlay, seedHoodiePhoto, seedStimpieArtwork, seedWidePhoto } from './seed-assets';
+import { ABOUT_TEXT, DESIGN_STORY_UPDATES, DROP_STORY_UPDATES, FAQS, HOODIE_COPY, HOW_IT_WORKS, POLICIES, SIZE_GUIDE } from './store-content';
 
 export type SeedOptions = { minimal?: boolean; admin?: boolean; log?: (msg: string) => void };
 
@@ -64,15 +65,8 @@ const COLORS = [
   { name: 'Stone', hex: '#B8B2A7' },
   { name: 'Coral', hex: '#FF7A59' },
 ];
-const SIZES = ['S', 'M', 'L', 'XL'];
-/** Placeholder numbers: clearly flagged for the owner to replace. */
-const SIZE_CHART = {
-  columns: [{ label: 'Chest', unit: 'cm' }, { label: 'Length', unit: 'cm' }, { label: 'Sleeve', unit: 'cm' }],
-  rows: { S: ['54', '66', '60'], M: ['57', '69', '62'], L: ['60', '72', '64'], XL: ['63', '75', '66'] } as Record<string, string[]>,
-  howTo:
-    'PLACEHOLDER MEASUREMENTS: edit me in the dashboard (Products > Size chart).\n\n- **Chest:** lay the hoodie flat and measure straight across, armpit to armpit.\n- **Length:** from the highest point of the shoulder down to the hem.\n- **Sleeve:** from the shoulder seam to the end of the cuff.\n\nBetween two sizes? Take the larger one for a relaxed fit.',
-};
-/** Stock per variant (colour -> size -> units). Anything not listed gets 20. Includes LOW and SOLD_OUT cases. */
+const SIZES = Object.keys(SIZE_GUIDE.rows);
+/** Explicit demo stock for the four launch sizes. New chart sizes start at zero until stocked by the owner. */
 const VARIANT_STOCK: Record<string, Record<string, number>> = {
   Black: { S: 20, M: 4, L: 20, XL: 0 },
   Cream: { S: 0, M: 20, L: 20, XL: 12 },
@@ -95,42 +89,23 @@ const DESIGNS: DesignSeed[] = [
   { n: 1, name: 'THE VOID', type: 'CORE', group: 'core', priceCents: 1000, quantity: 50, story: 'Everything, switched off. Pure black with a single point of light.' },
   { n: 2, name: 'AFTER DARK', type: 'CORE', group: 'core', priceCents: 1000, quantity: 40, story: 'The city after the last tram. Neon, quiet streets, wet asphalt.' },
   { n: 3, name: 'THE CEDAR', type: 'CORE', group: 'core', priceCents: 1000, quantity: 8, story: 'A tree older than the borders around it. Calm, green, rooted.' },
-  { n: 4, name: 'THE DREAMER', type: 'CORE', group: 'core', priceCents: 1000, quantity: 0, story: 'Eyes closed, mind somewhere better. Currently out of stock.' },
+  { n: 4, name: 'THE DREAMER', type: 'CORE', group: 'core', priceCents: 1000, quantity: 0, story: 'Eyes closed. Possibilities wide open.' },
   { n: 9, name: 'THE ORBIT', type: 'CORE', group: 'core', priceCents: 1000, quantity: 35, story: 'Small things circling a big idea.' },
   { n: 10, name: 'THE WAVE', type: 'CORE', group: 'core', priceCents: 1000, quantity: 35, story: 'One long line that never breaks.' },
   { n: 11, name: 'THE EYE', type: 'CORE', group: 'core', priceCents: 1000, quantity: 25, story: 'It sees you wearing it.' },
   // ---- Drop 001 (live, Butter)
   { n: 5, name: 'THE SIGNAL', type: 'LIMITED', group: 'live', priceCents: 1200, quantity: 30, story: 'A transmission from nowhere. Tune in while it lasts.' },
-  { n: 6, name: 'THE STATIC', type: 'LIMITED', group: 'live', priceCents: 1200, quantity: 4, story: 'The noise between stations. Almost gone.' },
-  { n: 12, name: 'THE FLAME', type: 'LIMITED', group: 'live', priceCents: 1500, quantity: 0, story: 'Burned through the first day. Sold out.' },
+  { n: 6, name: 'THE STATIC', type: 'LIMITED', group: 'live', priceCents: 1200, quantity: 4, story: 'Find your frequency in the noise.' },
+  { n: 12, name: 'THE FLAME', type: 'LIMITED', group: 'live', priceCents: 1500, quantity: 0, story: 'For the spark that refuses to settle.' },
   // ---- Drop 002 (upcoming, Sky)
   { n: 7, name: 'THE MOTH', type: 'LIMITED', group: 'upcoming', priceCents: 1300, quantity: 30, story: 'Drawn to the light, never to the point.' },
   { n: 8, name: 'THE MAZE', type: 'LIMITED', group: 'upcoming', priceCents: 1300, quantity: 30, story: 'There is a way out. Probably.' },
   { n: 13, name: 'THE SERPENT', type: 'LIMITED', group: 'upcoming', priceCents: 1500, quantity: 25, story: 'Shedding the old skin, one zip at a time.' },
   // ---- Drop 000 (ended, Lilac, sold out)
-  { n: 14, name: 'THE MOUNTAIN', type: 'LIMITED', group: 'archive', priceCents: 1400, quantity: 0, story: 'First light on the highest ridge. Sold out in a weekend.' },
-  { n: 15, name: 'THE ROSE', type: 'LIMITED', group: 'archive', priceCents: 1400, quantity: 0, story: 'Beautiful and a little dangerous. Gone.' },
-  { n: 16, name: 'THE SKULL', type: 'LIMITED', group: 'archive', priceCents: 1400, quantity: 0, story: 'A reminder with good posture. Gone.' },
+  { n: 14, name: 'THE MOUNTAIN', type: 'LIMITED', group: 'archive', priceCents: 1400, quantity: 0, story: 'Find a little perspective above the everyday.' },
+  { n: 15, name: 'THE ROSE', type: 'LIMITED', group: 'archive', priceCents: 1400, quantity: 0, story: 'Soft at first glance. Full of character.' },
+  { n: 16, name: 'THE SKULL', type: 'LIMITED', group: 'archive', priceCents: 1400, quantity: 0, story: 'A little edge for your everyday.' },
 ];
-
-const FAQS = [
-  { group: 'How it works', question: 'How does the swap work?', answer: 'The back of every hoodie has a zip panel. Unzip the Stimpie you are wearing, zip in another one, done. It takes a few seconds and needs no tools.' },
-  { group: 'Care', question: 'How do I wash it?', answer: 'Remove the Stimpie, wash the hoodie cold inside out, and hand wash or gently machine wash the Stimpie on its own. Line dry.' },
-  { group: 'Sizing', question: 'Which size should I take?', answer: 'Check the size chart on the Help page and compare it with a hoodie you already like. Between two sizes, take the larger one.' },
-  { group: 'Delivery', question: 'How long does delivery take?', answer: 'We deliver across Lebanon. Most orders arrive in 2-3 working days (the estimate is shown at checkout for your area).' },
-  { group: 'Ordering', question: 'How do I pay?', answer: 'Cash on delivery. You pay the courier at the door. No card needed.' },
-  { group: 'Ordering', question: 'Can I exchange something?', answer: 'Yes. If it does not fit or you changed your mind, message us within the return window and we will arrange an exchange.' },
-  { group: 'Drops', question: 'What is a drop?', answer: 'A drop is a limited set of Stimpies released for a short time. When a limited Stimpie sells out it is never restocked.' },
-  { group: 'How it works', question: 'Does the hoodie look good without a Stimpie?', answer: 'Yes. The back panel is a clean blank surface when empty, so the hoodie works on its own.' },
-];
-
-const POLICIES = {
-  deliveryReturns:
-    'PLACEHOLDER: edit me in the dashboard (Content > Policies).\n\n**Delivery.** We deliver across Lebanon, cash on delivery.\n\n**Returns and exchanges.** Contact us after delivery and we will arrange it.',
-  care: 'PLACEHOLDER: edit me in the dashboard.\n\n- Wash cold, inside out.\n- Remove the Stimpie before washing.\n- Line dry. Do not tumble dry.',
-  terms: 'PLACEHOLDER: edit me in the dashboard.\n\nBy ordering you agree to pay the total on delivery.',
-  privacy: 'PLACEHOLDER: edit me in the dashboard.\n\nWe only use your details to deliver and talk about your order.',
-};
 
 // ================================================================ helpers
 
@@ -197,17 +172,17 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
     sizes.push(await prisma.size.upsert({ where: { label }, create: { label, position: i + 1, active: true }, update: {} }));
   }
 
-  // ---- size chart (placeholder numbers) + how to measure
+  // ---- size chart (owner-approved garment measurements) + how to measure
   if ((await prisma.sizeChartColumn.count()) === 0) {
     const cols = [];
-    for (const [i, c] of SIZE_CHART.columns.entries()) cols.push(await prisma.sizeChartColumn.create({ data: { ...c, position: i } }));
+    for (const [i, c] of SIZE_GUIDE.columns.entries()) cols.push(await prisma.sizeChartColumn.create({ data: { ...c, position: i } }));
     for (const s of sizes) {
-      const vals = SIZE_CHART.rows[s.label];
+      const vals = SIZE_GUIDE.rows[s.label];
       if (!vals) continue;
       await prisma.sizeChartValue.createMany({ data: cols.map((c, i) => ({ sizeId: s.id, columnId: c.id, value: vals[i]! })) });
     }
   }
-  await createIfMissing(prisma, 'contentBlock', 'size_chart_howto', { text: SIZE_CHART.howTo });
+  await createIfMissing(prisma, 'contentBlock', 'size_chart_howto', { text: SIZE_GUIDE.howTo });
 
   // ---- hoodie + variants + stock
   const hoodie = await prisma.hoodie.upsert({
@@ -215,8 +190,8 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
     create: {
       name: 'Stimpy Hoodie',
       slug: 'stimpy-hoodie',
-      description: 'The one hoodie. A heavyweight zip hoodie with a swappable back panel: change your look in seconds.',
-      details: ['Heavyweight brushed fleece (placeholder spec)', 'Zip-in back panel for any Stimpie', 'Relaxed unisex fit', 'Ribbed cuffs and hem'],
+      description: HOODIE_COPY.description,
+      details: HOODIE_COPY.details,
       priceCents: 2500,
       costCents: 1000,
       images: [],
@@ -232,7 +207,7 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
     if ((await prisma.stockMovement.count({ where: { variantId: v.id } })) > 0) continue; // never touch a variant that has history
     const color = colors.find((c) => c.id === v.colorId)!;
     const size = sizes.find((s) => s.id === v.sizeId)!;
-    const qty = VARIANT_STOCK[color.name]?.[size.label] ?? 20;
+    const qty = VARIANT_STOCK[color.name]?.[size.label] ?? 0;
     if (qty > 0) {
       await prisma.$transaction([
         prisma.hoodieVariant.update({ where: { id: v.id }, data: { quantity: qty } }),
@@ -251,7 +226,7 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
   });
   await prisma.pack.upsert({
     where: { slug: 'hoodie-2-stimpies' },
-    create: { name: 'Hoodie + 2 Stimpies', slug: 'hoodie-2-stimpies', description: 'The hoodie and two different Stimpies: two looks from day one.', stimpieCount: 2, priceCents: 4500, badge: 'Most popular', active: true, position: 2 },
+    create: { name: 'Hoodie + 2 Stimpies', slug: 'hoodie-2-stimpies', description: 'The hoodie and two different Stimpies: two looks from day one.', stimpieCount: 2, priceCents: 4500, badge: 'Two looks', active: true, position: 2 },
     update: {},
   });
 
@@ -271,29 +246,23 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
   // ---- FAQs
   for (const [i, f] of FAQS.entries()) {
     if (!(await prisma.faq.findFirst({ where: { question: f.question } }))) {
-      await prisma.faq.create({ data: { ...f, showOnHome: i < 4, position: i + 1 } });
+      await prisma.faq.create({ data: { ...f, position: i + 1 } });
     }
   }
 
   // ---- content blocks (placeholder copy; shapes documented in docs/HANDOFF.md)
-  await createIfMissing(prisma, 'contentBlock', 'announcement', { enabled: false, text: 'Drop 002 lands soon. Subscribe to be first.', linkUrl: null });
+  await createIfMissing(prisma, 'contentBlock', 'announcement', { enabled: false, text: 'One hoodie. Multiple identities.', linkUrl: null });
   await createIfMissing(prisma, 'contentBlock', 'homepage', {
     heroHeadline: 'One hoodie. Multiple identities.',
     heroSubheadline: 'Zip in a new back in seconds.',
     heroVideoUrl: null,
     heroImageUrl: null,
     featuredDropSlug: null,
+    featuredStimpieSlug: 'the-cedar',
+    showDropSections: true,
   });
-  await createIfMissing(prisma, 'contentBlock', 'about', { text: 'PLACEHOLDER: edit me in the dashboard (Content > About).\n\nStimpy is one hoodie with a swappable back. Wear your mood.' });
-  await createIfMissing(prisma, 'contentBlock', 'how_it_works', {
-    steps: [
-      { title: 'Pick your hoodie', text: 'Choose a colour and size.', mediaUrl: null },
-      { title: 'Pick your Stimpie', text: 'Choose the back panel that matches your mood.', mediaUrl: null },
-      { title: 'Zip it in', text: 'Swap it any time in seconds.', mediaUrl: null },
-    ],
-    promises: ['Zip cycles tested for daily swapping', 'Wash-tested fabric that keeps its shape', 'Panels that hang flat, never bunch'],
-    faqs: [],
-  });
+  await createIfMissing(prisma, 'contentBlock', 'about', { text: ABOUT_TEXT });
+  await createIfMissing(prisma, 'contentBlock', 'how_it_works', HOW_IT_WORKS);
   await createIfMissing(prisma, 'contentBlock', 'policies', POLICIES);
 
   // ---- builder config (2D until a model exists)
@@ -332,15 +301,16 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
     }
 
     const dropDefs: { group: DesignSeed['group']; slug: string; name: string; accent: AccentColor; story: string; startsAt: Date; endsAt: Date | null; endedAt: Date | null; teaser: string | null }[] = [
-      { group: 'archive', slug: 'drop-000', name: 'Drop 000: First Light', accent: 'LILAC', story: 'Where it started. Three Stimpies, three days, all gone.', startsAt: addMs(now, -60 * DAY), endsAt: addMs(now, -45 * DAY), endedAt: addMs(now, -45 * DAY), teaser: null },
-      { group: 'live', slug: 'drop-001', name: 'Drop 001: Signal', accent: 'BUTTER', story: 'The first numbered drop. Limited, never restocked.', startsAt: addMs(now, -2 * DAY), endsAt: addMs(now, 12 * DAY), endedAt: null, teaser: lookbook?.url ?? null },
-      { group: 'upcoming', slug: 'drop-002', name: 'Drop 002: Night Flight', accent: 'SKY', story: 'Moths, mazes and one very long snake. Starts in two weeks.', startsAt: addMs(now, 14 * DAY), endsAt: addMs(now, 28 * DAY), endedAt: null, teaser: null },
+      { group: 'archive', slug: 'drop-000', name: 'Drop 000: First Light', accent: 'LILAC', story: DROP_STORY_UPDATES['drop-000']!, startsAt: addMs(now, -60 * DAY), endsAt: addMs(now, -45 * DAY), endedAt: addMs(now, -45 * DAY), teaser: null },
+      { group: 'live', slug: 'drop-001', name: 'Drop 001: Signal', accent: 'BUTTER', story: DROP_STORY_UPDATES['drop-001']!, startsAt: addMs(now, -2 * DAY), endsAt: addMs(now, 12 * DAY), endedAt: null, teaser: lookbook?.url ?? null },
+      { group: 'upcoming', slug: 'drop-002', name: 'Drop 002: Night Flight', accent: 'SKY', story: DROP_STORY_UPDATES['drop-002']!, startsAt: addMs(now, 14 * DAY), endsAt: addMs(now, 28 * DAY), endedAt: null, teaser: null },
     ];
     const dropIds: Record<string, number> = {};
+    const accentHexByColor: Record<AccentColor, string> = { BUTTER: '#FFE45C', SKY: '#5CC8FF', LILAC: '#C9B6FF' };
     for (const d of dropDefs) {
       const row = await prisma.drop.upsert({
         where: { slug: d.slug },
-        create: { name: d.name, slug: d.slug, story: d.story, accentColor: d.accent, startsAt: d.startsAt, endsAt: d.endsAt, endedAt: d.endedAt, teaserImage: d.teaser, teaserVideo: null },
+        create: { name: d.name, slug: d.slug, story: d.story, accentColor: d.accent, accentHex: accentHexByColor[d.accent], startsAt: d.startsAt, endsAt: d.endsAt, endedAt: d.endedAt, teaserImage: d.teaser, teaserVideo: null },
         update: {},
       });
       dropIds[d.group] = row.id;
@@ -363,7 +333,7 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
         (await prisma.stimpie.create({
           data: {
             name: d.name, slug, type: d.type, dropId, priceCents: d.priceCents, costCents: d.type === 'CORE' ? 600 : 700,
-            quantity: 0, reserved: 0, story: d.story, images: [artwork.url], artworkUrl: artwork.url,
+            quantity: 0, reserved: 0, story: DESIGN_STORY_UPDATES[slug] ?? d.story, images: [artwork.url], artworkUrl: artwork.url,
             artworkWidth: artwork.width, artworkHeight: artwork.height, active: true, position,
           },
         }));

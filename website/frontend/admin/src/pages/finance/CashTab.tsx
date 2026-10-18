@@ -58,11 +58,12 @@ function CashBody({ data }: { data: Cash }) {
     setPreparingDelivery(deliveryNumber);
     try {
       const orders = await getDeliveredOrdersForDelivery(deliveryNumber);
-      if (orders.length === 0) throw new Error(`No delivered orders were found for delivery ${deliveryNumber}. Refresh and try again.`);
+      const unsettledOrders = orders.filter((order) => !order.cashSettled);
+      if (unsettledOrders.length === 0) throw new Error(`No unsettled orders were found for delivery ${deliveryNumber}. Refresh and try again.`);
       setConfirm({
         deliveryNumber,
-        totalOrders: orders.length,
-        receivedCents: orders.reduce((sum, order) => sum + order.cashDueCents, 0),
+        totalOrders: unsettledOrders.length,
+        receivedCents: unsettledOrders.reduce((sum, order) => sum + order.cashDueCents, 0),
       });
     } catch (e) {
       notify(e);

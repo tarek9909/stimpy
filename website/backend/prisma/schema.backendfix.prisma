@@ -220,6 +220,7 @@ model HoodieVariant {
   sku       String   @unique @db.VarChar(60)
   quantity  Int      @default(0)
   reserved  Int      @default(0)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { pageQuerySchema, searchQuery, slugField, sortQuery } from '../../lib/http';
-import { accentColorEnum, assetUrl, longText, nameField, publicStimpieSchema } from '../catalog/schemas';
+import { pageQuerySchema, pageSchema, searchQuery, sortQuery } from '../../lib/http';
+import { accentColorEnum, accentHexField, assetUrl, longText, nameField, publicStimpieSchema } from '../catalog/schemas';
 
 // ---------------------------------------------------------------- public
 
@@ -25,7 +25,7 @@ export const publicDropSchema = z
   .meta({ id: 'Drop' });
 
 export const dropsResponseSchema = z
-  .object({ live: publicDropSchema.nullable(), upcoming: z.array(publicDropSchema), archive: z.array(publicDropSchema) })
+  .object({ live: publicDropSchema.nullable(), upcoming: pageSchema(publicDropSchema), archive: pageSchema(publicDropSchema) })
   .meta({ id: 'DropsOverview' });
 
 export const dropSlugParams = z.object({ slug: z.string().min(1).max(140) });
@@ -74,18 +74,24 @@ export const adminDropSchema = z
 
 const isoDate = z.iso.datetime({ offset: true, message: 'Enter a valid date and time.' }).transform((s) => new Date(s));
 
-export const dropCreateBody = z.strictObject({
+const dropBodyFields = {
   name: nameField,
-  slug: slugField.optional(),
   story: longText.optional(),
-  accentColor: accentColorEnum,
+  /** Deprecated compatibility input; new clients send the exact `accentHex`. */
+  accentColor: accentColorEnum.optional(),
+  accentHex: accentHexField.optional(),
   startsAt: isoDate,
   endsAt: isoDate.nullable().optional(),
   teaserImage: assetUrl.nullable().optional(),
   teaserVideo: assetUrl.nullable().optional(),
   stimpieIds: z.array(z.number().int().min(1)).max(100).optional(),
-});
-export const dropUpdateBody = dropCreateBody.partial();
+};
+const dropBodySchema = z.strictObject(dropBodyFields);
+export const dropCreateBody = z.union([
+  z.strictObject({ ...dropBodyFields, accentHex: accentHexField }),
+  z.strictObject({ ...dropBodyFields, accentColor: accentColorEnum }),
+]);
+export const dropUpdateBody = dropBodySchema.partial();
 
 export const dropListQuery = pageQuerySchema.extend({
   state: z.enum(['UPCOMING', 'LIVE', 'ARCHIVE']).optional(),

@@ -2,9 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, unwrap, type Schemas } from '../../api/client';
 import { queryKeys } from '../../api/queryKeys';
 import type { DateRange } from '../../lib/ranges';
+import { fetchAllPages } from '../../lib/pagination';
 
-export type Profit = Schemas['FinanceProfit'];
-export type Cash = Schemas['FinanceCash'];
+type ProfitPage = Schemas['FinanceProfit'];
+type CashPage = Schemas['FinanceCash'];
+export type Profit = Omit<ProfitPage, 'byOrder'> & { byOrder: ProfitPage['byOrder']['items'] };
+export type Cash = Omit<CashPage, 'groups'> & { groups: CashPage['groups']['items'] };
 export type Expense = Schemas['Expense'];
 export type AdSpend = Schemas['AdSpend'];
 export type CostKind = 'expenses' | 'ad-spend';
@@ -14,7 +17,15 @@ const rangeQuery = (r: DateRange) => ({ from: r.from ?? undefined, to: r.to ?? u
 export const useProfit = (range: DateRange) =>
   useQuery({
     queryKey: queryKeys.financeProfit(range),
-    queryFn: () => unwrap(api.GET('/api/v1/admin/finance/profit', { params: { query: rangeQuery(range) } })),
+    queryFn: async () => {
+      const loadPage = (page: number, pageSize: number) =>
+        unwrap(api.GET('/api/v1/admin/finance/profit', { params: { query: { ...rangeQuery(range), page, pageSize } } }));
+      const all = await fetchAllPages(async (page, pageSize) => {
+        const report = await loadPage(page, pageSize);
+        return { ...report.byOrder, report };
+      }, 100, (row) => row.orderNumber);
+      return { ...all.report, byOrder: all.items };
+    },
     staleTime: 15_000,
     placeholderData: (prev) => prev,
   });
@@ -22,7 +33,20 @@ export const useProfit = (range: DateRange) =>
 export const useCash = () =>
   useQuery({
     queryKey: queryKeys.financeCash,
-    queryFn: () => unwrap(api.GET('/api/v1/admin/finance/cash')),
+    queryFn: async () => {
+      const loadPage = (page: number, pageSize: number) =>
+        unwrap(api.GET('/api/v1/admin/finance/cash', { params: { query: { page, pageSize } } }));
+      const first = await loadPage(1, 100);
+      const groups = [...first.groups.items];
+      const pages = Math.ceil(first.groups.total / first.groups.pageSize);
+      for (let page = 2; page <= pages; page += 1) {
+        const next = await loadPage(page, 100);
+        if (next.groups.total !== first.groups.total) throw new Error('The cash group list changed while it was loading. Refresh and try again.');
+        groups.push(...next.groups.items);
+      }
+      if (groups.length !== first.groups.total) throw new Error('The API returned an incomplete cash group list. Refresh and try again.');
+      return { outstandingCents: first.outstandingCents, groups };
+    },
     staleTime: 15_000,
   });
 

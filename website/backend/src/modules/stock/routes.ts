@@ -12,34 +12,36 @@ const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date like 2026-1
 
 const MOVEMENT_REASONS = ['INITIAL', 'RESTOCK', 'CORRECTION', 'DAMAGED', 'ORDER_RESERVED', 'ORDER_RELEASED', 'ORDER_SOLD', 'ORDER_RETURNED', 'ORDER_WRITTEN_OFF'] as const;
 
-const snapshot = z.object({ quantity: z.number().int(), reserved: z.number().int(), available: z.number().int() }).meta({ id: 'StockSnapshot' });
+const snapshot = z.object({ quantity: z.number().int(), reserved: z.number().int().optional(), available: z.number().int() }).meta({ id: 'StockSnapshot' });
 
 const hoodiesResponse = z.object({
-  colors: z.array(colorSchema),
-  sizes: z.array(sizeSchema),
-  hoodies: z.array(
-    z.object({
-      hoodieId: z.number().int(),
-      name: z.string(),
-      cells: z.array(z.object({ variantId: z.number().int(), colorId: z.number().int(), sizeId: z.number().int(), quantity: z.number().int(), reserved: z.number().int(), available: z.number().int() })),
-    }),
-  ),
+  colors: z.array(colorSchema).optional(),
+  sizes: z.array(sizeSchema).optional(),
+  items: z.array(z.object({
+    hoodieId: z.number().int(),
+    name: z.string(),
+    colors: z.array(colorSchema),
+    sizes: z.array(sizeSchema),
+    cells: z.array(z.object({ variantId: z.number().int(), colorId: z.number().int(), sizeId: z.number().int(), quantity: z.number().int(), reserved: z.number().int().optional(), available: z.number().int() })),
+  })),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  total: z.number().int(),
 });
 
-const stimpiesResponse = z.object({
-  items: z.array(
-    z.object({
-      stimpieId: z.number().int(),
-      name: z.string(),
-      type: z.enum(['CORE', 'LIMITED']),
-      dropName: z.string().nullable(),
-      quantity: z.number().int(),
-      reserved: z.number().int(),
-      available: z.number().int(),
-      low: z.boolean(),
-    }),
-  ),
+const stockStimpieSchema = z.object({
+  stimpieId: z.number().int(),
+  name: z.string(),
+  type: z.enum(['CORE', 'LIMITED']),
+  dropName: z.string().nullable(),
+  quantity: z.number().int(),
+  reserved: z.number().int().optional(),
+  available: z.number().int(),
+  low: z.boolean(),
+  artworkUrl: z.string().nullable().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
+const stimpiesResponse = pageSchema(stockStimpieSchema);
 
 const adjustBody = z.strictObject({
   itemType,
@@ -86,15 +88,15 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
   const tags = ['stock'];
 
   app.get('/stock/hoodies', {
-    schema: { tags, summary: 'Hoodie stock grid (colour x size)', response: { 200: hoodiesResponse, ...errorResponses } },
-  }, async () => stockHoodies(app.ctx));
+    schema: { tags, summary: 'Stock for each hoodie and its selected colour/size variants (paginated by hoodie)', querystring: pageQuerySchema, response: { 200: hoodiesResponse, ...errorResponses } },
+  }, async (req) => stockHoodies(app.ctx, req.query));
 
   app.get('/stock/stimpies', {
-    schema: { tags, summary: 'Stimpie stock list', response: { 200: stimpiesResponse, ...errorResponses } },
-  }, async () => stockStimpies(app.ctx));
+    schema: { tags, summary: 'Stimpie stock list', querystring: pageQuerySchema, response: { 200: stimpiesResponse, ...errorResponses } },
+  }, async (req) => stockStimpies(app.ctx, req.query));
 
   app.post('/stock/adjust', {
-    schema: { tags, summary: 'Add or remove units (note required; never below reserved)', body: adjustBody, response: { 200: snapshot, ...errorResponses } },
+    schema: { tags, summary: 'Adjust on-hand quantity (note required; cannot reduce units committed to open orders)', body: adjustBody, response: { 200: snapshot, ...errorResponses } },
   }, async (req) =>
     adjustStock(app.ctx, {
       ref: toRef(req.body.itemType, req.body.itemId),

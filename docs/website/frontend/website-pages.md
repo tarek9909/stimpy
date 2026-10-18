@@ -41,7 +41,7 @@ The server reads the API from `API_URL` (default `http://localhost:4000/api/v1`)
 
 - Mobile-first: single column, 16 px gutters, tap targets at least 48 px, body text 16 px, no horizontal scroll at 320 px. Breakpoints: `sm` 640, `md` 768, `lg` 1024, `xl` 1280.
 - Poppins: Bold headlines, Medium subheads, Regular body. Colours: base white/cream, coral signature, black premium sections, **electric blue only for calls to action** (Order now, Checkout, Place order, Add to cart). Text on coral is black; on black and on electric blue it is white; on butter/sky/lilac/cream it is black.
-- Drop accent: `Drop.accentHex` (Butter, Sky or Lilac) is used as an accent on that drop's pages, one drop at a time. Always black text on it.
+- Drop accent: the custom `Drop.accentHex` is used on that drop's pages, one drop at a time. Foreground text switches between black and white for contrast.
 - Logo: full logo on white in the header; "on black" in black sections; icon-only for favicon; no effects or recolouring.
 - All images use `next/image` with explicit width/height or `fill` + aspect ratio to avoid layout shift; the first visible image on each page is `priority`. All image, video and GLB URLs in API responses are absolute (random, immutable file names; `/uploads/*` is served with CORS `*` so WebGL can read textures), so the API's upload host must be listed in `next.config` `images.remotePatterns`. There is no width parameter; `next/image` does the optimising.
 
@@ -128,8 +128,8 @@ Rendered by the root layout (`app/layout.tsx`), which fetches `GET /content` (IS
 ### 3.2 Header
 
 - Data: cart count from the client cart store; nothing from the API.
-- Mobile: sticky, 56 px, white. Left: full logo on white (icon + wordmark, links to `/`); right: cart icon with count badge, hamburger. Hamburger opens a full-screen menu (white, large links): Shop, Builder, Drops, How it works, plus Track order and Help as secondary links; focus-trapped, Esc closes.
-- Desktop (`lg`): logo left, nav centre (Shop, Builder, Drops, How it works), cart right. Active link is underlined in coral.
+- Mobile: sticky, 56 px, white. Left: full logo on white (icon + wordmark, links to `/`); right: cart icon with count badge, hamburger. Hamburger opens a full-screen menu (white, large links): Home, Shop, Builder, Drops, How it works, plus Track order and Help as secondary links; focus-trapped, Esc closes.
+- Desktop (`lg`): logo left, nav centre (Home, Shop, Builder, Drops, How it works), cart right. Active link is underlined in coral.
 - Cart icon opens the cart drawer; count badge hidden at 0 and capped visually at "9+" while the accessible name carries the real number ("Cart, 3 items").
 - Behaviour: header shrinks to 48 px after 40 px of scroll; no hide-on-scroll (keeps the cart reachable).
 - Accessibility: skip link "Skip to content" first in the DOM; `nav aria-label="Main"`; current page `aria-current="page"`.
@@ -178,20 +178,22 @@ Fully specified in [checkout-and-order-flow.md section 1.5](checkout-and-order-f
 | `GET /drops` | If `featuredDropSlug` is set use `GET /drops/:slug`; otherwise `live` ?? `upcoming[0]`. Drives the countdown strip and "Current drop" section (`name`, `accentHex`, `unitsRemaining`, `state`, `startsAt`, `endsAt`) |
 | `GET /products/stimpies?type=CORE&includeSoldOut=false` | Core collection (first 4) |
 | `GET /products/stimpies` | "Extra Stimpies from {min price}" -> minimum `priceCents` among `purchasable` Stimpies |
+| `GET /promotions` | Active promotions and their product targets; the homepage matches target IDs to the public hoodie, Stimpie and pack catalogs |
 | `GET /health` (client) | Server clock for `Countdown` (`time`, millisecond precision) |
 
 **Layout, mobile (top to bottom)**
 
 1. **Hero** (black section, ~85 vh): looping muted `playsInline` video (`heroVideoUrl`; poster `heroImageUrl`; the video loads only when `navigator.connection.saveData` is false, otherwise the image is shown). Headline `heroHeadline` (default "One hoodie. Multiple identities."), subheadline, `Button cta` "Order now" (to `/shop`), `Button ghost` "Try the Builder" (to `/builder`).
-2. **Drop countdown strip** (only when a live or upcoming drop exists): the drop's `accentHex` background with black text, drop name, `Countdown`, link to `/drops/{slug}`. Hidden when no drop.
-3. **The idea in three steps**: "Wear it plain. Zip on a Stimpie. Swap tomorrow." three cards with icons (or `howItWorks.steps` first three, with `mediaUrl`). `ZipWipe` (cream) leads into this section and the next.
-4. **Builder teaser**: compact 2D preview (colour swatches + 5 Stimpies carousel) with "Open full Builder" link. Loaded lazily when scrolled near. Hidden if `GET /builder/config` has no usable 2D asset.
-5. **Packs**: stacked `PackCard`s: the pack with `badge` "Most popular" first and highlighted (coral border), the entry pack next, then a smaller "Extra Stimpies from {price}" card linking to `/shop?tab=stimpies`.
-6. **Current drop**: `DropCard variant="live"` or `upcoming`; omitted when there is none.
-7. **Core collection**: horizontally scrollable row of 4 `StimpieCard`s (snap scrolling), "See all" link.
-8. **Trust strip** (`TrustStrip`, cream).
-9. **Customer swaps**: `ReviewCard` carousel from `reviews`; section omitted when `reviews` is empty.
-10. **FAQ preview**: `Accordion` of up to 5 FAQs with "All questions" link to `/help?tab=faq`; omitted when empty.
+2. **Drop countdown strip** (only when a live or upcoming drop exists): the drop's `accentHex` background with contrast-aware text, drop name, `Countdown`, link to `/drops/{slug}`. Hidden when no drop.
+3. **Current promotions** (omitted when none are active): each promotion name and discount, followed by cards for the products included in it. All-products promotions use the current public catalog; item-specific promotions use their configured targets. Cards link to their product or set and show the current sale price.
+4. **The idea in three steps**: "Wear it plain. Zip on a Stimpie. Swap tomorrow." three cards with icons (or `howItWorks.steps` first three, with `mediaUrl`). `ZipWipe` (cream) leads into this section and the next.
+5. **Builder teaser**: compact 2D preview (colour swatches + 5 Stimpies carousel) with "Open full Builder" link. Loaded lazily when scrolled near. Hidden if `GET /builder/config` has no usable 2D asset.
+6. **Packs**: stacked `PackCard`s: the pack with `badge` "Most popular" first and highlighted (coral border), the entry pack next, then a smaller "Extra Stimpies from {price}" card linking to `/shop?tab=stimpies`.
+7. **Current drop**: `DropCard variant="live"` or `upcoming`; omitted when there is none.
+8. **Core collection**: horizontally scrollable row of 4 `StimpieCard`s (snap scrolling), "See all" link.
+9. **Trust strip** (`TrustStrip`, cream).
+10. **Customer swaps**: `ReviewCard` carousel from `reviews`; section omitted when `reviews` is empty.
+11. **FAQ preview**: `Accordion` of up to 5 FAQs with "All questions" link to `/help?tab=faq`; omitted when empty.
 
 **Desktop**: hero is two columns (text left, video right); packs sit side by side (3 columns); core collection is a 4-column grid; steps in a row.
 
@@ -410,7 +412,7 @@ Query parameters: `?stimpie=<slug>&color=<id>&pack=<slug>`.
 **Layout, mobile**
 
 1. Heading "Drops".
-2. **Current drop**: `DropCard variant="live"` large, using the drop's `accentHex` as background (black text): name, `story` excerpt, `unitsRemaining` ("{n} units left"), `Countdown` to `endsAt` if set, `Button cta` "Enter drop" -> `/drops/{slug}`. Section omitted with an `EmptyState` ("No drop is live right now. The next one is below.") when `live` is null.
+2. **Current drop**: `DropCard variant="live"` large, using the drop's `accentHex` as background with contrast-aware text: name, `story` excerpt, `unitsRemaining` ("{n} units left"), `Countdown` to `endsAt` if set, `Button cta` "Enter drop" -> `/drops/{slug}`. Section omitted with an `EmptyState` ("No drop is live right now. The next one is below.") when `live` is null.
 3. **Upcoming**: list of `DropCard variant="upcoming"` (`teaserImage`/`teaserVideo`, name, date from `startsAt`, `Countdown`) each with a `SubscribeForm` (type toggle WhatsApp/Email).
 4. **Archive**: grid of `DropCard variant="archive"` (muted), `state` `SOLD_OUT` -> "Sold out — won't return", `ENDED` -> "Ended". API order is newest first.
 
@@ -443,7 +445,7 @@ Query parameters: `?stimpie=<slug>&color=<id>&pack=<slug>`.
 
 **Data**: `GET /drops/:slug` -> `name`, `story`, `accentHex`, `startsAt`, `endsAt`, `state`, `teaserImage`, `teaserVideo`, `unitsRemaining`, `stimpies[]`. While the page is open and `state` is `LIVE`, the client polls `GET /drops/:slug` (`cache: 'no-store'`) every 30 s to refresh `unitsRemaining` and statuses; polling stops when hidden (Page Visibility API).
 
-**Layout, mobile**: hero in the drop's `accentHex` (black text) with teaser media, `name`, state badge, `Countdown` (to `startsAt` while `UPCOMING`, to `endsAt` while `LIVE` and set), "{n} units left" when `unitsRemaining` is not null; story (`RichText`); grid of `StimpieCard`s (2 columns); closing block with a pack call-to-action ("Put one on a hoodie": link to `/shop?tab=hoodies`) and, for `UPCOMING`, a `SubscribeForm`. **Desktop**: hero two columns; 3-4 column grid.
+**Layout, mobile**: hero in the drop's `accentHex` (contrast-aware text) with teaser media, `name`, state badge, `Countdown` (to `startsAt` while `UPCOMING`, to `endsAt` while `LIVE` and set), "{n} units left" when `unitsRemaining` is not null; story (`RichText`); grid of `StimpieCard`s (2 columns); closing block with a pack call-to-action ("Put one on a hoodie": link to `/shop?tab=hoodies`) and, for `UPCOMING`, a `SubscribeForm`. **Desktop**: hero two columns; 3-4 column grid.
 
 **States by `state`**
 
@@ -458,7 +460,7 @@ Edge cases: a Stimpie reaching `SOLD_OUT` within a live drop updates in place on
 
 **SEO**: title "{name} drop"; description first 155 characters of `story`; OG image = `teaserImage` ?? first Stimpie `artworkUrl`.
 
-**Accessibility**: the accent hero keeps black text (contrast per brand table); polling updates announce only meaningful changes (sold out) in a polite region; countdown per 2.2.
+**Accessibility**: the accent hero chooses black or white text based on contrast; polling updates announce only meaningful changes (sold out) in a polite region; countdown per 2.2.
 
 ---
 

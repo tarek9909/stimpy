@@ -1,7 +1,5 @@
-/** Icons: the @stimpy/ui subset plus the few extra Lucide icons the storefront needs (named imports, tree-shaken). */
-import { icons } from '@stimpy/ui';
-
-export const {
+/** Named exports let each storefront route include only the Lucide icons it renders. */
+export {
   AlertCircle,
   AlertTriangle,
   Banknote,
@@ -22,6 +20,6 @@ export const {
   Truck,
   Video,
   X,
-} = icons;
+} from 'lucide-react';
 
 export { ArrowRight, Instagram, Layers, Mail, Menu, Pause, Play, Ruler, Scissors, Share2, Shirt, ShoppingBag, Sparkles, Zap } from 'lucide-react';

@@ -49,6 +49,9 @@ export interface TextFieldProps extends FieldBase {
   type?: 'text' | 'email' | 'url' | 'tel' | 'number' | 'search' | 'password';
   placeholder?: string;
   maxLength?: number;
+  min?: number | string;
+  max?: number | string;
+  step?: number | string;
   autoComplete?: string;
   inputMode?: InputProps['inputMode'];
   disabled?: boolean;
@@ -59,7 +62,7 @@ export interface TextFieldProps extends FieldBase {
   transform?: (value: string) => string;
 }
 
-export function TextField({ transform, type = 'text', placeholder, maxLength, autoComplete, inputMode, disabled, readOnly, prefixText, suffixText, ...base }: TextFieldProps) {
+export function TextField({ transform, type = 'text', placeholder, maxLength, min, max, step, autoComplete, inputMode, disabled, readOnly, prefixText, suffixText, ...base }: TextFieldProps) {
   return (
     <Field {...base}>
       {(p) => (
@@ -76,6 +79,9 @@ export function TextField({ transform, type = 'text', placeholder, maxLength, au
           aria-required={p['aria-required']}
           placeholder={placeholder}
           maxLength={maxLength}
+          min={min}
+          max={max}
+          step={step}
           autoComplete={autoComplete}
           inputMode={inputMode}
           disabled={disabled}

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { Banner, Button, Checkbox, Skeleton, TextLink, useToast, cn } from '@stimpy/ui';
 import { AdminForm } from '../../components/form/AdminForm';
-import { SwatchRadio } from './SwatchRadio';
+import { ColorPicker } from '../../components/ColorPicker';
 import { TextAreaField, TextField } from '../../components/form/Field';
 import { FormSection } from '../../components/form/FormSection';
 import { useFormDraft } from '../../components/form/useFormDraft';
@@ -13,11 +13,10 @@ import { DateTimeInput } from '../../components/DateTimeInput';
 import { FileUpload } from '../../components/FileUpload';
 import { SearchField } from '../../components/SearchField';
 import { asApiError } from '../../api/errors';
-import { slugify } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { useFormatters } from '../../lib/format';
 import { useAssignableStimpies, useDropMutations, useEveryDrop, type AdminDrop } from './api';
-import { ACCENTS, NEW_DROP, dropControls, dropSchema, launchInPast, overlappingLive, toDropValues, type DropFormValues } from './dropForm';
+import { NEW_DROP, dropControls, dropSchema, launchInPast, overlappingLive, toDropValues, type DropFormValues } from './dropForm';
 
 interface Props {
   initial: AdminDrop | null;
@@ -82,17 +81,11 @@ export function DropEditor({ initial, onDone }: Props) {
   const form = useForm<DropFormValues>({ resolver: zodResolver(dropSchema), defaultValues: defaults, mode: 'onSubmit', reValidateMode: 'onChange' });
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const draft = useFormDraft(form);
-  const slugTouched = useRef(initial !== null);
-  const name = useWatch({ control: form.control, name: 'name' });
   const startsAt = useWatch({ control: form.control, name: 'startsAt' });
   const stimpieIds = useWatch({ control: form.control, name: 'stimpieIds' });
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteConflict, setDeleteConflict] = useState(false);
-
-  useEffect(() => {
-    if (!slugTouched.current) form.setValue('slug', slugify(name));
-  }, [name, form]);
 
   const overlap = overlappingLive(every.data?.items ?? [], initial?.id ?? null);
   const pastLaunch = !initial && launchInPast(startsAt);
@@ -133,15 +126,19 @@ export function DropEditor({ initial, onDone }: Props) {
       >
         <FormSection title="Details">
           <TextField name="name" label="Name" required maxLength={120} autoComplete="off" disabled={readOnly} />
-          <div onChange={() => { slugTouched.current = true; }}>
-            <TextField name="slug" label="Slug" required autoComplete="off" disabled={readOnly} hint="Lowercase letters, numbers and hyphens. Used in the drop's web address." />
-          </div>
           <TextAreaField name="story" label="Story" rows={4} maxLength={2000} showCount optional disabled={readOnly} />
           <Controller
             control={form.control}
-            name="accentColor"
-            render={({ field }) => (
-              <SwatchRadio legend="Accent colour" value={field.value} onChange={field.onChange} options={ACCENTS} disabled={readOnly} />
+            name="accentHex"
+            render={({ field, fieldState }) => (
+              <ColorPicker
+                label="Accent colour"
+                value={field.value}
+                onChange={field.onChange}
+                error={fieldState.error?.message}
+                hint="Choose the colour used across the storefront for this drop."
+                disabled={readOnly}
+              />
             )}
           />
         </FormSection>
@@ -196,11 +193,7 @@ export function DropEditor({ initial, onDone }: Props) {
           <Controller control={form.control} name="teaserVideo" render={({ field }) => <FileUpload variant="video" label="Teaser video" value={field.value} onChange={(r) => field.onChange(r?.url ?? null)} onBusyChange={setUploading} disabled={readOnly} />} />
         </FormSection>
 
-        {initial ? (
-          <p className="text-body-sm text-fg-muted">
-            Launch {f.dateTime(initial.startsAt)} ({f.timeZone}). Public page: <span className="font-mono">/drops/{initial.slug}</span>
-          </p>
-        ) : null}
+        {initial ? <p className="text-body-sm text-fg-muted">Launch {f.dateTime(initial.startsAt)} ({f.timeZone}).</p> : null}
 
         <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 -mx-4 flex flex-col-reverse gap-2 border-t border-base bg-surface-base px-4 py-3 md:static md:mx-0 md:flex-row md:justify-end md:border-0 md:bg-transparent md:p-0">
           {initial ? (

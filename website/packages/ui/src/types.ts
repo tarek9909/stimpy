@@ -42,6 +42,7 @@ export interface HoodieSummaryLike {
   slug: string;
   name: string;
   priceCents: Cents;
+  compareAtPriceCents?: Cents | null;
   images: string[];
   colors: ColorLike[];
   inStock: boolean;
@@ -52,9 +53,10 @@ export interface StimpieLike {
   name: string;
   type: StimpieType;
   priceCents: Cents;
+  compareAtPriceCents?: Cents | null;
   images: string[];
   artworkUrl: string;
-  drop: { slug?: string; name: string; accentColor: AccentColor } | null;
+  drop: { slug?: string; name: string; accentColor: AccentColor; accentHex?: string } | null;
   status: StimpieStatus;
   remaining: number | null;
   purchasable: boolean;
@@ -65,6 +67,7 @@ export interface PackLike {
   name: string;
   description: string;
   priceCents: Cents;
+  compareAtPriceCents?: Cents | null;
   badge: string | null;
 }
 
@@ -72,6 +75,7 @@ export interface DropLike {
   slug: string;
   name: string;
   accentColor: AccentColor;
+  accentHex?: string;
   startsAt: ISODate;
   endsAt: ISODate | null;
   state: DropState;

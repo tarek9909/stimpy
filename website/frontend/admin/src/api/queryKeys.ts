@@ -35,6 +35,8 @@ export const queryKeys = {
 
   drops: (state?: string) => (state ? (['drops', state] as const) : (['drops'] as const)),
   dropDetail: (id: number | string) => ['drops', 'detail', id] as const,
+  promotions: ['promotions'] as const,
+  promotionDetail: (id: number | string) => ['promotions', 'detail', id] as const,
 
   customers: (filters?: object) => (filters ? (['customers', filters] as const) : (['customers'] as const)),
   customerDetail: (id: number | string) => ['customers', 'detail', id] as const,

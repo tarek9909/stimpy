@@ -54,7 +54,7 @@ export function DropDetailView({ drop: initial, businessTimeZone, staticStartTex
       <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </div>
-      <Section tone="accent" accentColor={drop.accentColor}>
+      <Section tone="accent" accentColor={drop.accentColor} accentHex={drop.accentHex}>
         <div className="grid gap-8 md:grid-cols-2 md:items-center">
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
@@ -92,7 +92,7 @@ export function DropDetailView({ drop: initial, businessTimeZone, staticStartTex
       {soldOut ? (
         <Section tone="white" className="!py-6">
           <Banner variant="info" live>
-            <span className="font-medium">Sold out. This drop won&apos;t return.</span>{' '}
+            <span className="font-medium">This drop is sold out.</span>{' '}
             <TextLink href="/drops">See the current drop</TextLink>
           </Banner>
         </Section>

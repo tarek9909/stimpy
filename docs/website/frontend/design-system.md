@@ -54,12 +54,12 @@ Related: [builder.md](builder.md) (Builder UI), [state-and-errors.md](state-and-
 | `black` | Black | `#111111` | 17, 17, 17 | Text, dark sections. |
 | `white` | White | `#FFFFFF` | 255, 255, 255 | Default background, text on dark. |
 | `blue` | Electric blue | `#2E63FF` | 46, 99, 255 | **Actions only** (primary buttons, countdown call-outs). The announcement bar link is not blue: it is white and underlined on the black bar. |
-| `butter` | Butter | `#FFE45C` | 255, 228, 92 | Drop accent (`AccentColor` `BUTTER`). |
-| `sky` | Sky | `#5CC8FF` | 92, 200, 255 | Drop accent (`SKY`). |
-| `lilac` | Lilac | `#C9B6FF` | 201, 182, 255 | Drop accent (`LILAC`). |
+| `butter` | Butter | `#FFE45C` | 255, 228, 92 | Legacy drop accent palette. |
+| `sky` | Sky | `#5CC8FF` | 92, 200, 255 | Legacy drop accent palette. |
+| `lilac` | Lilac | `#C9B6FF` | 201, 182, 255 | Legacy drop accent palette. |
 | `cream` | Cream | `#FFF4E6` | 255, 244, 230 | Warm alternative to white; panels; hang-tag backgrounds. |
 
-The API's `Drop.accentHex` (and `Stimpie.drop.accentHex`) is always exactly the brand hex for its `accentColor` (`BUTTER` = `#FFE45C`, `SKY` = `#5CC8FF`, `LILAC` = `#C9B6FF`), so the three tokens above equal what the API returns. The UI still maps the `accentColor` enum to the token (so tokens, not runtime strings, drive styling and text-on-accent contrast), and may use `accentHex` directly only where a hex string is unavoidable (for example Open Graph images).
+The API's `Drop.accentHex` (and `Stimpie.drop.accentHex`) is the exact `#RRGGBB` chosen in the dashboard. The legacy `accentColor` field maps custom colors to the nearest Butter, Sky or Lilac palette value for older clients; storefront surfaces use `accentHex` and choose black or white text for contrast.
 
 ### 2.2 Supporting neutrals [Rec]
 
@@ -410,7 +410,7 @@ Used by: **W** = website, **A** = admin dashboard. All components accept `classN
 | Component | Apps | Purpose | Variants | States | Notes |
 |---|---|---|---|---|---|
 | **Badge** | W A | Small labelled marker ("Most popular", count) | `coral`, `black`, `outline`, `accent` (current drop colour) | n/a | One accent per view. |
-| **Tag** | W | Product tag: Core, Limited, Last few, Sold out | `core` (cream bg, black text), `limited` (accent or coral, black text), `last-few` (butter, black), `sold-out` (neutral, white text) | n/a | Maps from `Stimpie.type` and `status` (`LOW`, `SOLD_OUT`). Text always present. |
+| **Tag** | W | Product tag: Core, Limited, Last few, Sold out | `core` (cream bg, black text), `limited` (drop accent or coral with contrast-aware text), `last-few` (butter, black), `sold-out` (neutral, white text) | n/a | Maps from `Stimpie.type` and `status` (`LOW`, `SOLD_OUT`). Text always present. |
 | **StatusPill** | A (W for track page) | Order status | the 7 `OrderStatus` values (section 2.3) | default; `size` sm/md | Icon + label. Track page uses a lighter timeline instead of pills. |
 | **PriceTag** | W A | Money display | `default`, `compact` (tables), `strike` (was price), `total` | n/a | Takes **cents**, formats USD with tabular numbers ([state-and-errors.md](state-and-errors.md#12-formatting-rules)). "Free" never used unless fee is 0 -> "Free delivery". |
 | **Card** | W A | Surface container | `plain` (border `line`), `cream`, `product` (image + body), `stat` (dashboard KPI) | hover (product only, border darkens; no lift), focus-within | No shadow. Clickable cards use one link (stretched), not nested interactive elements. |

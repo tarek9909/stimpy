@@ -8,12 +8,10 @@ import { browserApi } from '@/lib/api-browser';
 import { track } from '@/lib/track';
 import { EARLY_POLL_MS, inEarlyWindow, runHandoff } from './handoff';
 
-/** The server's current state of one drop, from `GET /drops` (no-store). Null when it is not listed or unreadable. */
+/** The server's current state of one drop, from `GET /drops/:slug` (no-store). Null when it is unreadable. */
 export async function fetchDropState(slug: string): Promise<DropState | null> {
-  const { data } = await browserApi().GET('/api/v1/drops', { cache: 'no-store' });
-  if (!data) return null;
-  const all = [...(data.live ? [data.live] : []), ...data.upcoming, ...data.archive];
-  return all.find((d) => d.slug === slug)?.state ?? null;
+  const { data } = await browserApi().GET('/api/v1/drops/{slug}', { params: { path: { slug } }, cache: 'no-store' });
+  return data?.state ?? null;
 }
 
 export type HandoffStatus = 'idle' | 'waiting' | 'delayed';

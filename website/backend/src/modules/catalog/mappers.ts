@@ -1,11 +1,12 @@
-import type { Drop, Hoodie, Pack, Stimpie } from '@prisma/client';
+import type { Drop, Hoodie, HoodieVariant, Pack, Stimpie } from '@prisma/client';
 import { jsonStringArray } from '../../lib/db';
 import { iso, isoOrNull } from '../../lib/dates';
-import { ACCENT_HEX, availableUnits, stimpieAvailability } from '../../services/drops';
+import { availableUnits, stimpieAvailability } from '../../services/drops';
+import type { PromotionPrice } from '../../services/promotions';
 
 export type StimpieWithDrop = Stimpie & { drop: Drop | null };
 
-export const accentHexOf = (d: Pick<Drop, 'accentColor'>): string => ACCENT_HEX[d.accentColor];
+export const accentHexOf = (d: Pick<Drop, 'accentHex'>): string => d.accentHex;
 
 export function toDropSummary(d: Drop) {
   return {
@@ -20,14 +21,15 @@ export function toDropSummary(d: Drop) {
 }
 
 /** Public `Stimpie` (api-reference section 2). Never exposes cost or exact stock above the threshold. */
-export function toPublicStimpie(row: StimpieWithDrop, lowStockThreshold: number, at: Date) {
+export function toPublicStimpie(row: StimpieWithDrop, lowStockThreshold: number, at: Date, promotionPrice?: PromotionPrice) {
   const a = stimpieAvailability({ ...row, drop: row.drop }, lowStockThreshold, at);
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
     type: row.type,
-    priceCents: row.priceCents,
+    priceCents: promotionPrice?.priceCents ?? row.priceCents,
+    compareAtPriceCents: promotionPrice?.compareAtPriceCents ?? null,
     story: row.story,
     images: jsonStringArray(row.images),
     artworkUrl: row.artworkUrl,
@@ -47,10 +49,11 @@ export const toPublicPack = (p: Pack) => ({
   description: p.description,
   stimpieCount: p.stimpieCount,
   priceCents: p.priceCents,
+  compareAtPriceCents: null,
   badge: p.badge,
 });
 
-export const toAdminHoodie = (h: Hoodie, stock: { available: number; reserved: number }) => ({
+export const toAdminHoodie = (h: Hoodie, stock: { available: number; reserved: number }, variants: Pick<HoodieVariant, 'colorId' | 'sizeId'>[] = []) => ({
   id: h.id,
   name: h.name,
   slug: h.slug,
@@ -61,8 +64,9 @@ export const toAdminHoodie = (h: Hoodie, stock: { available: number; reserved: n
   images: jsonStringArray(h.images),
   active: h.active,
   position: h.position,
+  colorIds: [...new Set(variants.map((variant) => variant.colorId))],
+  sizeIds: [...new Set(variants.map((variant) => variant.sizeId))],
   available: stock.available,
-  reserved: stock.reserved,
 });
 
 export const toAdminStimpie = (s: Stimpie) => ({
@@ -82,7 +86,6 @@ export const toAdminStimpie = (s: Stimpie) => ({
   position: s.position,
   quantity: s.quantity,
   available: availableUnits(s),
-  reserved: s.reserved,
 });
 
 export const toAdminPack = (p: Pack) => ({

@@ -17,13 +17,13 @@ export const SHORTCUTS: ReadonlyArray<{ keys: string; action: string }> = [
   { keys: 'g then o', action: 'Go to Orders' },
   { keys: 'g then p', action: 'Go to Products' },
   { keys: 'g then s', action: 'Go to Stock' },
-  { keys: 'g then d', action: 'Go to Deliveries' },
+  { keys: 'g then d', action: 'Go to Out for delivery' },
   { keys: 'g then c', action: 'Go to Customers' },
   { keys: '?', action: 'Show this help' },
   { keys: 'Esc', action: 'Close a dialog, menu or search' },
 ];
 
-const GO: Record<string, string> = { h: '/', o: '/orders', p: '/products', s: '/stock', d: '/deliveries', c: '/customers' };
+const GO: Record<string, string> = { h: '/', o: '/orders', p: '/products', s: '/stock', d: '/orders?view=out', c: '/customers' };
 
 export function ShortcutsHost() {
   const navigate = useNavigate();

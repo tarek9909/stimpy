@@ -1,22 +1,20 @@
 'use client';
 
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Drop, Pack, Review, Stimpie } from '@stimpy/api-client';
+import type { Drop, Pack, Stimpie } from '@stimpy/api-client';
 
 const DeferredCards = lazy(() => import('./HomeDeferredCards'));
 
-type Props =
-  | {
-      kind: 'commerce';
-      fallback: ReactNode;
-      packs: Pack[];
-      hoodieSlug: string | null;
-      extraCents: number;
-      minExtra: number | null;
-      drop: Drop | null;
-      coreStimpies: Stimpie[];
-    }
-  | { kind: 'reviews'; fallback: ReactNode; reviews: Review[] };
+type Props = {
+  kind: 'commerce';
+  fallback: ReactNode;
+  packs: Pack[];
+  hoodieSlug: string | null;
+  extraCents: number;
+  minExtra: number | null;
+  drop: Drop | null;
+  coreStimpies: Stimpie[];
+};
 
 /** Keep the complete server preview in the HTML, then load its interactive cards shortly before they enter view. */
 export function HomeDeferredGate(props: Props) {

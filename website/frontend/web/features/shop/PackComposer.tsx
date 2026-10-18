@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import {
   Badge,
   Button,
@@ -8,9 +8,8 @@ import {
   PriceTag,
   RadioGroup,
   SizeSelector,
-  StimpieCard,
+  Spinner,
   TextLink,
-  formatCents,
   type RadioOption,
 } from '@stimpy/ui';
 import type { HoodieDetail, Pack, Stimpie } from '@stimpy/api-client';
@@ -27,7 +26,6 @@ import {
   packById,
   requiredStimpies,
   selectionTotalCents,
-  stimpieSelectable,
   validateComposer,
   type ComposerPreset,
   type ComposerState,
@@ -39,7 +37,7 @@ export interface PackComposerProps {
   packs: readonly Pack[];
   stimpies: readonly Stimpie[];
   preset?: ComposerPreset;
-  /** Delivery estimate ("2-3 working days") for the note under the button. */
+  /** Delivery estimate for the note under the button. */
   estimateText?: string | null;
   source?: AddSource;
   /** The chosen colour changed (the gallery shows its photo). */
@@ -57,6 +55,7 @@ export interface PackComposerProps {
 
 const packValue = (c: PackChoice) => String(c);
 const parseChoice = (v: string): PackChoice => (v === HOODIE_ONLY ? HOODIE_ONLY : Number(v));
+const ComposerStimpies = lazy(() => import('./ComposerStimpies'));
 
 /**
  * The pick-pack / colour / size / N-Stimpies flow (checkout-and-order-flow 1.3). Emits the exact `CartItem` the
@@ -127,7 +126,7 @@ export function PackComposer({
   const pickedPack = packById(packs, state.pack);
 
   const packOptions: RadioOption[] = [
-    { value: HOODIE_ONLY, label: 'Hoodie only', description: 'Wear it plain. Add Stimpies any time.', meta: formatCents(hoodie.priceCents) },
+    { value: HOODIE_ONLY, label: 'Hoodie only', description: 'Wear it plain. Add Stimpies any time.', meta: <PriceTag cents={hoodie.priceCents} compareAtCents={hoodie.compareAtPriceCents ?? undefined} size="sm" /> },
     ...packs.map((p) => ({
       value: packValue(p.id),
       label: (
@@ -137,7 +136,7 @@ export function PackComposer({
         </span>
       ),
       description: p.description,
-      meta: formatCents(p.priceCents),
+      meta: <PriceTag cents={p.priceCents} compareAtCents={p.compareAtPriceCents ?? undefined} size="sm" />,
     })),
   ];
 
@@ -208,25 +207,10 @@ export function PackComposer({
           <p className="text-body font-medium text-fg" role="status" aria-live="polite">
             {validation.progressLabel}
           </p>
-          <ul className="scroll-row -mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0" aria-label="Stimpies">
-            {stimpies.map((s) => {
-              const selectable = stimpieSelectable(s, cartLines);
-              const selected = state.stimpieIds.includes(s.id);
-              // Picking is allowed while a slot is free or when swapping a one-Stimpie pack.
-              return (
-                <li key={s.id} className="w-28 shrink-0 snap-start">
-                  <StimpieCard
-                    stimpie={selectable ? s : { ...s, purchasable: false }}
-                    variant="compact"
-                    selectable
-                    selected={selected}
-                    onSelect={() => dispatch({ type: 'toggleStimpie', stimpieId: s.id, need })}
-                    sizes="112px"
-                  />
-                </li>
-              );
-            })}
-          </ul>
+          <Suspense fallback={<div className="flex min-h-60 items-center justify-center gap-2 text-body-sm text-fg-muted" role="status"><Spinner size="sm" /> Loading Stimpies…</div>}>
+            <ComposerStimpies stimpies={stimpies} cartLines={cartLines} selectedIds={state.stimpieIds}
+              onSelect={(stimpieId) => dispatch({ type: 'toggleStimpie', stimpieId, need })} />
+          </Suspense>
           {notice ? (
             <p role="status" className="text-body-sm font-medium text-fg">
               {notice}

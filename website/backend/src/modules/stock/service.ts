@@ -7,50 +7,65 @@ import { toColorDto, toSizeDto } from '../options/service';
 
 /** Read side of the admin stock API (api-reference 5.5). Writes go through services/stock.ts. */
 
-export async function stockHoodies(ctx: AppContext) {
-  const [colors, sizes, hoodies] = await Promise.all([
+export async function stockHoodies(ctx: AppContext, q: PageQuery) {
+  const where = {};
+  const [colors, sizes, hoodies, total] = await Promise.all([
     ctx.prisma.color.findMany({ where: { active: true }, orderBy: [{ position: 'asc' }, { id: 'asc' }] }),
     ctx.prisma.size.findMany({ where: { active: true }, orderBy: [{ position: 'asc' }, { id: 'asc' }] }),
-    ctx.prisma.hoodie.findMany({ orderBy: [{ position: 'asc' }, { id: 'asc' }], include: { variants: { orderBy: { id: 'asc' } } } }),
+    ctx.prisma.hoodie.findMany({
+      where,
+      orderBy: [{ position: 'asc' }, { id: 'asc' }],
+      ...toSkipTake(q),
+      include: { variants: { where: { active: true, color: { active: true }, size: { active: true } }, include: { color: true, size: true }, orderBy: { id: 'asc' } } },
+    }),
+    ctx.prisma.hoodie.count({ where }),
   ]);
-  const colorIds = new Set(colors.map((c) => c.id));
-  const sizeIds = new Set(sizes.map((s) => s.id));
-  const colorPos = new Map(colors.map((c, i) => [c.id, i]));
-  const sizePos = new Map(sizes.map((s, i) => [s.id, i]));
+  const byPos = <T extends { position: number; id: number }>(a: T, b: T) => a.position - b.position || a.id - b.id;
+  const items = hoodies.map((h) => {
+    const hColors = new Map(h.variants.map((variant) => [variant.colorId, variant.color]));
+    const hSizes = new Map(h.variants.map((variant) => [variant.sizeId, variant.size]));
+    return {
+      hoodieId: h.id,
+      name: h.name,
+      colors: [...hColors.values()].sort(byPos).map(toColorDto),
+      sizes: [...hSizes.values()].sort(byPos).map(toSizeDto),
+      cells: h.variants
+        .slice()
+        .sort((a, b) => byPos(a.color, b.color) || byPos(a.size, b.size))
+        .map((v) => ({ variantId: v.id, colorId: v.colorId, sizeId: v.sizeId, quantity: v.quantity, reserved: v.reserved, available: v.quantity - v.reserved })),
+    };
+  });
   return {
     colors: colors.map(toColorDto),
     sizes: sizes.map(toSizeDto),
-    hoodies: hoodies.map((h) => ({
-      hoodieId: h.id,
-      name: h.name,
-      cells: h.variants
-        .filter((v) => colorIds.has(v.colorId) && sizeIds.has(v.sizeId))
-        .sort((a, b) => colorPos.get(a.colorId)! - colorPos.get(b.colorId)! || sizePos.get(a.sizeId)! - sizePos.get(b.sizeId)!)
-        .map((v) => ({ variantId: v.id, colorId: v.colorId, sizeId: v.sizeId, quantity: v.quantity, reserved: v.reserved, available: v.quantity - v.reserved })),
-    })),
+    ...toPage(items, total, q),
   };
 }
 
-export async function stockStimpies(ctx: AppContext) {
-  const [{ lowStockThreshold }, rows] = await Promise.all([
+export async function stockStimpies(ctx: AppContext, q: PageQuery) {
+  const where = {};
+  const [{ lowStockThreshold }, rows, total] = await Promise.all([
     ctx.settings.get('orders'),
-    ctx.prisma.stimpie.findMany({ orderBy: [{ position: 'asc' }, { id: 'asc' }], include: { drop: { select: { name: true } } } }),
+    ctx.prisma.stimpie.findMany({ where, orderBy: [{ position: 'asc' }, { id: 'asc' }], ...toSkipTake(q), include: { drop: { select: { name: true } } } }),
+    ctx.prisma.stimpie.count({ where }),
   ]);
-  return {
-    items: rows.map((s) => {
-      const available = s.quantity - s.reserved;
-      return {
-        stimpieId: s.id,
-        name: s.name,
-        type: s.type,
-        dropName: s.drop?.name ?? null,
-        quantity: s.quantity,
-        reserved: s.reserved,
-        available,
-        low: available <= lowStockThreshold,
-      };
-    }),
-  };
+  const items = rows.map((s) => {
+    const available = s.quantity - s.reserved;
+    const images = Array.isArray(s.images) ? (s.images as string[]) : [];
+    return {
+      stimpieId: s.id,
+      name: s.name,
+      type: s.type,
+      dropName: s.drop?.name ?? null,
+      quantity: s.quantity,
+      reserved: s.reserved,
+      available,
+      low: available <= lowStockThreshold,
+      artworkUrl: s.artworkUrl,
+      imageUrl: images[0] ?? s.artworkUrl ?? null,
+    };
+  });
+  return toPage(items, total, q);
 }
 
 export type MovementQuery = PageQuery & {

@@ -42,6 +42,17 @@ enum StimpieType {
   LIMITED
 }
 
+enum PromotionDiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum PromotionProductType {
+  HOODIE
+  STIMPIE
+  PACK
+}
+
 enum AccentColor {
   BUTTER
   SKY
@@ -243,6 +254,7 @@ model HoodieVariant {
   sku       String   @unique @db.VarChar(60)
   quantity  Int      @default(0)
   reserved  Int      @default(0)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
@@ -265,6 +277,7 @@ model Drop {
   slug        String      @unique @db.VarChar(140)
   story       String      @db.Text
   accentColor AccentColor @map("accent_color")
+  accentHex   String      @default("#FFE45C") @map("accent_hex") @db.VarChar(7)
   startsAt    DateTime    @map("starts_at") @db.DateTime(3)
   endsAt      DateTime?   @map("ends_at") @db.DateTime(3)
   endedAt     DateTime?   @map("ended_at") @db.DateTime(3)
@@ -324,6 +337,36 @@ model Pack {
   updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime(3)
 
   @@map("packs")
+}
+
+model Promotion {
+  id            Int                    @id @default(autoincrement()) @db.UnsignedInt
+  name          String                 @db.VarChar(120)
+  discountType  PromotionDiscountType  @map("discount_type")
+  discountValue Int                    @map("discount_value")
+  allProducts   Boolean                @default(false) @map("all_products")
+  enabled       Boolean                @default(true)
+  startsAt      DateTime?              @map("starts_at") @db.DateTime(3)
+  endsAt        DateTime?              @map("ends_at") @db.DateTime(3)
+  createdAt     DateTime               @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime               @updatedAt @map("updated_at") @db.DateTime(3)
+
+  items PromotionItem[]
+
+  @@index([enabled, startsAt, endsAt])
+  @@map("promotions")
+}
+
+model PromotionItem {
+  promotionId Int                  @map("promotion_id") @db.UnsignedInt
+  productType PromotionProductType @map("product_type")
+  productId   Int                  @map("product_id") @db.UnsignedInt
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@id([promotionId, productType, productId])
+  @@index([productType, productId])
+  @@map("promotion_items")
 }
 
 model Area {

@@ -71,7 +71,7 @@ describe('GET /admin/finance/profit', () => {
       ordersCount: 3,
       planMargins: { pack35: 1800, pack45: 2200 },
     });
-    expect(body.byOrder).toEqual([
+    expect(body.byOrder.items).toEqual([
       { orderNumber: 'STP-B', date: '2026-10-31', revenueCents: 6500, costCents: 3500, profitCents: 3000 },
       { orderNumber: 'STP-E', date: '2026-10-15', revenueCents: 2500, costCents: 1100, profitCents: 1400 },
       { orderNumber: 'STP-A', date: '2026-10-01', revenueCents: 3500, costCents: 1700, profitCents: 1800 },
@@ -83,7 +83,7 @@ describe('GET /admin/finance/profit', () => {
     await seedFinance();
     const { client } = await t.adminClient();
     const body = (await client.get('/admin/finance/profit', { query: { from: '2026-10-01', to: '2026-10-31' } })).json();
-    const numbers = body.byOrder.map((o: { orderNumber: string }) => o.orderNumber);
+    const numbers = body.byOrder.items.map((o: { orderNumber: string }) => o.orderNumber);
     expect(numbers).not.toContain('STP-F');
     expect(numbers).not.toContain('STP-G');
     expect(numbers).not.toContain('STP-H');
@@ -94,10 +94,10 @@ describe('GET /admin/finance/profit', () => {
     await seedFinance();
     const { client } = await t.adminClient();
     const one = async (from: string, to: string) => (await client.get('/admin/finance/profit', { query: { from, to } })).json();
-    expect((await one('2026-10-01', '2026-10-01')).byOrder.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-A']);
-    expect((await one('2026-10-31', '2026-10-31')).byOrder.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-B']);
-    expect((await one('2026-11-01', '2026-11-01')).byOrder.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-C']);
-    expect((await one('2026-09-30', '2026-09-30')).byOrder.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-D']);
+    expect((await one('2026-10-01', '2026-10-01')).byOrder.items.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-A']);
+    expect((await one('2026-10-31', '2026-10-31')).byOrder.items.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-B']);
+    expect((await one('2026-11-01', '2026-11-01')).byOrder.items.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-C']);
+    expect((await one('2026-09-30', '2026-09-30')).byOrder.items.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-D']);
   });
 
   it('without from/to it covers all time; one open bound works', async () => {
@@ -116,7 +116,7 @@ describe('GET /admin/finance/profit', () => {
     await seedFinance();
     const { client } = await t.adminClient();
     const body = (await client.get('/admin/finance/profit', { query: { from: '2025-01-01', to: '2025-01-31' } })).json();
-    expect(body).toMatchObject({ revenueCents: 0, costOfGoodsCents: 0, expensesCents: 0, adSpendCents: 0, profitCents: 0, ordersCount: 0, byOrder: [] });
+    expect(body).toMatchObject({ revenueCents: 0, costOfGoodsCents: 0, expensesCents: 0, adSpendCents: 0, profitCents: 0, ordersCount: 0, byOrder: { items: [], page: 1, pageSize: 25, total: 0 } });
   });
 
   it('uses settings.business.timezone for the day boundaries (same data, UTC gives different orders)', async () => {
@@ -125,10 +125,10 @@ describe('GET /admin/finance/profit', () => {
     const { client } = await t.adminClient();
     const body = (await client.get('/admin/finance/profit', { query: { from: '2026-10-01', to: '2026-10-31' } })).json();
     // In UTC: A (2026-09-30T21:00Z) is OUT, C (2026-10-31T22:00Z) is IN. IN = B 6500 + C 2500 + E 2500
-    expect(body.byOrder.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-C', 'STP-B', 'STP-E']);
+    expect(body.byOrder.items.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-C', 'STP-B', 'STP-E']);
     expect(body.revenueCents).toBe(11500);
     expect(body.costOfGoodsCents).toBe(3500 + 1100 + 1100);
-    expect(body.byOrder[0].date).toBe('2026-10-31'); // 22:00Z is still 31 Oct in UTC
+    expect(body.byOrder.items[0].date).toBe('2026-10-31'); // 22:00Z is still 31 Oct in UTC
   });
 
   it('DST end (clocks go back at 2026-10-25 00:00 local): 24 Oct is a 25-hour day, 23:00-24:00 happens twice', async () => {
@@ -142,10 +142,10 @@ describe('GET /admin/finance/profit', () => {
     await makeOrder(p, { number: 'STP-5', status: 'DELIVERED', items: [HOODIE], deliveredAt: '2026-10-24T22:00:00Z' }); // 25 Oct 00:00:00 local
     const { client } = await t.adminClient();
     const day = (await client.get('/admin/finance/profit', { query: { from: '2026-10-24', to: '2026-10-24' } })).json();
-    expect(day.byOrder.map((o: { orderNumber: string }) => o.orderNumber).sort()).toEqual(['STP-2', 'STP-3', 'STP-4']);
+    expect(day.byOrder.items.map((o: { orderNumber: string }) => o.orderNumber).sort()).toEqual(['STP-2', 'STP-3', 'STP-4']);
     expect(day.revenueCents).toBe(7500);
     const next = (await client.get('/admin/finance/profit', { query: { from: '2026-10-25', to: '2026-10-25' } })).json();
-    expect(next.byOrder.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-5']);
+    expect(next.byOrder.items.map((o: { orderNumber: string }) => o.orderNumber)).toEqual(['STP-5']);
   });
 
   it('DST start (clocks forward 2026-03-29 00:00 local): the 29 Mar day is 23 hours long', async () => {
@@ -157,7 +157,7 @@ describe('GET /admin/finance/profit', () => {
     await makeOrder(p, { number: 'STP-4', status: 'DELIVERED', items: [HOODIE], deliveredAt: '2026-03-29T21:00:00Z' }); // 30 Mar 00:00 (+3)
     const { client } = await t.adminClient();
     const day = (await client.get('/admin/finance/profit', { query: { from: '2026-03-29', to: '2026-03-29' } })).json();
-    expect(day.byOrder.map((o: { orderNumber: string }) => o.orderNumber).sort()).toEqual(['STP-2', 'STP-3']);
+    expect(day.byOrder.items.map((o: { orderNumber: string }) => o.orderNumber).sort()).toEqual(['STP-2', 'STP-3']);
   });
 
   it('validates the range: bad format, impossible date, end before start', async () => {
@@ -203,8 +203,8 @@ describe('GET /admin/finance/cash', () => {
     const body = (await client.get('/admin/finance/cash')).json();
     expect(body.outstandingCents).toBe(10400); // 3800 + 2800 + 3800
     const sum = (n: number) => n;
-    expect(body.groups.map((g: { deliveryNumber: string | null }) => g.deliveryNumber)).toEqual(['D-1', 'D-2', null]);
-    const [d1, d2, none] = body.groups;
+    expect(body.groups.items.map((g: { deliveryNumber: string | null }) => g.deliveryNumber)).toEqual(['D-1', 'D-2', null]);
+    const [d1, d2, none] = body.groups.items;
     expect(d1.totalDueCents).toBe(sum(3800)); // the settled 7000 order is listed but not due
     expect(d1.orders.map((o: { orderNumber: string; cashDueCents: number; settled: boolean }) => [o.orderNumber, o.cashDueCents, o.settled])).toEqual([
       ['STP-1', 3800, false],
@@ -213,7 +213,7 @@ describe('GET /admin/finance/cash', () => {
     expect(d1.orders[0]).toHaveProperty('orderId');
     expect(d2).toMatchObject({ totalDueCents: 2800, orders: [{ orderNumber: 'STP-3', cashDueCents: 2800, settled: false }] });
     expect(none).toMatchObject({ deliveryNumber: null, totalDueCents: 3800 });
-    const all = body.groups.flatMap((g: { orders: { orderNumber: string }[] }) => g.orders.map((o) => o.orderNumber));
+    const all = body.groups.items.flatMap((g: { orders: { orderNumber: string }[] }) => g.orders.map((o) => o.orderNumber));
     expect(all).not.toContain('STP-5'); // old settled
     expect(all).not.toContain('STP-6');
     expect(all).not.toContain('STP-7');
@@ -225,7 +225,7 @@ describe('GET /admin/finance/cash', () => {
     await t.prisma.order.update({ where: { number: 'STP-1' }, data: { cashSettled: true } });
     let body = (await client.get('/admin/finance/cash')).json();
     expect(body.outstandingCents).toBe(6600);
-    expect(body.groups[0]).toMatchObject({ deliveryNumber: 'D-1', totalDueCents: 0 });
+    expect(body.groups.items[0]).toMatchObject({ deliveryNumber: 'D-1', totalDueCents: 0 });
     await t.prisma.order.updateMany({ where: { deliveryNumber: 'D-2', status: 'DELIVERED' }, data: { cashSettled: true } });
     body = (await client.get('/admin/finance/cash')).json();
     expect(body.outstandingCents).toBe(3800);
@@ -233,7 +233,7 @@ describe('GET /admin/finance/cash', () => {
 
   it('nothing to collect gives zero and no groups', async () => {
     const { client } = await t.adminClient();
-    expect((await client.get('/admin/finance/cash')).json()).toEqual({ outstandingCents: 0, groups: [] });
+    expect((await client.get('/admin/finance/cash')).json()).toEqual({ outstandingCents: 0, groups: { items: [], page: 1, pageSize: 25, total: 0 } });
   });
 });
 

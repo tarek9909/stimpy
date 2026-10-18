@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Accordion, EmptyState, RichText, Section, WhatsAppButton } from '@stimpy/ui';
+import { Accordion, Button, EmptyState, RichText, Section, WhatsAppButton } from '@stimpy/ui';
 import type { Content, SizeChartResponse } from '@stimpy/api-client';
 import { UrlTabs } from '@/components/UrlTabs';
 import { must } from '@/lib/api-server';
@@ -13,7 +13,7 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const TAB_META: Record<HelpTab, { title: string; description: string }> = {
   size: { title: 'Size guide', description: 'Find your size: measurements for every Stimpy hoodie size and how to measure yourself.' },
-  care: { title: 'Care guide', description: 'How to wash and care for your Stimpy hoodie and Stimpies so they last.' },
+  care: { title: 'Care guide', description: 'Questions about caring for your Stimpy hoodie and Stimpies? Contact the team.' },
   faq: { title: 'FAQ', description: 'Answers about sizing, delivery, payment and swapping Stimpies.' },
 };
 
@@ -24,8 +24,10 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
 
 export default async function HelpPage({ searchParams }: { searchParams: SearchParams }) {
   const tab = parseHelpTab((await searchParams).tab);
-  const content = await must(() => getContent());
-  const chart = tab === 'size' ? await getSizeChart().catch(() => null) : null;
+  const [content, chart] = await Promise.all([
+    must(() => getContent()),
+    tab === 'size' ? getSizeChart().catch(() => null) : Promise.resolve(null),
+  ]);
   const faqs = content.faqs;
 
   return (
@@ -49,20 +51,26 @@ export default async function HelpPage({ searchParams }: { searchParams: SearchP
   );
 }
 
-function ComingSoon({ title, business }: { title: string; business: Content['business'] }) {
+function HelpContact({ title, business }: { title: string; business: Content['business'] }) {
+  const whatsappNumber = business.whatsappNumber?.trim();
+  const email = business.supportEmail?.trim();
   return (
     <EmptyState
       icon={<Ruler width={32} height={32} />}
       title={title}
-      text="Ask us on WhatsApp and we will help."
-      action={<WhatsAppButton number={business.whatsappNumber} text="Hi Stimpy, I have a question" label="Ask us on WhatsApp" />}
+      text={whatsappNumber || email ? 'Contact us and we will help.' : 'Please check back for more information.'}
+      action={whatsappNumber ? (
+        <WhatsAppButton number={whatsappNumber} text="Hi Stimpy, I have a question" label="Ask us on WhatsApp" />
+      ) : email ? (
+        <Button href={`mailto:${email}`} variant="dark">Email us</Button>
+      ) : undefined}
     />
   );
 }
 
 function SizePanel({ chart, business }: { chart: SizeChartResponse | null; business: Content['business'] }) {
   if (!chart || chart.rows.length === 0 || chart.columns.length === 0) {
-    return <ComingSoon title="The size guide is coming soon." business={business} />;
+    return <HelpContact title="Need help finding your size?" business={business} />;
   }
   return (
     <div className="flex flex-col gap-8">
@@ -116,12 +124,12 @@ function SizePanel({ chart, business }: { chart: SizeChartResponse | null; busin
 }
 
 function CarePanel({ text, business }: { text: string; business: Content['business'] }) {
-  if (!text.trim()) return <ComingSoon title="The care guide is coming soon." business={business} />;
+  if (!text.trim()) return <HelpContact title="Questions about care?" business={business} />;
   return <RichText text={text} className="max-w-prose" />;
 }
 
 function FaqPanel({ faqs, business }: { faqs: Content['faqs']; business: Content['business'] }) {
-  if (faqs.length === 0) return <ComingSoon title="Answers are coming soon." business={business} />;
+  if (faqs.length === 0) return <HelpContact title="Have a question?" business={business} />;
   const groups = groupFaqs(faqs);
   return (
     <div className="grid gap-10 md:grid-cols-2 md:gap-x-12" data-testid="faq">

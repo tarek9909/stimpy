@@ -10,7 +10,8 @@ export interface AdjustTarget {
   /** "Stimpy Hoodie, Black, M" or "THE VOID". */
   name: string;
   quantity: number;
-  reserved: number;
+  /** Legacy callers may provide this; the stock dialog no longer exposes or uses a reserved count. */
+  reserved?: number;
   available: number;
 }
 
@@ -28,8 +29,7 @@ export function parseWholeNumber(raw: string): number | null {
 }
 
 /**
- * Adjust on-hand stock only (dashboard-pages 8.4). Reserved units are controlled by order flows;
- * the server derives their count from open order reservations.
+ * Adjust on-hand stock only. Quantities already committed to open orders stay protected by the server.
  */
 export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null; onClose: () => void }) {
   const change = useStockChange();
@@ -59,7 +59,7 @@ export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null;
   const deltaN = parseWholeNumber(delta);
   const qtyN = /^\d+$/.test(quantity.trim()) ? Number(quantity.trim()) : null;
   const newQuantity = mode === 'adjust' ? (deltaN === null ? null : target.quantity + deltaN) : qtyN;
-  const newAvailable = newQuantity === null ? null : newQuantity - target.reserved;
+  const newAvailable = newQuantity === null ? null : target.available + newQuantity - target.quantity;
   const effectiveDelta = mode === 'adjust' ? deltaN : (qtyN === null ? null : qtyN - target.quantity);
   const busy = change.isPending;
 
@@ -72,8 +72,8 @@ export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null;
     } else if (qtyN === null) {
       next.quantity = 'Enter a whole number of 0 or more.';
     }
-    if (newQuantity !== null && newQuantity < target.reserved) {
-      const msg = `You can't go below what's reserved for open orders (reserved: ${target.reserved}).`;
+    if (newAvailable !== null && newAvailable < 0) {
+      const msg = 'That would lower stock below the quantity committed to open orders.';
       if (mode === 'adjust') next.delta = msg;
       else next.quantity = msg;
     }
@@ -105,7 +105,7 @@ export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null;
       setConfirmLarge(false);
       const err = asApiError(e);
       if (err?.code === 'CONFLICT') {
-        const msg = `You can't go below what's reserved for open orders (reserved: ${target.reserved}).`;
+        const msg = 'That would lower stock below the quantity committed to open orders.';
         setErrors(mode === 'adjust' ? { delta: msg } : { quantity: msg });
       } else if (err?.code === 'VALIDATION_ERROR' && err.fields) {
         setErrors({ delta: err.fields.delta, reason: err.fields.reason, quantity: err.fields.quantity, note: err.fields.note });
@@ -122,7 +122,7 @@ export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null;
       onClose={() => !busy && onClose()}
       title={`Adjust stock: ${target.name}`}
       size="md"
-      closeOnBackdrop={false}
+      closeOnBackdrop={!busy}
       closeOnEsc={!busy}
       footer={
         confirmLarge ? (
@@ -145,14 +145,10 @@ export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null;
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <dl className="grid grid-cols-3 gap-2 rounded-md bg-surface p-2 text-center text-body-sm">
+          <dl className="grid grid-cols-2 gap-2 rounded-md bg-surface p-2 text-center text-body-sm">
             <div className="flex flex-col items-center p-1.5">
               <dt className="text-fg-muted font-medium">On hand</dt>
               <dd className="text-h5 font-bold tabular-nums">{target.quantity}</dd>
-            </div>
-            <div className="flex flex-col items-center p-1.5">
-              <dt className="text-fg-muted font-medium">Reserved</dt>
-              <dd className="text-h5 font-bold tabular-nums">{target.reserved}</dd>
             </div>
             <div className="flex flex-col items-center p-1.5">
               <dt className="text-fg-muted font-medium">Available</dt>
@@ -213,7 +209,7 @@ export function AdjustDialog({ target, onClose }: { target: AdjustTarget | null;
 
           {newQuantity !== null && newAvailable !== null ? (
             <p className="rounded-md bg-cream px-3 py-2 text-body-sm" aria-live="polite" data-testid="stock-preview">
-              On hand {target.quantity} → {newQuantity}. Reserved {target.reserved}. Available {newAvailable}.
+              On hand {target.quantity} → {newQuantity}. Available {newAvailable}.
               {newAvailable === 0 ? <span className="mt-1 block font-medium">This will show as Sold out on the website.</span> : null}
             </p>
           ) : null}

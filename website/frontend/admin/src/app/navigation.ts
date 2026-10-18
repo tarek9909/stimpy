@@ -3,11 +3,11 @@ import {
   Boxes,
   FileText,
   LayoutDashboard,
+  Percent,
   Rocket,
   Settings,
   Shirt,
   ShoppingBag,
-  Truck,
   Users,
   Wallet,
   type LucideIcon,
@@ -36,18 +36,18 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { area: 'products', group: 'Catalog', path: '/products', label: 'Products', icon: Shirt },
   { area: 'stock', group: 'Catalog', path: '/stock', label: 'Stock', icon: Boxes },
   { area: 'drops', group: 'Catalog', path: '/drops', label: 'Drops', icon: Rocket },
+  { area: 'promotions', group: 'Catalog', path: '/promotions', label: 'Promotions', icon: Percent },
   { area: 'customers', group: 'Business', path: '/customers', label: 'Customers', icon: Users },
   { area: 'finance', group: 'Business', path: '/finance', label: 'Finance', icon: Wallet },
   { area: 'insights', group: 'Business', path: '/insights', label: 'Insights', icon: BarChart3 },
   { area: 'content', group: 'Store', path: '/content', label: 'Content', icon: FileText },
-  { area: 'deliveries', group: 'Workspace', path: '/deliveries', label: 'Deliveries', icon: Truck },
   { area: 'settings', group: 'Store', path: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export const NAV_GROUPS: readonly NavGroup[] = ['Workspace', 'Catalog', 'Business', 'Store'];
 
 /** Phone bottom bar slots (dashboard-pages 2.2); everything else is under "More". */
-export const BOTTOM_BAR_AREAS: readonly Area[] = ['overview', 'orders', 'deliveries', 'stock'];
+export const BOTTOM_BAR_AREAS: readonly Area[] = ['overview', 'orders', 'stock'];
 
 export function isNavActive(item: Pick<NavItem, 'path' | 'end'>, pathname: string): boolean {
   if (item.end) return pathname === item.path;

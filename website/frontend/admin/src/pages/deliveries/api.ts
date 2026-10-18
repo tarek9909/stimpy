@@ -24,9 +24,9 @@ export function useDeliveries(filters: DeliveryFilters) {
 }
 export type DeliveryRow = NonNullable<ReturnType<typeof useDeliveries>['data']>['items'][number];
 
-/** Confirmation copy shared by Finance -> Cash and Deliveries -> Delivered (dashboard-pages 11.2, 14.2). */
+/** Confirmation copy shared by Finance -> Cash and Orders -> Delivered. */
 export function groupSettlementConfirmation(deliveryNumber: string, orderCount: number, received: string): string {
-  return `Mark all ${orderCount} ${orderCount === 1 ? 'order' : 'orders'} on ${deliveryNumber} as settled? You received ${received}.`;
+  return `Mark ${orderCount} unsettled ${orderCount === 1 ? 'order' : 'orders'} on ${deliveryNumber} as settled? You received ${received}.`;
 }
 
 /**

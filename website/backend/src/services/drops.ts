@@ -13,9 +13,20 @@ export type PurchaseReason = 'INACTIVE' | 'DROP_NOT_STARTED' | 'DROP_ENDED';
 export type StimpieStatus = 'AVAILABLE' | 'LOW' | 'SOLD_OUT' | 'UPCOMING' | 'ENDED';
 export type AccentColor = 'BUTTER' | 'SKY' | 'LILAC';
 
-/** Fixed brand values (data-model section 2): `accentHex` is always exactly one of these. */
+/** Default brand values retained for older clients that still send `accentColor`. */
 export const ACCENT_HEX: Record<AccentColor, string> = { BUTTER: '#FFE45C', SKY: '#5CC8FF', LILAC: '#C9B6FF' };
 export const ACCENT_COLORS = ['BUTTER', 'SKY', 'LILAC'] as const;
+
+/** Nearest legacy enum used to keep `accentColor` stable for clients predating custom colours. */
+export function accentColorFromHex(hex: string): AccentColor {
+  const color = hex.replace(/^#/, '');
+  const rgb = [0, 2, 4].map((offset) => Number.parseInt(color.slice(offset, offset + 2), 16));
+  const distance = (candidate: string) => {
+    const values = [0, 2, 4].map((offset) => Number.parseInt(candidate.slice(offset + 1, offset + 3), 16));
+    return rgb.reduce((sum, channel, index) => sum + (channel - values[index]) ** 2, 0);
+  };
+  return ACCENT_COLORS.reduce((best, value) => distance(ACCENT_HEX[value]) < distance(ACCENT_HEX[best]) ? value : best, ACCENT_COLORS[0]);
+}
 
 export type DropTimes = { startsAt: Date; endsAt: Date | null; endedAt: Date | null };
 export type StockLike = { active: boolean; quantity: number; reserved: number };

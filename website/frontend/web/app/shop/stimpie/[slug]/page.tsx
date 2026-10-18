@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Badge, Pill, RichText, Section, accentTone, formatCents } from '@stimpy/ui';
+import { Badge, Pill, PriceTag, RichText, Section, accentColorStyle, accentTone } from '@stimpy/ui';
 import type { Stimpie } from '@stimpy/api-client';
 import { getBusinessTimezone, staticDropText } from '@/lib/business';
-import { must, orNull } from '@/lib/api-server';
+import { orNull } from '@/lib/api-server';
 import { getStimpie, getStimpies } from '@/lib/data';
 import { JsonLd, breadcrumbJsonLd, stimpieJsonLd } from '@/lib/jsonld';
 import { excerpt, pageMetadata } from '@/lib/seo';
@@ -32,19 +33,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function StimpiePage({ params }: { params: Params }) {
   const { slug } = await params;
-  const stimpie = await orNull(() => getStimpie(slug));
+  const [stimpie, tz] = await Promise.all([orNull(() => getStimpie(slug)), getBusinessTimezone()]);
   if (!stimpie) notFound();
   const drop = stimpie.drop;
-  const tz = await getBusinessTimezone();
-
-  // "More from this drop" (when it belongs to one) and, when sold out, similar Stimpies that can still be bought.
-  const soldOut = stimpie.status === 'SOLD_OUT';
-  const [dropMates, similar] = await Promise.all([
-    drop ? must(() => getStimpies({ drop: drop.slug, includeSoldOut: true })) : Promise.resolve([]),
-    soldOut ? must(() => getStimpies({ type: stimpie.type, includeSoldOut: false })) : Promise.resolve([]),
-  ]);
-  const moreFromDrop = dropMates.filter((s) => s.id !== stimpie.id).slice(0, 4);
-  const similarAvailable = similar.filter((s) => s.id !== stimpie.id && s.purchasable).slice(0, 4);
 
   const statusBadge =
     stimpie.status === 'LOW'
@@ -74,13 +65,13 @@ export default async function StimpiePage({ params }: { params: Params }) {
           <StimpieGallery name={stimpie.name} artworkUrl={stimpie.artworkUrl} images={stimpie.images} />
           <div className="store-stimpie-info flex flex-col gap-5">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge kind={stimpie.type === 'CORE' ? 'CORE' : 'LIMITED'} accent={drop?.accentColor ?? null} />
+              <Badge kind={stimpie.type === 'CORE' ? 'CORE' : 'LIMITED'} accent={drop?.accentColor ?? null} style={accentColorStyle(drop?.accentHex)} />
               {statusBadge ? <Badge {...statusBadge} /> : null}
             </div>
             <h1 className="text-h1 text-fg">{stimpie.name}</h1>
             {drop ? (
               <Link href={`/drops/${drop.slug}`} className="self-start no-underline">
-                <Pill tone={accentTone(drop.accentColor)}>{drop.name}</Pill>
+                <Pill tone={accentTone(drop.accentColor)} style={accentColorStyle(drop.accentHex)}>{drop.name}</Pill>
               </Link>
             ) : null}
             <RichText text={stimpie.story} />
@@ -91,6 +82,20 @@ export default async function StimpiePage({ params }: { params: Params }) {
           </div>
         </div>
       </Section>
+      <Suspense fallback={null}><StimpieRecommendations stimpie={stimpie} /></Suspense>
+    </>
+  );
+}
+
+async function StimpieRecommendations({ stimpie }: { stimpie: Stimpie }) {
+  // Optional recommendations stream after the product and its order controls are already usable.
+  const [dropMates, similar] = await Promise.all([
+    stimpie.drop ? getStimpies({ drop: stimpie.drop.slug, includeSoldOut: true }).catch((): Stimpie[] => []) : Promise.resolve([]),
+    stimpie.status === 'SOLD_OUT' ? getStimpies({ type: stimpie.type, includeSoldOut: false }).catch((): Stimpie[] => []) : Promise.resolve([]),
+  ]);
+  const moreFromDrop = dropMates.filter((item) => item.id !== stimpie.id).slice(0, 4);
+  const similarAvailable = similar.filter((item) => item.id !== stimpie.id && item.purchasable).slice(0, 4);
+  return <>
       {similarAvailable.length > 0 ? (
         <StimpieRecommendationsGate
           stimpies={similarAvailable}
@@ -113,8 +118,7 @@ export default async function StimpiePage({ params }: { params: Params }) {
           }
         />
       ) : null}
-    </>
-  );
+  </>;
 }
 
 function StimpieRowPreview({ stimpies, heading, tone }: { stimpies: Stimpie[]; heading: string; tone: 'white' | 'cream' }) {
@@ -123,13 +127,13 @@ function StimpieRowPreview({ stimpies, heading, tone }: { stimpies: Stimpie[]; h
       <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6">
         {stimpies.map((stimpie) => (
           <li key={stimpie.id}>
-            <a href={`/shop/stimpie/${stimpie.slug}`} className="flex h-full flex-col overflow-hidden rounded-lg border border-base bg-surface-base">
+            <Link href={`/shop/stimpie/${stimpie.slug}`} className="flex h-full flex-col overflow-hidden rounded-lg border border-base bg-surface-base">
               <img src={stimpie.images[0] ?? stimpie.artworkUrl} alt={`${stimpie.name} Stimpie`} loading="lazy" decoding="async" className="aspect-[0.64] w-full object-contain" />
               <span className="flex flex-1 flex-col gap-1.5 p-3 md:p-4">
                 <span className="font-medium text-fg">{stimpie.name}</span>
-                <span className="text-body-sm">{formatCents(stimpie.priceCents)}</span>
+                <PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="sm" />
               </span>
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

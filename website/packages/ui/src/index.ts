@@ -14,7 +14,7 @@ export * from './constants';
 export * from './buttonStyles';
 export { UIProvider, useUI } from './context';
 export type { ImageRenderProps, RenderImage, UIContextValue, UIProviderProps } from './context';
-export { SURFACE_CLASSES, accentSurface } from './surfaces';
+export { SURFACE_CLASSES, accentColorStyle, accentSurface } from './surfaces';
 export type { SurfaceTone } from './surfaces';
 export * as icons from './icons';
 export { getFocusable, isExternalHref, mergeRefs, prefersReducedMotion } from './utils';

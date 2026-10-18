@@ -20,9 +20,10 @@ export const REVALIDATE = {
   options: 60,
   sizeChart: 300,
   delivery: 300,
-  hoodies: 60,
-  stimpies: 30,
-  packs: 60,
+  hoodies: 5,
+  stimpies: 5,
+  packs: 5,
+  promotions: 5,
   drops: 10,
   builder: 60,
 } as const;

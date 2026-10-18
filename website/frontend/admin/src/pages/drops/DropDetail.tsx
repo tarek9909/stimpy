@@ -137,7 +137,7 @@ function DropView({ drop }: { drop: AdminDrop }) {
         description={
           <span className="flex flex-wrap items-center gap-3">
             <StateBadge state={drop.state} />
-            <AccentChip accent={drop.accentColor} />
+            <AccentChip accentHex={drop.accentHex} />
             <span className="tabular-nums">Launch {f.dateTime(drop.startsAt)}</span>
           </span>
         }

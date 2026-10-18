@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { useForm, useController, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { Plus } from 'lucide-react';
-import { Banner, Button, EmptyState, Modal, Skeleton, useToast } from '@stimpy/ui';
+import { Button, EmptyState, Modal, Skeleton, useToast } from '@stimpy/ui';
 import { api, unwrap } from '../../api/client';
-import { queryKeys } from '../../api/queryKeys';
 import { ColorPicker } from '../../components/ColorPicker';
 import { DataTable, type Column } from '../../components/DataTable';
 import { FileUpload } from '../../components/FileUpload';
@@ -15,55 +13,11 @@ import { AdminForm } from '../../components/form/AdminForm';
 import { SwitchField, TextField } from '../../components/form/Field';
 import { ImageListField } from '../../components/form/ListFields';
 import { QueryBoundary } from '../../components/QueryBoundary';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { MAX_ORDERABLE_ITEMS, moveItem, moveToPosition } from '../../lib/reorder';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { ActiveCell, ActiveFilter, DeleteOrHide, matchesActive, type ActiveView } from './shared';
 import { invalidateFor, useActiveToggle, useColors, useReorder, useSizes, type AdminColor, type AdminSize } from './api';
-
-/* ------------------------------------------------------------------ recently added reminder */
-
-interface Added {
-  kind: 'color' | 'size';
-  id: number;
-  name: string;
-}
-const ADDED_KEY = 'stimpy.options.added';
-function readAdded(): Added[] {
-  try {
-    return JSON.parse(window.sessionStorage.getItem(ADDED_KEY) ?? '[]') as Added[];
-  } catch {
-    return [];
-  }
-}
-function writeAdded(list: Added[]): void {
-  try {
-    window.sessionStorage.setItem(ADDED_KEY, JSON.stringify(list.slice(-10)));
-  } catch {
-    /* storage may be blocked */
-  }
-}
-
-/** Persistent strip: "N variants have zero stock" for what was just added, until stock is entered. */
-function ZeroStockStrip({ added, onDismiss }: { added: Added[]; onDismiss: () => void }) {
-  const stock = useQuery({
-    queryKey: queryKeys.stockHoodies,
-    queryFn: () => unwrap(api.GET('/api/v1/admin/stock/hoodies')),
-    enabled: added.length > 0,
-    staleTime: 15_000,
-  });
-  const zero = useMemo(() => {
-    if (!stock.data) return 0;
-    const colorIds = new Set(added.filter((a) => a.kind === 'color').map((a) => a.id));
-    const sizeIds = new Set(added.filter((a) => a.kind === 'size').map((a) => a.id));
-    return stock.data.hoodies.flatMap((h) => h.cells).filter((c) => c.available === 0 && (colorIds.has(c.colorId) || sizeIds.has(c.sizeId))).length;
-  }, [stock.data, added]);
-  if (added.length === 0 || zero === 0) return null;
-  return (
-    <Banner variant="warning" live dismissible onDismiss={onDismiss} action={<Button href="/stock" variant="secondary" size="sm">Go to Stock</Button>}>
-      {zero} {zero === 1 ? 'variant has' : 'variants have'} zero stock. {zero === 1 ? 'It shows' : 'They show'} as Sold out on the website until you add stock.
-    </Banner>
-  );
-}
 
 /* ------------------------------------------------------------------------------- forms */
 
@@ -85,25 +39,32 @@ function ColorField({ name, label, optional, hint }: { name: string; label: stri
   return <ColorPicker id={`field-${name}`} label={label} value={(field.value as string) ?? ''} onChange={field.onChange} error={fieldState.error?.message ?? null} optional={optional} hint={hint} />;
 }
 
-function ColorDialog({ color, onClose, onAdded }: { color: AdminColor | null; onClose: () => void; onAdded: (a: Added) => void }) {
+function ColorDialog({ color, onClose }: { color: AdminColor | null; onClose: () => void }) {
   const qc = useQueryClient();
   const toast = useToast();
   const form = useForm<ColorValues>({ resolver: zodResolver(colorSchema), defaultValues: color ? colorValues(color) : COLOR_NEW, reValidateMode: 'onChange' });
   const [uploading, setUploading] = useState(false);
-  const guard = useUnsavedChangesGuard(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const body = (v: ColorValues) => ({ name: v.name, hex: v.hex.toUpperCase(), images: v.images, builderTint: v.builderTint === '' ? null : v.builderTint.toUpperCase(), builderTexture: v.builderTexture === '' ? null : v.builderTexture, active: v.active });
   const save = useMutation({
     mutationFn: (v: ColorValues) => (color ? unwrap(api.PATCH('/api/v1/admin/colors/{id}', { params: { path: { id: color.id } }, body: body(v) })) : unwrap(api.POST('/api/v1/admin/colors', { body: body(v) }))),
   });
   const hide = useMutation({ mutationFn: () => unwrap(api.PATCH('/api/v1/admin/colors/{id}', { params: { path: { id: (color as AdminColor).id } }, body: { active: false } })) });
   const remove = useMutation({ mutationFn: () => api.DELETE('/api/v1/admin/colors/{id}', { params: { path: { id: (color as AdminColor).id } } }) });
+  const busy = uploading || form.formState.isSubmitting || save.isPending || hide.isPending || remove.isPending;
+  const requestClose = () => {
+    if (busy) return;
+    if (form.formState.isDirty) setConfirmDiscard(true);
+    else onClose();
+  };
   return (
+    <>
     <Modal
       open
-      onClose={onClose}
+      onClose={requestClose}
       title={color ? `Edit ${color.name}` : 'New colour'}
       size="lg"
-      closeOnBackdrop={false}
       footer={
         <>
           {color ? (
@@ -123,7 +84,7 @@ function ColorDialog({ color, onClose, onAdded }: { color: AdminColor | null; on
               }}
             />
           ) : null}
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={requestClose} disabled={busy}>Cancel</Button>
           <Button type="submit" form="color-form" variant="primary" loading={form.formState.isSubmitting || save.isPending} disabled={uploading}>
             {color ? 'Save colour' : 'Add colour'}
           </Button>
@@ -135,10 +96,9 @@ function ColorDialog({ color, onClose, onAdded }: { color: AdminColor | null; on
         form={form}
         className="flex flex-col gap-4"
         onSubmit={async (v) => {
-          const saved = await save.mutateAsync(v);
+          await save.mutateAsync(v);
           invalidateFor(qc, 'colors');
-          if (!color) onAdded({ kind: 'color', id: saved.id, name: saved.name });
-          else toast.success('Colour saved.');
+          toast.success(color ? 'Colour saved.' : 'Colour added.');
           onClose();
         }}
       >
@@ -147,10 +107,12 @@ function ColorDialog({ color, onClose, onAdded }: { color: AdminColor | null; on
         <ImageListField name="images" label="Hoodie photos" onBusyChange={setUploading} />
         <ColorField name="builderTint" label="Builder tint" optional hint="Used for the 3D hoodie. This is the only place it is edited." />
         <BuilderTexture onBusyChange={setUploading} />
-        <SwitchField name="active" label="Show on the website" description="Hiding keeps its variants and order history." />
+        <SwitchField name="active" label="Enable this colour" description="Available on the hoodies that offer it. Hiding keeps its variants and order history." />
       </AdminForm>
-      {guard.dialog}
     </Modal>
+    {guard.dialog}
+    <ConfirmDialog open={confirmDiscard} title="Discard unsaved changes?" description="Your colour edits will be lost." confirmLabel="Discard changes" tone="destructive" onClose={() => setConfirmDiscard(false)} onConfirm={onClose} />
+    </>
   );
 }
 
@@ -175,19 +137,28 @@ const sizeSchema = z.object({
 });
 type SizeValues = z.infer<typeof sizeSchema>;
 
-function SizeDialog({ size, onClose, onAdded }: { size: AdminSize | null; onClose: () => void; onAdded: (a: Added) => void }) {
+function SizeDialog({ size, onClose }: { size: AdminSize | null; onClose: () => void }) {
   const qc = useQueryClient();
   const toast = useToast();
   const form = useForm<SizeValues>({ resolver: zodResolver(sizeSchema), defaultValues: size ? { label: size.label, active: size.active } : { label: '', active: true }, reValidateMode: 'onChange' });
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const save = useMutation({
     mutationFn: (v: SizeValues) => (size ? unwrap(api.PATCH('/api/v1/admin/sizes/{id}', { params: { path: { id: size.id } }, body: v })) : unwrap(api.POST('/api/v1/admin/sizes', { body: v }))),
   });
   const hide = useMutation({ mutationFn: () => unwrap(api.PATCH('/api/v1/admin/sizes/{id}', { params: { path: { id: (size as AdminSize).id } }, body: { active: false } })) });
   const remove = useMutation({ mutationFn: () => api.DELETE('/api/v1/admin/sizes/{id}', { params: { path: { id: (size as AdminSize).id } } }) });
+  const busy = form.formState.isSubmitting || save.isPending || hide.isPending || remove.isPending;
+  const requestClose = () => {
+    if (busy) return;
+    if (form.formState.isDirty) setConfirmDiscard(true);
+    else onClose();
+  };
   return (
+    <>
     <Modal
       open
-      onClose={onClose}
+      onClose={requestClose}
       title={size ? `Edit size ${size.label}` : 'New size'}
       size="sm"
       footer={
@@ -209,7 +180,7 @@ function SizeDialog({ size, onClose, onAdded }: { size: AdminSize | null; onClos
               }}
             />
           ) : null}
-          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" onClick={requestClose} disabled={busy}>Cancel</Button>
           <Button type="submit" form="size-form" variant="primary" loading={form.formState.isSubmitting || save.isPending}>{size ? 'Save size' : 'Add size'}</Button>
         </>
       }
@@ -219,17 +190,19 @@ function SizeDialog({ size, onClose, onAdded }: { size: AdminSize | null; onClos
         form={form}
         className="flex flex-col gap-4"
         onSubmit={async (v) => {
-          const saved = await save.mutateAsync(v);
+          await save.mutateAsync(v);
           invalidateFor(qc, 'sizes');
-          if (!size) onAdded({ kind: 'size', id: saved.id, name: saved.label });
-          else toast.success('Size saved.');
+          toast.success(size ? 'Size saved.' : 'Size added.');
           onClose();
         }}
       >
         <TextField name="label" label="Label" required maxLength={10} autoComplete="off" hint="For example S, M, L or XL." />
-        <SwitchField name="active" label="Show on the website" />
+        <SwitchField name="active" label="Enable this size" description="Available on the hoodies that offer it." />
       </AdminForm>
     </Modal>
+    {guard.dialog}
+    <ConfirmDialog open={confirmDiscard} title="Discard unsaved changes?" description="Your size edits will be lost." confirmLabel="Discard changes" tone="destructive" onClose={() => setConfirmDiscard(false)} onConfirm={onClose} />
+    </>
   );
 }
 
@@ -240,7 +213,7 @@ function lookStatus(c: AdminColor): string {
   return parts.length ? parts.join(', ') : 'Not set';
 }
 
-/** Products -> Options: colours and sizes (dashboard-pages 7.4). Creating either auto-creates zero-stock variants and says so. */
+/** Products -> Options: shared colour and size definitions; hoodie assignments are edited on each hoodie. */
 export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewChange: (v: ActiveView) => void }) {
   const colors = useColors();
   const sizes = useSizes();
@@ -248,11 +221,7 @@ export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewCha
   const toggleSize = useActiveToggle('sizes');
   const reorderColors = useReorder('colors');
   const reorderSizes = useReorder('sizes');
-  const navigate = useNavigate();
   const [dialog, setDialog] = useState<{ kind: 'color'; item: AdminColor | null } | { kind: 'size'; item: AdminSize | null } | null>(null);
-  const [notice, setNotice] = useState<Added | null>(null);
-  const [added, setAdded] = useState<Added[]>(() => readAdded());
-  useEffect(() => writeAdded(added), [added]);
 
   const colorRows = useMemo(() => colors.data?.items.filter((c) => matchesActive(c.active, view)), [colors.data, view]);
   const sizeRows = useMemo(() => sizes.data?.items.filter((s) => matchesActive(s.active, view)), [sizes.data, view]);
@@ -284,17 +253,12 @@ export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewCha
     { id: 'edit', header: 'Edit', mobileLabel: '', cell: (s) => <Button variant="secondary" size="sm" aria-label={`Edit size ${s.label}`} onClick={() => setDialog({ kind: 'size', item: s })}>Edit</Button> },
   ];
 
-  const onAdded = (a: Added) => {
-    setAdded((list) => [...list, a]);
-    setNotice(a);
-  };
-
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-body-sm text-fg-muted">These are shared option definitions. Choose which colours and sizes each hoodie offers in its hoodie editor; new options are not added to hoodies automatically.</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <ActiveFilter value={view} onChange={onViewChange} />
       </div>
-      <ZeroStockStrip added={added} onDismiss={() => setAdded([])} />
       <div className="grid gap-6 2xl:grid-cols-2">
         <section aria-labelledby="colors-h" className="flex min-w-0 flex-col gap-3">
           <div className="flex items-center justify-between gap-2">
@@ -315,7 +279,7 @@ export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewCha
                   onMove: (id, d) => reorderColors.mutate(moveItem(colorIds, Number(id), d)),
                   onDragMove: (a, b) => reorderColors.mutate(moveToPosition(colorIds, Number(a), Number(b))),
                 }}
-                empty={<EmptyState title="No colors yet" text="Add your first color so hoodies can be sold." action={<Button variant="primary" onClick={() => setDialog({ kind: 'color', item: null })}>New colour</Button>} />}
+                empty={<EmptyState title="No colors yet" text="Add a colour, then select it on the hoodies that offer it." action={<Button variant="primary" onClick={() => setDialog({ kind: 'color', item: null })}>New colour</Button>} />}
               />
             )}
           </QueryBoundary>
@@ -339,7 +303,7 @@ export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewCha
                   onMove: (id, d) => reorderSizes.mutate(moveItem(sizeIds, Number(id), d)),
                   onDragMove: (a, b) => reorderSizes.mutate(moveToPosition(sizeIds, Number(a), Number(b))),
                 }}
-                empty={<EmptyState title="No sizes yet" text="Add your first size so hoodies can be sold." action={<Button variant="primary" onClick={() => setDialog({ kind: 'size', item: null })}>New size</Button>} />}
+                empty={<EmptyState title="No sizes yet" text="Add a size, then select it on the hoodies that offer it." action={<Button variant="primary" onClick={() => setDialog({ kind: 'size', item: null })}>New size</Button>} />}
               />
             )}
           </QueryBoundary>
@@ -348,26 +312,8 @@ export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewCha
       {view !== 'all' ? <p className="text-body-sm text-fg-muted">Reordering is available when the filter is set to All.</p> : null}
       {view === 'all' && (colorIds.length > MAX_ORDERABLE_ITEMS || sizeIds.length > MAX_ORDERABLE_ITEMS) ? <p className="text-body-sm text-fg-muted">Reordering is unavailable for a list that exceeds the 5,000-item API limit.</p> : null}
 
-      {dialog?.kind === 'color' ? <ColorDialog color={dialog.item} onClose={() => setDialog(null)} onAdded={onAdded} /> : null}
-      {dialog?.kind === 'size' ? <SizeDialog size={dialog.item} onClose={() => setDialog(null)} onAdded={onAdded} /> : null}
-
-      <Modal
-        open={notice !== null}
-        onClose={() => setNotice(null)}
-        title={notice?.kind === 'color' ? `Colour '${notice.name}' added` : `Size '${notice?.name ?? ''}' added`}
-        closeOnBackdrop={false}
-        size="sm"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setNotice(null)}>Later</Button>
-            <Button variant="primary" onClick={() => { setNotice(null); navigate('/stock'); }}>Go to Stock</Button>
-          </>
-        }
-      >
-        <p>
-          Zero-stock variants were created for every hoodie in every active {notice?.kind === 'color' ? 'size' : 'colour'}. They show as Sold out on the website until you add stock.
-        </p>
-      </Modal>
+      {dialog?.kind === 'color' ? <ColorDialog color={dialog.item} onClose={() => setDialog(null)} /> : null}
+      {dialog?.kind === 'size' ? <SizeDialog size={dialog.item} onClose={() => setDialog(null)} /> : null}
     </div>
   );
 }

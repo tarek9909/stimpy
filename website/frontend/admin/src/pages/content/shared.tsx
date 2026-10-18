@@ -1,9 +1,21 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Button, RichText, cn } from '@stimpy/ui';
 
 /** Helper line under every long-text field (dashboard-pages 13.3). */
 export const PLAIN_TEXT_HINT = "Plain text. Leave a blank line between paragraphs. **bold** and '- ' lists are supported.";
+
+/** Refresh saved content without replacing edits that are still in progress. */
+export function useContentDraft<T>(saved: T) {
+  const previous = useRef(saved);
+  const [draft, setDraft] = useState(saved);
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = saved;
+    setDraft((current) => JSON.stringify(current) === JSON.stringify(before) ? saved : current);
+  }, [saved]);
+  return [draft, setDraft] as const;
+}
 
 /** Preview rendered by the same safe renderer as the public site (never raw HTML). */
 export function TextPreview({ text, label = 'Preview' }: { text: string; label?: string }) {

@@ -11,6 +11,7 @@ import { insightsModule } from './insights/routes';
 import { optionsModule } from './options/routes';
 import { ordersModule } from './orders/routes';
 import { overviewModule } from './overview/routes';
+import { promotionsModule } from './promotions/routes';
 import { settingsModule } from './settings/routes';
 import { stockModule } from './stock/routes';
 import { uploadsModule } from './uploads/routes';
@@ -37,4 +38,5 @@ export const modules: ModuleDef[] = [
   commsModule,
   settingsModule,
   overviewModule,
+  promotionsModule,
 ];

@@ -37,6 +37,7 @@ export type Stimpie = Schemas['Stimpie'];
 export type HoodieSummary = Schemas['HoodieSummary'];
 export type HoodieDetail = Schemas['HoodieDetail'];
 export type Pack = Schemas['Pack'];
+export type PublicPromotion = Schemas['PublicPromotion'];
 
 export type StimpieStatus = Stimpie['status'];
 export type StimpieType = Stimpie['type'];
@@ -69,7 +70,11 @@ export type SubscribeRequest = RequestBody<'/api/v1/drops/{id}/subscribe', 'post
 export type DeliveryFees = ResponseBody<'/api/v1/delivery/fees', 'get'>;
 
 // ---- Content and builder (derived) ----
-export type Content = ResponseBody<'/api/v1/content', 'get'>;
+type PaginatedContent = ResponseBody<'/api/v1/content', 'get'>;
+export type Content = Omit<PaginatedContent, 'faqs' | 'reviews'> & {
+  faqs: PaginatedContent['faqs']['items'];
+  reviews: PaginatedContent['reviews']['items'];
+};
 export type BuilderConfig = ResponseBody<'/api/v1/builder/config', 'get'>;
 export type Faq = Content['faqs'][number];
 export type Review = Content['reviews'][number];

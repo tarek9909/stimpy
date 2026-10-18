@@ -70,6 +70,7 @@ Constraints that shape everything: English only, USD, cash on delivery, mobile f
 | `GET /products/hoodies`, `/products/hoodies/:slug` | 60 | `catalog` | Per-variant stock (`inStock`) must not be stale for long; hoodie detail pages refetch on the client for stock (no-store) after hydration. |
 | `GET /products/stimpies`, `/products/stimpies/:slug` | 30 | `catalog` | Limited stock (`status`, `remaining`) is time-sensitive. |
 | `GET /packs` | 60 | `catalog` | |
+| `GET /promotions` | 5 | `promotions` | Active promotion windows change on a schedule; homepage offers use current public catalog targets. |
 | `GET /drops`, `GET /drops/:slug` | 15 (and `no-store` from the client while a drop starts within 60 s) | `drops` | Drop state and `unitsRemaining` change fast on drop day; the API itself caches for 10 s and sends `no-store` within 60 s of a drop start; the countdown page also refreshes on the client (section 13). |
 | `GET /builder/config` | 60 | `builder` | Mode switch propagates in about 90 s. |
 | `GET /health` | not cached (always `no-store` on the API) | n/a | Used for clock offset (section 13). |
@@ -625,7 +626,7 @@ Poppins 400, 500, 700, Latin subset, `woff2`, self-hosted, `font-display: swap`,
 | No hydration of static content | Content/legal/FAQ pages ship no client JS beyond the shell. |
 | Long tasks | Anything > 50 ms is chunked or moved off the main thread. |
 | Lists | Dashboard tables over 100 rows are paginated server-side (API pages are <= 100); no client-side virtualisation needed in v1. |
-| Prefetching | `<Link prefetch>` only for primary nav; disabled when `saveData`. |
+| Prefetching | Primary navigation prefetches its destinations. Shared shopping links warm on hover, keyboard focus or touch; product grids do not eagerly prefetch every destination. Save Data and explicit opt-outs disable prefetching. Pending links show a loading indicator; URL tabs and filters update immediately while new results load. |
 | Animations | `transform`/`opacity`/`clip-path` only. |
 | Monitoring | Web Vitals sent to the analytics tool (anonymous, section 17) and checked at each release; Lighthouse CI on the key pages. |
 

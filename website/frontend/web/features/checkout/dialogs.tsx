@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { HoodieDetail, PurchaseProblem, Stimpie, StockProblem } from '@stimpy/api-client';
 import { Button, Modal, StimpieCard, TextLink, formatCents } from '@stimpy/ui';
 import { browserApi } from '@/lib/api-browser';
+import { fetchApiAllPages } from '@/lib/pagination';
 import { cartStore } from '@/features/cart/store';
 import type { CartLine } from '@/features/cart/types';
 import { stimpieAlternatives, swapStimpieInLine, switchVariantInLine, variantAlternatives, type VariantChoice } from './alternatives';
@@ -160,10 +161,10 @@ export function SoldOutDialog({
           const slug = lineFor(lines, p)?.ui.hoodieSlug;
           if (slug) variantSlugs.add(slug);
         }
-        const [stimpiesRes, hoodieRes] = await Promise.all([
+        const [stimpies, hoodieRes] = await Promise.all([
           stimpieProblems.length > 0
-            ? api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'false' } }, cache: 'no-store' })
-            : Promise.resolve({ data: [] as Stimpie[] }),
+            ? fetchApiAllPages((page, pageSize) => api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'false', page, pageSize } }, cache: 'no-store' }))
+            : Promise.resolve([] as Stimpie[]),
           Promise.all(
             [...variantSlugs].map(async (slug) => {
               const r = await api.GET('/api/v1/products/hoodies/{slug}', { params: { path: { slug } }, cache: 'no-store' });
@@ -173,14 +174,13 @@ export function SoldOutDialog({
         ]);
         const hoodies: Record<string, HoodieDetail> = {};
         for (const [slug, h] of hoodieRes) if (h) hoodies[slug] = h;
-        const stimpies = stimpiesRes.data ?? [];
         // Nothing to swap in: find the sold-out Stimpie's drop for a "Notify me" link.
         const dropSlugFor: Record<number, string> = {};
         if (stimpieProblems.length > 0 && stimpies.filter((s) => s.purchasable).length === 0) {
-          const all = await api.GET('/api/v1/products/stimpies', { cache: 'no-store' });
+          const all = await fetchApiAllPages((page, pageSize) => api.GET('/api/v1/products/stimpies', { params: { query: { page, pageSize } }, cache: 'no-store' }));
           for (const p of stimpieProblems) {
             if (p.kind !== 'STIMPIE') continue;
-            const slug = all.data?.find((s) => s.id === p.stimpieId)?.drop?.slug;
+            const slug = all.find((s) => s.id === p.stimpieId)?.drop?.slug;
             if (slug) dropSlugFor[p.stimpieId] = slug;
           }
         }

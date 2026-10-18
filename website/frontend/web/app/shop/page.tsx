@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { Button, ColorDots, EmptyState, Media, ProductCard, Section, formatCents } from '@stimpy/ui';
+import { Suspense } from 'react';
+import { Button, EmptyState, ProductCard, Section } from '@stimpy/ui';
 import type { Drop } from '@stimpy/api-client';
-import { getDrops, getHoodies, getStimpies } from '@/lib/data';
+import { getDrops, getHoodie, getHoodies, getStimpies } from '@/lib/data';
 import { must } from '@/lib/api-server';
 import { pageMetadata } from '@/lib/seo';
 import { StimpieAddCard } from '@/features/shop/StimpieAddCard';
 import { ShopTabs, StimpieFilters } from '@/features/shop/ShopControls';
 import { activeFilterCount, parseShopParams, shopHref } from '@/features/shop/params';
-import { ArrowRight, Layers, Sparkles } from '@/components/icons';
+import { Layers, Sparkles } from '@/components/icons';
+import { HoodieFeature } from '@/features/shop/HoodieFeature';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -31,18 +32,13 @@ function allDrops(drops: { live: Drop | null; upcoming: Drop[]; archive: Drop[] 
 
 export default async function ShopPage({ searchParams }: { searchParams: SearchParams }) {
   const params = parseShopParams(await searchParams);
-  const drops = params.tab === 'stimpies' ? await must(() => getDrops()) : null;
-  const dropList = drops ? allDrops(drops) : [];
-  // An unknown drop slug is ignored (with a notice) instead of failing.
-  const unknownDrop = !!params.drop && !dropList.some((d) => d.slug === params.drop);
-  const effectiveDrop = unknownDrop ? null : params.drop;
-  const filters = { ...params, drop: effectiveDrop };
-
   return (
     <Section tone="white" heading="The collection." eyebrow="Made for your every day" headingLevel={1} className="store-shop">
       <p className="store-shop-intro">One essential hoodie. A whole world of Stimpies.</p>
-      <ShopTabs params={filters}>
-        {params.tab === 'hoodies' ? <HoodiesPanel /> : <StimpiesPanel filters={filters} dropList={dropList} unknownDrop={unknownDrop} />}
+      <ShopTabs params={params}>
+        <Suspense fallback={<ShopPanelLoading />}>
+          {params.tab === 'hoodies' ? <HoodiesPanel /> : <StimpiesPanel filters={params} />}
+        </Suspense>
       </ShopTabs>
     </Section>
   );
@@ -55,24 +51,15 @@ async function HoodiesPanel() {
       <EmptyState
         icon={<Layers width={32} height={32} />}
         title="Nothing here yet"
-        text="The hoodie is coming soon. Follow the next drop."
-        action={<Button href="/drops" variant="dark">Go to Drops</Button>}
+        text="No hoodie is listed right now. Browse the Stimpies collection or contact us at info@stimpylb.com for help."
+        action={<Button href="/shop?tab=stimpies" variant="dark">Browse Stimpies</Button>}
       />
     );
   }
   if (hoodies.length === 1) {
     const hoodie = hoodies[0]!;
-    const href = `/shop/hoodie/${hoodie.slug}`;
-    return <div className="store-hoodie-feature">
-      <Link href={href} aria-label={`View ${hoodie.name}`}><Media src={hoodie.images[0]} alt={`${hoodie.name}, front view`} ratio="4 / 5" fit="contain" priority sizes="(min-width: 768px) 50vw, 100vw" /></Link>
-      <div><p className="store-eyebrow">The everyday original</p><h2><Link href={href}>{hoodie.name}</Link></h2>
-        <p className="store-hoodie-price">{formatCents(hoodie.priceCents)}</p>
-        <p className="store-hoodie-description">A heavyweight zip hoodie with an interchangeable back. Wear it plain, or make it your own with a Stimpie.</p>
-        <ColorDots colors={hoodie.colors} />
-        <Link href={href} className="store-button">{hoodie.inStock ? 'Choose your hoodie' : 'View hoodie'} <ArrowRight size={17} aria-hidden="true" /></Link>
-        <p className="mt-4 text-body-sm text-fg-muted">Cash on delivery across Lebanon.</p>
-      </div>
-    </div>;
+    const detail = await must(() => getHoodie(hoodie.slug));
+    return <HoodieFeature hoodie={hoodie} detail={detail} />;
   }
   return (
     <div className="mt-6">
@@ -91,21 +78,23 @@ async function HoodiesPanel() {
 }
 
 async function StimpiesPanel({
-  filters,
-  dropList,
-  unknownDrop,
+  filters: requestedFilters,
 }: {
   filters: ReturnType<typeof parseShopParams>;
-  dropList: Drop[];
-  unknownDrop: boolean;
 }) {
-  const stimpies = await must(() =>
-    getStimpies({
-      ...(filters.type ? { type: filters.type } : {}),
-      ...(filters.drop ? { drop: filters.drop } : {}),
-      includeSoldOut: !filters.hideSoldOut,
-    }),
-  );
+  const query = {
+    ...(requestedFilters.type ? { type: requestedFilters.type } : {}),
+    includeSoldOut: !requestedFilters.hideSoldOut,
+  };
+  // A valid drop filter needs no serial round-trip through the drop list before its products start loading.
+  const [drops, initialStimpies] = await Promise.all([
+    must(() => getDrops()),
+    must(() => getStimpies({ ...query, ...(requestedFilters.drop ? { drop: requestedFilters.drop } : {}) })),
+  ]);
+  const dropList = allDrops(drops);
+  const unknownDrop = !!requestedFilters.drop && !dropList.some((drop) => drop.slug === requestedFilters.drop);
+  const filters = { ...requestedFilters, drop: unknownDrop ? null : requestedFilters.drop };
+  const stimpies = unknownDrop ? await must(() => getStimpies(query)) : initialStimpies;
   const count = activeFilterCount(filters);
   const noneAtAll = stimpies.length === 0 && count === 0;
   return (
@@ -159,5 +148,11 @@ async function StimpiesPanel({
       </div>
     </div>
   );
+}
+
+function ShopPanelLoading() {
+  return <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6" aria-label="Loading products" aria-busy="true">
+    {Array.from({ length: 4 }, (_, index) => <div key={index} className="aspect-[4/5] rounded bg-cream motion-safe:animate-pulse" />)}
+  </div>;
 }
 

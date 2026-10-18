@@ -16,6 +16,7 @@ import { QueryBoundary } from '../../components/QueryBoundary';
 import { useOnline } from '../../lib/hooks';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { useEveryDrop } from '../drops/api';
+import { useAllStimpies } from '../products/api';
 import { useContentBlock, useReviewMutations, useReviews, useSaveContent, type AdminReview, type HomepageBlock } from './api';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../api/queryKeys';
@@ -23,32 +24,48 @@ import { queryKeys } from '../../api/queryKeys';
 const heroSchema = z.object({
   heroHeadline: z.string().trim().min(1, 'Enter a headline.').max(80, 'Use at most 80 characters.'),
   heroSubheadline: z.string().max(300, 'Use at most 300 characters.'),
-  heroVideoUrl: z.string().nullable(),
-  heroImageUrl: z.string().nullable(),
   featuredDropSlug: z.string(),
+  featuredStimpieSlug: z.string(),
+  showDropSections: z.boolean(),
 });
 type HeroValues = z.infer<typeof heroSchema>;
-const toHero = (h: HomepageBlock): HeroValues => ({ ...h, featuredDropSlug: h.featuredDropSlug ?? '' });
+const toHero = (h: HomepageBlock): HeroValues => ({
+  heroHeadline: h.heroHeadline,
+  heroSubheadline: h.heroSubheadline,
+  featuredDropSlug: h.featuredDropSlug ?? '',
+  featuredStimpieSlug: h.featuredStimpieSlug ?? 'the-void',
+  showDropSections: h.showDropSections ?? true,
+});
 export const toHomepageBody = (v: HeroValues): HomepageBlock => ({
   heroHeadline: v.heroHeadline.trim(),
   heroSubheadline: v.heroSubheadline.trim(),
-  heroVideoUrl: v.heroVideoUrl,
-  heroImageUrl: v.heroImageUrl,
+  heroVideoUrl: null,
+  heroImageUrl: null,
   featuredDropSlug: v.featuredDropSlug === '' ? null : v.featuredDropSlug,
+  featuredStimpieSlug: v.featuredStimpieSlug === '' ? null : v.featuredStimpieSlug,
+  showDropSections: v.showDropSections,
 });
 
 function HeroForm({ initial }: { initial: HomepageBlock }) {
   const toast = useToast();
   const save = useSaveContent('homepage');
   const drops = useEveryDrop();
+  const stimpies = useAllStimpies();
   const form = useForm<HeroValues>({ resolver: zodResolver(heroSchema), defaultValues: useMemo(() => toHero(initial), [initial]), reValidateMode: 'onChange' });
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const draft = useFormDraft(form);
-  const [uploading, setUploading] = useState(false);
   const options = [{ value: '', label: 'Automatic: current live drop' }, ...(drops.data?.items ?? []).filter((d) => d.state !== 'ENDED').map((d) => ({ value: d.slug, label: d.name }))];
   // A saved slug that is no longer in the list (ended drop) must still be shown, not silently dropped.
   const current = initial.featuredDropSlug;
   if (current && !options.some((o) => o.value === current)) options.push({ value: current, label: current });
+  const selectedStimpieSlug = form.watch('featuredStimpieSlug');
+  const stimpieList = stimpies.data?.items ?? [];
+  const availableStimpies = stimpieList.filter((stimpie) => stimpie.active);
+  const stimpieOptions = availableStimpies.map((stimpie) => ({ value: stimpie.slug, label: stimpie.name }));
+  const selectedStimpie = stimpieList.find((stimpie) => stimpie.slug === selectedStimpieSlug);
+  if (selectedStimpieSlug && !stimpieOptions.some((option) => option.value === selectedStimpieSlug)) {
+    stimpieOptions.push({ value: selectedStimpieSlug, label: selectedStimpie ? `${selectedStimpie.name} (inactive)` : selectedStimpieSlug });
+  }
   return (
     <>
       {draft.banner}
@@ -66,12 +83,24 @@ function HeroForm({ initial }: { initial: HomepageBlock }) {
         <FormSection title="Hero">
           <TextField name="heroHeadline" label="Headline" required maxLength={80} autoComplete="off" />
           <TextAreaField name="heroSubheadline" label="Subheadline" rows={3} maxLength={300} showCount optional />
-          <Controller control={form.control} name="heroVideoUrl" render={({ field }) => <FileUpload variant="video" label="Hero video (optional)" hint="MP4 or WebM up to 100 MB." value={field.value} onChange={(r) => field.onChange(r?.url ?? null)} onBusyChange={setUploading} />} />
-          <Controller control={form.control} name="heroImageUrl" render={({ field }) => <FileUpload variant="image" label="Hero image (optional)" hint="Shown as the poster and as the fallback when there is no video." value={field.value} onChange={(r) => field.onChange(r?.url ?? null)} onBusyChange={setUploading} />} />
-          <SelectField name="featuredDropSlug" label="Featured drop" options={options} hint="Which drop the home page highlights." />
+          <SelectField name="featuredStimpieSlug" label="Featured Stimpie" options={stimpieOptions} disabled={stimpies.isPending || stimpieOptions.length === 0} hint="The hero uses this Stimpie's artwork and quote from its product story." />
+          {selectedStimpie ? (
+            <div className="flex items-start gap-3 rounded-md border border-base bg-surface p-3" aria-live="polite">
+              <img src={selectedStimpie.artworkUrl} alt="" className="h-20 w-14 shrink-0 rounded border border-base bg-white object-cover" />
+              <div className="min-w-0">
+                <p className="text-body-sm font-semibold">{selectedStimpie.name}</p>
+                <p className="mt-1 text-caption font-medium text-fg-muted">Quote</p>
+                <p className="mt-1 text-body-sm text-fg-muted">{selectedStimpie.story ? `“${selectedStimpie.story}”` : 'No story has been added for this Stimpie yet.'}</p>
+                <p className="mt-1 text-caption text-fg-muted">Edit this quote in Products → Stimpies.</p>
+                {!selectedStimpie.active ? <p className="mt-1 text-caption text-danger">This Stimpie is inactive and will not appear on the storefront.</p> : null}
+              </div>
+            </div>
+          ) : null}
+          <SelectField name="featuredDropSlug" label="Featured drop" options={options} hint="Which drop to highlight when drop sections are shown." />
+          <SwitchField name="showDropSections" label="Show drop sections on the homepage" description="Turn this off to hide the drop highlights. Drops and their items stay available in the shop." />
         </FormSection>
         <div>
-          <Button type="submit" variant="primary" loading={form.formState.isSubmitting || save.isPending} disabled={uploading}>Save homepage</Button>
+          <Button type="submit" variant="primary" loading={form.formState.isSubmitting || save.isPending}>Save homepage</Button>
         </div>
       </AdminForm>
       {guard.dialog}
@@ -101,7 +130,6 @@ function ReviewDialog({ review, onClose }: { review: AdminReview | null; onClose
       onClose={onClose}
       title={review ? 'Edit review' : 'Add review'}
       size="md"
-      closeOnBackdrop={false}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>Cancel</Button>

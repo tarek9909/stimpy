@@ -163,6 +163,7 @@ Phone: top bar (compact) + content + bottom bar
 | Products | `/products` | Products |
 | Stock | `/stock` | Stock (badge: low-stock count if provided by Overview `attention`) |
 | Drops | `/drops` | Drops |
+| Promotions | `/promotions` | Promotions |
 | Customers | `/customers` | Customers |
 | Finance | `/finance` | Finance |
 | Insights | `/insights` | Insights |
@@ -172,7 +173,7 @@ Phone: top bar (compact) + content + bottom bar
 
 - Active item: coral background with black text and a left bar; `aria-current="page"`. Active matching is by prefix (`/orders/123` highlights Orders).
 - Desktop: expanded by default; a collapse toggle reduces it to icons (preference remembered in `localStorage`, key `stimpy.sidebar`, wrapped in try/catch; this is a per-viewer convenience only).
-- Phone bottom bar (fixed, safe-area aware) shows five slots: **Overview, Orders, Deliveries, Stock, More**. **More** opens a bottom sheet listing Products, Drops, Customers, Finance, Insights, Content, Settings. Orders keeps its New badge. The bar hides when the on-screen keyboard is open.
+- Phone bottom bar (fixed, safe-area aware) shows five slots: **Overview, Orders, Deliveries, Stock, More**. **More** opens a bottom sheet listing Products, Drops, Promotions, Customers, Finance, Insights, Content, Settings. Orders keeps its New badge. The bar hides when the on-screen keyboard is open.
 
 ### 2.3 Top bar
 
@@ -698,16 +699,15 @@ Route `/drops`, tabs via `?tab=` : `upcoming` (default), `live`, `archive`. Drop
 
 ### 9.1 Upcoming tab
 
-Cards/rows: name, accent colour chip with its name (Butter/Sky/Lilac in text), launch date/time, Stimpies count, total units, **Edit**. Button **+ New drop**.
+Cards/rows: name, accent colour chip with its hex value, launch date/time, Stimpies count, total units, **Edit**. Button **+ New drop**.
 
 **Drop form fields:**
 
 | Field | API | Validation |
 |---|---|---|
 | Name | `name` | required |
-| Slug | `slug` | auto from name; `CONFLICT` -> "That slug is taken." |
 | Story | `story` | plain text |
-| Accent colour | `accentColor` | radio chips `BUTTER` `SKY` `LILAC` showing the swatch and the name |
+| Accent colour | `accentHex` | color picker with a live swatch and editable `#RRGGBB` value |
 | Launch | `startsAt` | required; date + time inputs, interpreted in the business timezone (shown next to the field, e.g. "Asia/Beirut time"), sent as ISO UTC; must be in the future when creating (UI check; the server is authoritative) |
 | End (optional) | `endsAt` | must be after `startsAt` |
 | Stimpies | `stimpieIds` | multi-select list with search; each row shows stock quantity (read-only here). New Stimpies are created in Products; a link **Create a Stimpie** goes there. Quantities are set on the Stimpie (initial `quantity`) or in Stock |
@@ -730,6 +730,10 @@ Rows: name, state label (**Sold out - won't return** for `SOLD_OUT`; **Ended** f
 ### 9.4 States
 
 Standard. If the form is dirty, guard navigation. A `LIVE` drop's `startsAt` is read-only in the form (UI choice; server rules apply).
+
+### 9.5 Promotions
+
+`/promotions` lists scheduled, active, ended and paused promotions with pagination. **New promotion** opens `/promotions/new`; rows open `/promotions/:id`. Create/edit includes a name, either a whole percentage or fixed USD amount, and either all catalog products (including future ones) or one or more selected hoodies, Stimpies and packs. Start and end are optional: no start means immediate, no end means run until manually paused. The edit page can pause/resume or delete a promotion. Discounts apply automatically in public product prices and are recalculated server-side during cart validation and order creation. If active discounts overlap, the lowest item price is used.
 
 ---
 
@@ -858,7 +862,7 @@ Controls the public `/builder` page. This is the most complex tab.
 | API | `GET /admin/builder`, `PUT /admin/builder`, `POST /admin/uploads` (the plan names `POST /admin/builder/assets`; the contract defines uploads at `POST /admin/uploads`, which is what the UI uses), `GET /admin/colors`, `GET /admin/stimpies`, `GET /admin/hoodies` (for the hoodie selector) |
 | Key | `['builder']` |
 
-`GET /admin/builder` has the shape of the public builder config (with `mode` as set, not `effectiveMode`) plus `assetsReady: { model3d: boolean; colors2d: { colorId, ready }[]; overlays2d: number; stimpieTextures: number }`. `PUT /admin/builder` takes the **full object** as returned by `GET` (it replaces the stored config) and returns it with `warnings: string[]`. Writable fields: `mode`, `defaultView`, `hoodieId`, `model3d` (`url`, `backPanelMesh`, `panelAspect`, `camera`, `lighting`; `sizeBytes` is filled in by the server from the upload), `colors[].hoodieImage2d`, `colors[].overlay2d`, `colors[].placement2d` and `stimpieTextures`. `colors[].tint` and `colors[].texture3d` are read-only here: they mirror `/admin/colors` and `PUT` ignores them. The form holds the full object in local state (React Hook Form or reducer) and sends it as a whole on **Save Builder settings**. Saved changes are live immediately (no draft or publish step); the dashboard's own live preview (below) is the only pre-save check.
+`GET /admin/builder` has the shape of the public builder config (with `mode` as set, not `effectiveMode`) plus `assetsReady: { model3d: boolean; colors2d: { colorId, ready }[]; overlays2d: number; stimpieTextures: number }`. `PUT /admin/builder` takes the **full object** as returned by `GET` (it replaces the stored config) and returns it with `warnings: string[]`. The dashboard edits `mode`, `defaultView`, `hoodieId`, and per-colour 2D image/overlay/placement. Model configuration (including camera) and Stimpie texture overrides are managed in code; the dashboard preserves those values when saving the full object. `colors[].tint` and `colors[].texture3d` are read-only here: they mirror `/admin/colors` and `PUT` ignores them. Saved changes are live immediately (no draft or publish step); the dashboard's own live preview (below) is the pre-save check.
 
 Layout (desktop): left column = settings accordions; right column = sticky live preview. Phone: settings first, **Preview** as a full-width panel at the top that collapses; a floating **Preview** button scrolls to it.
 
@@ -869,17 +873,11 @@ Layout (desktop): left column = settings accordions; right column = sticky live 
 | Mode selector (segmented, text labels) | `mode`: **2D only** (`2D`) / **3D only** (`3D`) / **Both** (`BOTH`) | |
 | Default view (shown only when Both) | `defaultView`: **2D** / **3D** | |
 | Hoodie | `hoodieId` | **Hoodie sold in the Builder**: a select of hoodies from `GET /admin/hoodies` (name, with inactive ones marked "Hidden" and disabled). Helper: "The Builder sells this hoodie. Defaults to the first active hoodie." The saved value is returned as `hoodie: { id, slug, name }` |
-| Readiness hints | `assetsReady` | Beside the mode: a chip "3D model: ready/missing", "2D images: 3 of 4 colours ready" (from `colors2d`), "2D shading overlays: N" (`overlays2d`) and "Stimpie textures: N" (`stimpieTextures`). Choosing 3D or Both while `assetsReady.model3d` is false shows an amber note "No 3D model uploaded yet. The website will fall back to 2D until you upload one." |
+| Readiness hints | `assetsReady` | Beside the mode: a chip "3D model: ready/missing", "2D images: 3 of 4 colours ready" (from `colors2d`) and "2D shading overlays: N" (`overlays2d`). Choosing 3D or Both while `assetsReady.model3d` is false shows an amber note that the model must be configured in code before the website can use 3D. |
 
-**2. 3D model**
+**2. 3D model and Stimpie textures**
 
-| Control | Field | Validation |
-|---|---|---|
-| GLB upload | `model3d.url` via `POST /admin/uploads` | `.glb` only, <= 50 MB (client check mirrors the server; `413 FILE_TOO_LARGE` / `415 UNSUPPORTED_FILE_TYPE` shown as in 7.7); progress bar; after upload shows file name and size (from the upload response; the server stores `sizeBytes`), **Replace** and **Remove** (sets `model3d` to null) |
-| Panel aspect | `model3d.panelAspect` | number > 0, default 0.64 (width / height of the back panel); advanced field with helper "Leave at 0.64 unless the model's back panel has a different shape." |
-| Back panel mesh name | `model3d.backPanelMesh` | required if a model is set; text input. If the GLB is parsed client-side (optional enhancement using the three.js loader in the preview), offer a dropdown of mesh names found in the file; otherwise free text. Helper: "The exact name of the mesh that receives the Stimpie artwork." A mismatch can't be detected by the server; the live preview shows the artwork missing, with a red note "Mesh 'Back' not found in this model" when the preview loader cannot find it |
-| Camera | `model3d.camera.position` (x,y,z numbers), `target` (x,y,z), `fov` (10..100) | numeric inputs, defaults from the server; **Use current preview angle** button reads the preview camera |
-| Lighting | `model3d.lighting` | select **Studio** (`STUDIO`) / **Soft** (`SOFT`) / **Night** (`NIGHT`) |
+No model upload, camera editor, or Stimpie texture upload controls are shown in the dashboard. These assets and settings are maintained in code. Existing values are carried through when the full Builder config is saved. The dashboard preview uses the configured model and Stimpie artwork, and the colour selector lets staff switch among the selected hoodie's assigned colours.
 
 **3. Per-colour look (one row/card per active colour from `GET /admin/colors`; inactive colours are listed collapsed as "Hidden")**
 
@@ -904,11 +902,7 @@ Each colour card shows swatch + name, an **assets status chip** from `assetsRead
 - Validation: x, y, width within 0..1 and the rectangle at least 50% inside the image; rotation numeric. The panel's aspect (height = width / 0.64) is fixed by the artwork convention, so resizing keeps it.
 - If the image is missing the editor is disabled with "Upload the flat image first."
 
-**4. Per-Stimpie texture overrides**
-
-Collapsed section "Stimpie textures (advanced)". Table of Stimpies (name, thumbnail of `artworkUrl` as the default). Each row has **Upload override** (image) writing `stimpieTextures[]` `{ stimpieId, textureUrl }`, a preview, and **Use artwork** (removes the override). Helper: "By default the Stimpie's artwork is used on the 3D back panel. Upload a different image only if the print needs adjusting for 3D."
-
-**5. Live preview (reuses the public Builder)**
+**4. Live preview (reuses the public Builder)**
 
 - Rendered by importing the same `<Builder>` component from the shared package (`packages/ui` or `packages/builder`) that `apps/web` uses, fed with the **unsaved form state** in the shape of `GET /builder/config` (the form object is mapped to that shape, with `effectiveMode` computed client-side using the same rule: fall back to 2D when the 3D model is missing; `hoodie` comes from the selected `hoodieId`; `tint`/`texture3d` come from the read-only colour values) instead of fetching the public endpoint. Stimpies come from `GET /admin/stimpies` mapped to the public `Stimpie` shape (including `artworkWidth`/`artworkHeight`).
 - Controls above the preview: **2D / 3D** toggle (when the mode allows), colour select, Stimpie select, and **Simulate: no WebGL** to test the 2D fallback.
@@ -916,13 +910,13 @@ Collapsed section "Stimpie textures (advanced)". Table of Stimpies (name, thumbn
 - The preview mounts in an isolated container and error boundary; a failing GLB shows "Couldn't load the 3D model" in the preview only, not a page error.
 - The preview is lazy-loaded (code-split) so Three.js is not in the main dashboard bundle.
 
-**6. Save and warnings**
+**5. Save and warnings**
 
 Button **Save Builder settings** (electric blue, sticky on phone). Behaviour:
 
 1. Client validation as per above (blocking errors highlighted).
 2. `PUT /admin/builder`, pessimistic.
-3. On `200`, show a result panel. If `warnings[]` is non-empty (e.g. saving `3D`/`BOTH` without a model), display each as an amber list item under the header "Saved, with warnings" (text, with an icon), not as an error. Example copy: "Saved. The website will use 2D until a 3D model is uploaded." The raw warning strings from the API are shown verbatim.
+3. On `200`, show a result panel. If `warnings[]` is non-empty (e.g. saving `3D`/`BOTH` without a configured model), display each as an amber list item under the header "Saved, with warnings" (text, with an icon), not as an error. The raw warning strings from the API are shown verbatim.
 4. Refresh `['builder']` so `assetsReady` updates the chips.
 5. Info line after save: "Saved and live. The website picks it up within about 30-60 seconds (public caching)." The Builder has no draft or publish step.
 
@@ -1102,7 +1096,7 @@ Phases follow section 13 of the plan. Shell, shared components and auth are buil
 
 ### Phase 2: Builder and drops
 
-- [ ] Content -> Builder: mode selector, default view, hoodie selector (`hoodieId`), GLB upload, mesh name, panel aspect, camera, lighting, per-colour 2D image, `overlay2d` and placement editor (centre-based geometry), read-only tint/texture with link to Options, per-Stimpie overrides, readiness chips (incl. `overlays2d`, `stimpieTextures`), warnings display, full-object `PUT`, live preview using the shared Builder component
+- [ ] Content -> Builder: mode selector, default view, hoodie selector (`hoodieId`), per-colour 2D image, `overlay2d` and placement editor (centre-based geometry), read-only tint/texture with link to Options, assigned-colour selector in preview, readiness chips, warnings display, full-object `PUT` preserving code-managed model/camera/Stimpie textures, live preview using the shared Builder component
 - [ ] Drops: Upcoming (create/edit), Live (progress, end early), Archive
 - [ ] Customers: All, Repeat, customer view, Subscribers with CSV export
 - [ ] Exit test: switching the mode between 2D only / 3D only / Both changes the website's Builder; a new colour shows "2D image missing" until its look is set

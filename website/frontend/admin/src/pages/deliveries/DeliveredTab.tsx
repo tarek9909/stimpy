@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckCheck, Wallet } from 'lucide-react';
 import { Button, EmptyState, Pill, SegmentedControl, useToast } from '@stimpy/ui';
 import { useNotifyError } from '../../api/errors';
@@ -25,9 +26,10 @@ function CashState({ settled }: { settled: boolean }) {
   );
 }
 
-/** Deliveries -> Delivered (dashboard-pages 14.2): grouped by delivery number with "Mark delivery settled" per group. */
+/** Orders -> Delivered: grouped by delivery number with "Mark delivery settled" per group. */
 export function DeliveredTab() {
   const [p, setP] = useUrlState(params);
+  const navigate = useNavigate();
   const f = useFormatters();
   const toast = useToast();
   const notify = useNotifyError();
@@ -75,11 +77,12 @@ export function DeliveredTab() {
     setPreparingDelivery(deliveryNumber);
     try {
       const orders = await getDeliveredOrdersForDelivery(deliveryNumber);
-      if (orders.length === 0) throw new Error(`No delivered orders were found for delivery ${deliveryNumber}. Refresh and try again.`);
+      const unsettledOrders = orders.filter((order) => !order.cashSettled);
+      if (unsettledOrders.length === 0) throw new Error(`No unsettled orders were found for delivery ${deliveryNumber}. Refresh and try again.`);
       setConfirm({
         deliveryNumber,
-        totalOrders: orders.length,
-        receivedCents: orders.reduce((sum, order) => sum + order.cashDueCents, 0),
+        totalOrders: unsettledOrders.length,
+        receivedCents: unsettledOrders.reduce((sum, order) => sum + order.cashDueCents, 0),
       });
     } catch (e) {
       notify(e);
@@ -89,7 +92,7 @@ export function DeliveredTab() {
   };
 
   const columns: Column<DeliveryRow>[] = [
-    { id: 'order', header: 'Order no.', priority: 'primary', className: 'whitespace-nowrap', cell: (r) => <a href={`/orders/${r.orderId}`} className="underline underline-offset-4"><OrderNumber number={r.orderNumber} /></a> },
+    { id: 'order', header: 'Order no.', priority: 'primary', className: 'whitespace-nowrap', cell: (r) => <a href={`/orders/${r.orderId}`} onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); navigate(`/orders/${r.orderId}`); }} className="underline underline-offset-4"><OrderNumber number={r.orderNumber} /></a> },
     { id: 'due', header: 'Cash due', numeric: true, priority: 'primary', cell: (r) => <span className="font-bold">{f.money(r.cashDueCents)}</span> },
     { id: 'delivery', header: 'Delivery no.', priority: 'primary', className: 'whitespace-nowrap', cell: (r) => (r.deliveryNumber ? <span className="font-mono">{r.deliveryNumber}</span> : <span className="text-fg-muted">—</span>) },
     { id: 'customer', header: 'Customer', cell: (r) => r.customerName },
@@ -114,7 +117,7 @@ export function DeliveredTab() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-60 flex-1 md:max-w-sm">
-          <SearchField label="Search deliveries" placeholder="Search order, delivery no., name, phone" value={p.q} onChange={(q) => setP({ q }, { replace: true })} />
+          <SearchField label="Search orders" placeholder="Search order, delivery no., name, phone" value={p.q} onChange={(q) => setP({ q }, { replace: true })} />
         </div>
         <SegmentedControl
           aria-label="Cash state"

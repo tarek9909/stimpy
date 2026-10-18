@@ -45,7 +45,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
 
   const app = Fastify({
     logger: loggerOptions(config, opts.logStream),
-    // Fastify's own request lines are off; plugins/request-log.ts writes one structured line per request.
+    // Fastify's own request lines are off; plugins/request-log.ts writes one compact line per request.
     logController: new LogController({ disableRequestLogging: true }),
     genReqId: () => randomUUID(),
     requestIdHeader: false, // never trust a client-supplied id

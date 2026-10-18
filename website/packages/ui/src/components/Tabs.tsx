@@ -132,7 +132,7 @@ export function Tabs({
           aria-label={ariaLabel}
           onKeyDown={onKeyDown}
           className={cn(
-            'flex overflow-x-auto',
+            'flex overflow-x-auto md:overflow-visible overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
             variant === 'underline' ? 'gap-6 border-b border-base' : 'gap-2',
           )}
         >

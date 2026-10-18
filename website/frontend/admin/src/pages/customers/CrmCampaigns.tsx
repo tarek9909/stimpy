@@ -7,6 +7,7 @@ import { useNotifyError } from '../../api/errors';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FilterBar } from '../../components/FilterBar';
 import { PageHeader } from '../../components/PageHeader';
+import { fetchAllPages } from '../../lib/pagination';
 import { useAreas } from '../../lib/refdata';
 import { useAllDrops } from '../products/api';
 import { useCustomerTagCatalog } from './api';
@@ -82,8 +83,17 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
   const [confirmDraft, setConfirmDraft] = useState(false);
 
   const segments = useQuery({ queryKey: ['crm-segments', segmentPage], queryFn: () => unwrap(api.GET('/api/v1/admin/segments', { params: { query: { page: segmentPage, pageSize: 50 } } })) });
-  const selectedSegment = segments.data?.items.find((segment) => segment.id === selectedSegmentId);
-  const target = useMemo(() => selectedSegment ? { segmentId: selectedSegment.id } : { filters: cleanFilters(filters) }, [filters, selectedSegment]);
+  const allSegments = useQuery({
+    queryKey: ['crm-segments', 'all'],
+    queryFn: () => fetchAllPages((page, pageSize) => unwrap(api.GET('/api/v1/admin/segments', { params: { query: { page, pageSize } } }))),
+    enabled: mode === 'campaigns',
+  });
+  const selectedSegment = allSegments.data?.items.find((segment) => segment.id === selectedSegmentId)
+    ?? segments.data?.items.find((segment) => segment.id === selectedSegmentId);
+  const target = useMemo(
+    () => mode === 'segments' || !selectedSegment ? { filters: cleanFilters(filters) } : { segmentId: selectedSegment.id },
+    [filters, mode, selectedSegment],
+  );
   const preview = useQuery({
     queryKey: ['crm-campaign-preview', target, channel],
     queryFn: () => unwrap(api.POST('/api/v1/admin/campaigns/preview', { body: { target, channel } })) as Promise<Audience>,
@@ -161,7 +171,7 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
           <section className="rounded-lg border border-base bg-surface-base p-4">
             <h2 className="mb-4 text-h5">Build a campaign</h2>
             <div className="grid gap-4 md:grid-cols-3">
-              <label className="flex flex-col gap-1 text-body-sm font-medium">Saved segment<Select value={selectedSegmentId?.toString() ?? ''} onChange={(event) => { const id = event.target.value ? Number(event.target.value) : undefined; setSelectedSegmentId(id); const selected = segments.data?.items.find((segment) => segment.id === id); if (selected) onFiltersChange(selected.filters); }} options={[{ value: '', label: 'Use current filters' }, ...(segments.data?.items ?? []).map((segment) => ({ value: String(segment.id), label: segment.name }))]} /></label>
+              <label className="flex flex-col gap-1 text-body-sm font-medium">Saved segment<Select value={selectedSegmentId?.toString() ?? ''} onChange={(event) => { const id = event.target.value ? Number(event.target.value) : undefined; setSelectedSegmentId(id); const selected = allSegments.data?.items.find((segment) => segment.id === id); if (selected) onFiltersChange(selected.filters); }} options={[{ value: '', label: 'Use current filters' }, ...(allSegments.data?.items ?? []).map((segment) => ({ value: String(segment.id), label: segment.name }))]} /></label>
               <label className="flex flex-col gap-1 text-body-sm font-medium">Channel<Select value={channel} onChange={(event) => { setChannel(event.target.value as Channel); setTemplateKey(''); }} options={[{ value: 'EMAIL', label: 'Email' }, { value: 'WHATSAPP', label: 'WhatsApp' }]} /></label>
               <label className="flex flex-col gap-1 text-body-sm font-medium">Template<Select value={templateKey} onChange={(event) => setTemplateKey(event.target.value)} options={[{ value: '', label: templates.isPending ? 'Loading templates…' : 'Choose a template' }, ...templateOptions]} /></label>
             </div>

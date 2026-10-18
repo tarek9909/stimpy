@@ -127,7 +127,7 @@ describe('/admin/hoodies', () => {
     expect(ok.status).toBe(204);
     expect(ok.body).toBe('');
     expect((await c.get('/admin/hoodies')).json<Page<AHoodie>>().items.map((h) => h.slug)).toEqual(['d', 'a', 'b']);
-    expect((await t.client.get('/products/hoodies')).json<{ slug: string }[]>().map((h) => h.slug)).toEqual(['d', 'a', 'b']);
+    expect((await t.client.get('/products/hoodies')).json<{ items: { slug: string }[] }>().items.map((h) => h.slug)).toEqual(['d', 'a', 'b']);
     for (const ids of [[a.id, a.id, b.id], [a.id, b.id], [a.id, b.id, d.id, 99999], []]) {
       const r = await c.put('/admin/hoodies/order', { ids });
       expect(r.status).toBe(400);
@@ -306,7 +306,7 @@ describe('/admin/packs', () => {
     expect((await c.get('/admin/packs')).json<Page<APack>>().total).toBe(2);
     expect((await c.get('/admin/packs', { query: { active: 'true' } })).json<Page<APack>>().items.map((p) => p.id)).toEqual([a.id]);
     expect((await c.get('/admin/packs', { query: { active: 'false' } })).json<Page<APack>>().total).toBe(1);
-    expect((await t.client.get('/packs')).json<unknown[]>()).toHaveLength(1);
+    expect((await t.client.get('/packs')).json<{ items: unknown[] }>().items).toHaveLength(1);
   });
 
   it('PUT /order reorders and validates', async () => {
@@ -314,7 +314,7 @@ describe('/admin/packs', () => {
     const b = await createPack(t.prisma, { slug: 'b' });
     const c = await admin();
     expect((await c.put('/admin/packs/order', { ids: [b.id, a.id] })).status).toBe(204);
-    expect((await t.client.get('/packs')).json<{ slug: string }[]>().map((p) => p.slug)).toEqual(['b', 'a']);
+    expect((await t.client.get('/packs')).json<{ items: { slug: string }[] }>().items.map((p) => p.slug)).toEqual(['b', 'a']);
     expect((await c.put('/admin/packs/order', { ids: [b.id] })).status).toBe(400);
     expect((await c.put('/admin/packs/order', { ids: [b.id, b.id] })).status).toBe(400);
     expect((await c.put('/admin/packs/order', { ids: [b.id, 12345] })).status).toBe(400);

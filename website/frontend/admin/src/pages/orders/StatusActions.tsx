@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal } from 'lucide-react';
-import { Button, FormField, Modal, RadioGroup, Textarea, useToast, type OrderStatus } from '@stimpy/ui';
+import { Button, FormField, Modal, RadioGroup, Skeleton, Textarea, useToast, type OrderStatus } from '@stimpy/ui';
 import { asApiError, useNotifyError } from '../../api/errors';
 import { queryKeys } from '../../api/queryKeys';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -352,7 +352,21 @@ export function OrderStatusDialog({ orderId, to, onClose }: { orderId: number; t
       </Modal>
     );
   }
-  if (!order || closed) return null;
+  if (closed) return null;
+  if (!order) {
+    return (
+      <Modal open onClose={onClose} title="Loading order" size="sm">
+        {query.isError ? (
+          <div className="space-y-3">
+            <p>Could not load this order. Close this dialog and try again.</p>
+            <Button variant="secondary" onClick={onClose}>Close</Button>
+          </div>
+        ) : (
+          <Skeleton variant="rect" className="h-24" />
+        )}
+      </Modal>
+    );
+  }
   return (
     <StatusDialog
       order={order}

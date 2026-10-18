@@ -21,8 +21,8 @@ export const sizeSchema = z
   .meta({ id: 'Size' });
 
 /** Admin lists add read-only stock summary fields (api-reference 5.4). */
-export const adminColorSchema = colorSchema.extend({ available: z.number().int(), reserved: z.number().int() }).meta({ id: 'AdminColor' });
-export const adminSizeSchema = sizeSchema.extend({ available: z.number().int(), reserved: z.number().int() }).meta({ id: 'AdminSize' });
+export const adminColorSchema = colorSchema.extend({ available: z.number().int() }).meta({ id: 'AdminColor' });
+export const adminSizeSchema = sizeSchema.extend({ available: z.number().int() }).meta({ id: 'AdminSize' });
 
 export const optionsResponse = z.object({ colors: z.array(colorSchema), sizes: z.array(sizeSchema) });
 

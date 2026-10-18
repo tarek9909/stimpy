@@ -19,6 +19,7 @@ type HoodieDetail = HoodieSummary & {
   sizes: { id: number; label: string; position: number; active: boolean }[];
   variants: { colorId: number; sizeId: number; inStock: boolean; remaining: number | null }[];
 };
+type Page<T> = { items: T[]; page: number; pageSize: number; total: number };
 
 const STIMPIE_KEYS = ['artworkHeight', 'artworkUrl', 'artworkWidth', 'drop', 'id', 'images', 'name', 'priceCents', 'purchasable', 'remaining', 'slug', 'status', 'story', 'type'];
 const DROP_SUMMARY_KEYS = ['accentColor', 'accentHex', 'endsAt', 'id', 'name', 'slug', 'startsAt'];
@@ -39,7 +40,7 @@ describe('GET /products/hoodies', () => {
     const res = await t.client.get('/products/hoodies');
     expect(res.status).toBe(200);
     expect(res.header('cache-control')).toBe('public, max-age=30');
-    const list = res.json<HoodieSummary[]>();
+    const list = res.json<Page<HoodieSummary>>().items;
     expect(list.map((h) => h.slug)).toEqual([w.hoodie.slug, second.slug]);
     expect(Object.keys(list[0]!).sort()).toEqual(['colors', 'description', 'id', 'images', 'inStock', 'name', 'priceCents', 'slug']);
     expect(list[0]).toMatchObject({ priceCents: 2500, inStock: true });
@@ -53,12 +54,12 @@ describe('GET /products/hoodies', () => {
     const w = await buildWorld(t.prisma, { hoodieStock: 0 });
     const base = { hoodieId: w.hoodie.id, colorId: w.colors.cream.id };
     await setVariantStock(t.prisma, { ...base, sizeId: w.sizes.m.id }, 3);
-    let list = (await t.client.get('/products/hoodies')).json<HoodieSummary[]>();
+    let list = (await t.client.get('/products/hoodies')).json<Page<HoodieSummary>>().items;
     expect(list[0]!.colors.map((c) => c.name)).toEqual(['Cream']);
     expect(list[0]!.inStock).toBe(true);
 
     await setVariantStock(t.prisma, { ...base, sizeId: w.sizes.m.id }, 3, 3); // all reserved
-    list = (await t.client.get('/products/hoodies')).json<HoodieSummary[]>();
+    list = (await t.client.get('/products/hoodies')).json<Page<HoodieSummary>>().items;
     expect(list[0]!.colors).toEqual([]);
     expect(list[0]!.inStock).toBe(false);
   });
@@ -67,16 +68,16 @@ describe('GET /products/hoodies', () => {
     const w = await buildWorld(t.prisma, { hoodieStock: 0 });
     await setVariantStock(t.prisma, { hoodieId: w.hoodie.id, colorId: w.colors.black.id, sizeId: w.sizes.s.id }, 9);
     await t.prisma.color.update({ where: { id: w.colors.black.id }, data: { active: false } });
-    expect((await t.client.get('/products/hoodies')).json<HoodieSummary[]>()[0]!.inStock).toBe(false);
+    expect((await t.client.get('/products/hoodies')).json<Page<HoodieSummary>>().items[0]!.inStock).toBe(false);
     await t.prisma.color.update({ where: { id: w.colors.black.id }, data: { active: true } });
     await t.prisma.size.update({ where: { id: w.sizes.s.id }, data: { active: false } });
-    expect((await t.client.get('/products/hoodies')).json<HoodieSummary[]>()[0]!.inStock).toBe(false);
+    expect((await t.client.get('/products/hoodies')).json<Page<HoodieSummary>>().items[0]!.inStock).toBe(false);
   });
 
   it('is an empty array when there are no hoodies', async () => {
     const res = await t.client.get('/products/hoodies');
     expect(res.status).toBe(200);
-    expect(res.json()).toEqual([]);
+    expect(res.json()).toMatchObject({ items: [], page: 1, pageSize: 25, total: 0 });
   });
 });
 
@@ -172,7 +173,7 @@ describe('GET /products/stimpies', () => {
     const res = await t.client.get('/products/stimpies');
     expect(res.status).toBe(200);
     expect(res.header('cache-control')).toBe('public, max-age=30');
-    const list = res.json<Stimpie[]>();
+    const list = res.json<Page<Stimpie>>().items;
     expect(list.map((s) => s.slug)).toEqual(['the-void', 'after-dark', 'the-cedar', 'the-signal', 'the-static', 'the-dreamer', 'the-eye']);
     for (const s of list) expect(Object.keys(s).sort()).toEqual(STIMPIE_KEYS);
     const dreamer = list.find((s) => s.slug === 'the-dreamer')!;
@@ -186,7 +187,7 @@ describe('GET /products/stimpies', () => {
 
   it('exposes the drop summary with startsAt / endsAt / accentHex, and never exact stock above the threshold', async () => {
     await shop();
-    const list = (await t.client.get('/products/stimpies')).json<Stimpie[]>();
+    const list = (await t.client.get('/products/stimpies')).json<Page<Stimpie>>().items;
     const sig = list.find((s) => s.slug === 'the-signal')!;
     expect(sig.type).toBe('LIMITED');
     expect(Object.keys(sig.drop!).sort()).toEqual(DROP_SUMMARY_KEYS);
@@ -198,40 +199,40 @@ describe('GET /products/stimpies', () => {
 
   it('includeSoldOut=false hides sold-out Stimpies', async () => {
     await shop();
-    const list = (await t.client.get('/products/stimpies', { query: { includeSoldOut: 'false' } })).json<Stimpie[]>();
+    const list = (await t.client.get('/products/stimpies', { query: { includeSoldOut: 'false' } })).json<Page<Stimpie>>().items;
     expect(list.map((s) => s.slug)).not.toContain('the-dreamer');
     expect(list.every((s) => s.status === 'AVAILABLE' || s.status === 'LOW')).toBe(true);
   });
 
   it('includeUpcoming=true adds UPCOMING; includeEnded=true adds ENDED', async () => {
     await shop();
-    const up = (await t.client.get('/products/stimpies', { query: { includeUpcoming: 'true' } })).json<Stimpie[]>();
+    const up = (await t.client.get('/products/stimpies', { query: { includeUpcoming: 'true' } })).json<Page<Stimpie>>().items;
     const moth = up.find((s) => s.slug === 'the-moth')!;
     expect(moth).toMatchObject({ status: 'UPCOMING', purchasable: false, remaining: null });
     expect(moth.drop).toMatchObject({ accentHex: '#5CC8FF', slug: 'upcoming' });
     expect(up.find((s) => s.slug === 'the-rose')).toBeUndefined();
 
-    const en = (await t.client.get('/products/stimpies', { query: { includeEnded: 'true' } })).json<Stimpie[]>();
+    const en = (await t.client.get('/products/stimpies', { query: { includeEnded: 'true' } })).json<Page<Stimpie>>().items;
     expect(en.find((s) => s.slug === 'the-rose')).toMatchObject({ status: 'ENDED', purchasable: false });
     expect(en.find((s) => s.slug === 'the-moth')).toBeUndefined();
 
-    const all = (await t.client.get('/products/stimpies', { query: { includeUpcoming: 'true', includeEnded: 'true', includeSoldOut: 'false' } })).json<Stimpie[]>();
+    const all = (await t.client.get('/products/stimpies', { query: { includeUpcoming: 'true', includeEnded: 'true', includeSoldOut: 'false' } })).json<Page<Stimpie>>().items;
     expect(all.map((s) => s.status).sort()).toEqual(expect.arrayContaining(['UPCOMING', 'ENDED']));
     expect(all.find((s) => s.status === 'SOLD_OUT')).toBeUndefined();
   });
 
   it('filters by type and by drop slug', async () => {
     await shop();
-    const limited = (await t.client.get('/products/stimpies', { query: { type: 'LIMITED' } })).json<Stimpie[]>();
+    const limited = (await t.client.get('/products/stimpies', { query: { type: 'LIMITED' } })).json<Page<Stimpie>>().items;
     expect(limited.map((s) => s.slug)).toEqual(['the-signal', 'the-static']);
-    const core = (await t.client.get('/products/stimpies', { query: { type: 'CORE' } })).json<Stimpie[]>();
+    const core = (await t.client.get('/products/stimpies', { query: { type: 'CORE' } })).json<Page<Stimpie>>().items;
     expect(core.every((s) => s.type === 'CORE')).toBe(true);
-    const inDrop = (await t.client.get('/products/stimpies', { query: { drop: 'drop-001' } })).json<Stimpie[]>();
+    const inDrop = (await t.client.get('/products/stimpies', { query: { drop: 'drop-001' } })).json<Page<Stimpie>>().items;
     expect(inDrop.map((s) => s.slug)).toEqual(['the-signal', 'the-static']);
     // the drop filter does not bypass the upcoming default
-    expect((await t.client.get('/products/stimpies', { query: { drop: 'upcoming' } })).json()).toEqual([]);
-    expect((await t.client.get('/products/stimpies', { query: { drop: 'upcoming', includeUpcoming: 'true' } })).json<Stimpie[]>()).toHaveLength(1);
-    expect((await t.client.get('/products/stimpies', { query: { drop: 'no-such-drop' } })).json()).toEqual([]);
+    expect((await t.client.get('/products/stimpies', { query: { drop: 'upcoming' } })).json()).toMatchObject({ items: [], total: 0 });
+    expect((await t.client.get('/products/stimpies', { query: { drop: 'upcoming', includeUpcoming: 'true' } })).json<Page<Stimpie>>().items).toHaveLength(1);
+    expect((await t.client.get('/products/stimpies', { query: { drop: 'no-such-drop' } })).json()).toMatchObject({ items: [], total: 0 });
   });
 
   it('rejects invalid query values with VALIDATION_ERROR', async () => {
@@ -292,7 +293,7 @@ describe('GET /packs', () => {
     const res = await t.client.get('/packs');
     expect(res.status).toBe(200);
     expect(res.header('cache-control')).toBe('public, max-age=30');
-    const list = res.json<{ id: number; slug: string; name: string; description: string; stimpieCount: number; priceCents: number; badge: string | null }[]>();
+    const list = res.json<Page<{ id: number; slug: string; name: string; description: string; stimpieCount: number; priceCents: number; badge: string | null }>>().items;
     expect(list.map((p) => p.id)).toEqual([w.packs.one.id, w.packs.two.id]);
     expect(Object.keys(list[0]!).sort()).toEqual(['badge', 'description', 'id', 'name', 'priceCents', 'slug', 'stimpieCount']);
     expect(list[0]!.badge).toBeNull();
@@ -303,6 +304,6 @@ describe('GET /packs', () => {
 describe('fixtures sanity for the catalog', () => {
   it('colours / sizes created after a hoodie (fixtures) are not part of this suite', async () => {
     await createSize(t.prisma, { label: 'Z' });
-    expect((await t.client.get('/products/hoodies')).json()).toEqual([]);
+    expect((await t.client.get('/products/hoodies')).json()).toMatchObject({ items: [], total: 0 });
   });
 });

@@ -26,12 +26,13 @@
 
 | Cart item kind | Unit price | Unit cost (snapshot) | Components reserved |
 |---|---|---|---|
-| `pack` | `packs.price_cents` | hoodie cost + each Stimpie's cost + `hardwareCostCents` | 1 hoodie variant + each of `stimpieIds` |
-| `hoodie` | `hoodies.price_cents` | hoodie cost + `hardwareCostCents` | 1 hoodie variant |
-| `stimpie` | `stimpies.price_cents` | Stimpie cost | 1 Stimpie |
+| `pack` | current promotional pack price, or `packs.price_cents` | hoodie cost + each Stimpie's cost + `hardwareCostCents` | 1 hoodie variant + each of `stimpieIds` |
+| `hoodie` | current promotional hoodie price, or `hoodies.price_cents` | hoodie cost + `hardwareCostCents` | 1 hoodie variant |
+| `stimpie` | current promotional Stimpie price, or `stimpies.price_cents` | Stimpie cost | 1 Stimpie |
 
 - `subtotal = Σ unit price × qty`.
 - `deliveryFee = area.fee_cents ?? settings.delivery.defaultFeeCents`. If no `areaId` is sent, the default fee applies. Delivery is not discounted in v1.
+- An enabled promotion applies only when the current time is at or after its optional `starts_at` and before its optional `ends_at`. It targets all current/future catalog items or its selected hoodies, Stimpies and packs. Percentage discounts round to the nearest cent; fixed USD amounts are subtracted from each matching item's price, with a floor of zero. Overlapping promotions do not stack: use the lowest resulting price. Delivery is excluded.
 - `total = subtotal + deliveryFee`.
 - Cost snapshots are stored on `order_items` so later price or cost edits never change history.
 - If `expectedTotalCents` is present and differs from the computed total, reject with `PRICE_CHANGED` (and nothing is reserved).

@@ -23,6 +23,7 @@ import {
   SendEmailDialog,
 } from './OrderDialogs';
 import { Block, EmailFailedBadge, HoldExpiredBadge, OrderNumber, ordersListPath, useOpenWhatsapp } from './parts';
+import { OrderDetailItemRow } from './media';
 import { StatusActions } from './StatusActions';
 import { RESENDABLE_TEMPLATES, SOURCE_LABEL, STATUS_LABEL, WHATSAPP_TEMPLATES, defaultWhatsappTemplate, emailTemplateName, type OrderStatus, type WhatsappTemplate } from './status';
 import { FormField, Textarea } from '@stimpy/ui';
@@ -336,23 +337,9 @@ function ItemsBlock({ order }: { order: AdminOrder }) {
   return (
     <Block title="Items" id="items">
       <ul className="divide-y divide-line">
-        {order.items.map((item) => {
-          const d = item.details;
-          const parts = [d.hoodie, d.color, d.size].filter(Boolean).join(', ');
-          return (
-            <li key={item.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-2 first:pt-0">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{item.name}</p>
-                {parts ? <p className="text-body-sm text-fg-muted">{parts}</p> : null}
-                {d.stimpies.length > 0 ? <p className="text-body-sm text-fg-muted">Stimpies: {d.stimpies.join(', ')}</p> : null}
-              </div>
-              <p className="shrink-0 text-body-sm tabular-nums text-fg-muted">
-                {item.qty} × {f.money(item.unitPriceCents)}
-              </p>
-              <p className="w-20 shrink-0 text-right font-medium tabular-nums">{f.money(item.lineTotalCents)}</p>
-            </li>
-          );
-        })}
+        {order.items.map((item) => (
+          <OrderDetailItemRow key={item.id} item={item} moneyFormatter={f.money} />
+        ))}
       </ul>
       <dl className="mt-3 space-y-1 border-t border-base pt-3 text-body-sm">
         <div className="flex justify-between"><dt className="text-fg-muted">Subtotal</dt><dd className="tabular-nums">{f.money(order.subtotalCents)}</dd></div>

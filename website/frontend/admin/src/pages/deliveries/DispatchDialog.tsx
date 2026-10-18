@@ -16,8 +16,10 @@ interface Result {
   warnings: Array<{ deliveryNumber: string; orderNumbers: string[] }>;
 }
 
+const MAX_DISPATCH_ORDERS = 100;
+
 /**
- * "Send out packed orders" (dashboard-pages 14.1): pick PACKED orders, give each a delivery number
+ * Orders -> Out for delivery: pick PACKED orders, give each a delivery number
  * (or apply one number to all selected for a shared run), then `POST /admin/deliveries/dispatch`.
  * Duplicate numbers (inside the selection or on other orders) only warn.
  */
@@ -52,14 +54,24 @@ export function DispatchDialog({ open, onClose }: { open: boolean; onClose: () =
   const orders = packed.data?.items ?? [];
   const byId = useMemo(() => new Map(orders.map((o) => [o.id, o])), [orders]);
 
-  const toggle = (id: number) =>
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  const allSelected = orders.length > 0 && orders.every((o) => selected.has(o.id));
+  const toggle = (id: number) => {
+    const next = new Set(selected);
+    if (next.has(id)) {
+      next.delete(id);
+      setSelected(next);
+      setFormError(null);
+      return;
+    }
+    if (next.size >= MAX_DISPATCH_ORDERS) {
+      setFormError(`Dispatch up to ${MAX_DISPATCH_ORDERS} orders at a time. Send this batch, then start another.`);
+      return;
+    }
+    next.add(id);
+    setSelected(next);
+    setFormError(null);
+  };
+  const selectAllOrders = orders.slice(0, MAX_DISPATCH_ORDERS);
+  const allSelected = selectAllOrders.length > 0 && selectAllOrders.every((o) => selected.has(o.id));
 
   const lookup = async (raw: string) => {
     const value = raw.trim();
@@ -102,6 +114,7 @@ export function DispatchDialog({ open, onClose }: { open: boolean; onClose: () =
     }
     setRowErrors(errs);
     if (selectedIds.length === 0) return setFormError('Select at least one order.');
+    if (selectedIds.length > MAX_DISPATCH_ORDERS) return setFormError(`Dispatch up to ${MAX_DISPATCH_ORDERS} orders at a time.`);
     if (Object.keys(errs).length > 0) return setFormError('Enter a delivery number for each selected order.');
     setFormError(null);
     setConfirming(true);
@@ -137,7 +150,7 @@ export function DispatchDialog({ open, onClose }: { open: boolean; onClose: () =
         onClose={() => !dispatch.isPending && onClose()}
         title="Send out packed orders"
         size="lg"
-        closeOnBackdrop={false}
+        closeOnBackdrop={!dispatch.isPending}
         footer={
           <>
             <Button variant="secondary" onClick={onClose}>
@@ -170,7 +183,8 @@ export function DispatchDialog({ open, onClose }: { open: boolean; onClose: () =
                 {formError}
               </p>
             ) : null}
-            <Checkbox label={`Select all (${orders.length})`} checked={allSelected} onChange={() => setSelected(allSelected ? new Set() : new Set(orders.map((o) => o.id)))} />
+            <Checkbox label={orders.length > MAX_DISPATCH_ORDERS ? `Select first ${MAX_DISPATCH_ORDERS} (of ${orders.length})` : `Select all (${orders.length})`} checked={allSelected} onChange={() => { setSelected(allSelected ? new Set() : new Set(selectAllOrders.map((o) => o.id))); setFormError(null); }} />
+            {orders.length > MAX_DISPATCH_ORDERS ? <p className="text-body-sm text-fg-muted">Send up to {MAX_DISPATCH_ORDERS} orders per batch. You can dispatch the remaining packed orders in another batch.</p> : null}
             <ul className="divide-y divide-line rounded-md border border-base">
               {orders.map((o) => {
                 const isSel = selected.has(o.id);
@@ -181,7 +195,7 @@ export function DispatchDialog({ open, onClose }: { open: boolean; onClose: () =
                 return (
                   <li key={o.id} className={isSel ? 'bg-cream px-3 py-3' : 'px-3 py-3'}>
                     <div className="flex flex-wrap items-start gap-3">
-                      <Checkbox label={<span className="sr-only">Select {o.number}</span>} checked={isSel} onChange={() => toggle(o.id)} className="!min-h-0" />
+                      <Checkbox label={<span className="sr-only">Select {o.number}</span>} checked={isSel} disabled={!isSel && selectedIds.length >= MAX_DISPATCH_ORDERS} onChange={() => toggle(o.id)} className="!min-h-0" />
                       <div className="min-w-0 flex-1 basis-48">
                         <p className="flex flex-wrap items-center gap-x-3 font-medium">
                           <OrderNumber number={o.number} />

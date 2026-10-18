@@ -74,6 +74,7 @@ export interface BuilderStimpie {
   name: string;
   type: 'CORE' | 'LIMITED';
   priceCents: number;
+  compareAtPriceCents?: number | null;
   artworkUrl: string;
   artworkWidth: number | null;
   artworkHeight: number | null;
@@ -90,6 +91,7 @@ export interface BuilderPack {
   description: string;
   stimpieCount: number;
   priceCents: number;
+  compareAtPriceCents?: number | null;
   badge: string | null;
 }
 
@@ -105,6 +107,7 @@ export interface BuilderHoodie {
   slug: string;
   name: string;
   priceCents: number;
+  compareAtPriceCents?: number | null;
   images: readonly string[];
   inStock: boolean;
   sizes: readonly BuilderSize[];

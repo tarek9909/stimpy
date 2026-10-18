@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { boolQuery, centsField, pageQuerySchema, searchQuery, slugField, sortQuery } from '../../lib/http';
+import { boolQuery, centsField, pageQuerySchema, searchQuery, sortQuery } from '../../lib/http';
 import { colorSchema, sizeSchema } from '../options/schemas';
 
 // ---------------------------------------------------------------- shared field schemas
@@ -16,6 +16,8 @@ export const longText = z.string().max(2000);
 export const imageList = z.array(assetUrl).max(20);
 
 export const accentColorEnum = z.enum(['BUTTER', 'SKY', 'LILAC']);
+/** Exact runtime colour used by drop accents. */
+export const accentHexField = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Enter a valid hex colour.');
 
 /** `?flag=true|false`, with a default when absent. */
 export const boolQueryDefault = (fallback: boolean) =>
@@ -44,6 +46,7 @@ export const publicStimpieSchema = z
     name: z.string(),
     type: z.enum(['CORE', 'LIMITED']),
     priceCents: z.number().int(),
+    compareAtPriceCents: z.number().int().nullable(),
     story: z.string(),
     images: z.array(z.string()),
     artworkUrl: z.string(),
@@ -63,6 +66,7 @@ export const hoodieSummarySchema = z
     name: z.string(),
     description: z.string(),
     priceCents: z.number().int(),
+    compareAtPriceCents: z.number().int().nullable(),
     images: z.array(z.string()),
     colors: z.array(z.object({ id: z.number().int(), name: z.string(), hex: z.string() })),
     inStock: z.boolean(),
@@ -76,6 +80,7 @@ export const hoodieDetailSchema = z
     name: z.string(),
     description: z.string(),
     priceCents: z.number().int(),
+    compareAtPriceCents: z.number().int().nullable(),
     images: z.array(z.string()),
     inStock: z.boolean(),
     details: z.array(z.string()),
@@ -95,13 +100,16 @@ export const packSchema = z
     description: z.string(),
     stimpieCount: z.number().int(),
     priceCents: z.number().int(),
+    compareAtPriceCents: z.number().int().nullable(),
     badge: z.string().nullable(),
   })
   .meta({ id: 'Pack' });
 
 export const slugParams = z.object({ slug: z.string().min(1).max(140) });
 
-export const publicStimpieQuery = z.object({
+export const publicHoodieQuery = pageQuerySchema;
+export const publicPackQuery = pageQuerySchema;
+export const publicStimpieQuery = pageQuerySchema.extend({
   type: z.enum(['CORE', 'LIMITED']).optional(),
   drop: z.string().min(1).max(140).optional(),
   includeSoldOut: boolQueryDefault(true),
@@ -124,8 +132,9 @@ export const adminHoodieSchema = z
     images: z.array(z.string()),
     active: z.boolean(),
     position: z.number().int(),
+    colorIds: z.array(z.number().int()),
+    sizeIds: z.array(z.number().int()),
     available: z.number().int(),
-    reserved: z.number().int(),
   })
   .meta({ id: 'AdminHoodie' });
 
@@ -147,7 +156,6 @@ export const adminStimpieSchema = z
     position: z.number().int(),
     quantity: z.number().int(),
     available: z.number().int(),
-    reserved: z.number().int(),
   })
   .meta({ id: 'AdminStimpie' });
 
@@ -171,19 +179,20 @@ const detailBullets = z.array(z.string().trim().min(1).max(200)).max(30);
 
 export const hoodieCreateBody = z.strictObject({
   name: nameField,
-  slug: slugField.optional(),
   description: longText.optional(),
   details: detailBullets.optional(),
   priceCents: centsField,
   costCents: centsField.optional(),
   images: imageList.optional(),
   active: z.boolean().optional(),
+  /** Colours and sizes offered by this hoodie; stock is tracked per resulting pair. */
+  colorIds: z.array(z.number().int().min(1)).max(100).optional(),
+  sizeIds: z.array(z.number().int().min(1)).max(100).optional(),
 });
 export const hoodieUpdateBody = hoodieCreateBody.partial();
 
 export const stimpieCreateBody = z.strictObject({
   name: nameField,
-  slug: slugField.optional(),
   type: z.enum(['CORE', 'LIMITED']).optional(),
   dropId: z.number().int().min(1).nullable().optional(),
   priceCents: centsField,
@@ -199,7 +208,6 @@ export const stimpieUpdateBody = stimpieCreateBody.partial();
 
 export const packCreateBody = z.strictObject({
   name: nameField,
-  slug: slugField.optional(),
   description: longText.optional(),
   stimpieCount: z.number().int().min(1).max(5),
   priceCents: centsField,

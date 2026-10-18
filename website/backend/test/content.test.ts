@@ -12,8 +12,8 @@ type Content = {
   business: Record<string, unknown>; announcement: { text: string; linkUrl: string | null } | null;
   homepage: Record<string, unknown>; policies: Record<string, string>; about: string;
   howItWorks: { steps: { title: string; text: string; mediaUrl: string | null }[]; promises: string[]; faqs: { question: string; answer: string }[] };
-  faqs: { id: number; question: string; answer: string; group: string | null; showOnHome: boolean }[];
-  reviews: { id: number; name: string; text: string; mediaUrl: string | null }[];
+  faqs: Page<{ id: number; question: string; answer: string; group: string | null; showOnHome: boolean }>;
+  reviews: Page<{ id: number; name: string; text: string; mediaUrl: string | null }>;
 };
 
 const admin = async (): Promise<TestClient> => (await t.adminClient()).client;
@@ -29,12 +29,12 @@ describe('GET /content (public)', () => {
     expect(Object.keys(c.business).sort()).toEqual(['instagramUrl', 'name', 'supportEmail', 'timezone', 'whatsappNumber']);
     expect(c.business).toMatchObject({ name: 'Stimpy', timezone: 'Asia/Beirut', whatsappNumber: null, instagramUrl: null });
     expect(c.announcement).toBeNull();
-    expect(Object.keys(c.homepage).sort()).toEqual(['featuredDropSlug', 'heroHeadline', 'heroImageUrl', 'heroSubheadline', 'heroVideoUrl']);
+    expect(Object.keys(c.homepage).sort()).toEqual(['featuredDropSlug', 'featuredStimpieSlug', 'heroHeadline', 'heroImageUrl', 'heroSubheadline', 'heroVideoUrl', 'showDropSections']);
     expect(Object.keys(c.policies).sort()).toEqual(['care', 'deliveryReturns', 'privacy', 'terms']);
     expect(c.about).toBe('');
     expect(c.howItWorks).toEqual({ steps: [], promises: [], faqs: [] });
-    expect(c.faqs).toEqual([]);
-    expect(c.reviews).toEqual([]);
+    expect(c.faqs).toMatchObject({ items: [], page: 1, pageSize: 25, total: 0 });
+    expect(c.reviews).toMatchObject({ items: [], page: 1, pageSize: 25, total: 0 });
   });
 
   it('reflects what the owner saved: business settings, announcement, homepage, policies, about, how-it-works, FAQs, visible reviews', async () => {
@@ -52,15 +52,15 @@ describe('GET /content (public)', () => {
     const out = (await t.client.get('/content')).json<Content>();
     expect(out.business).toEqual({ name: 'Stimpy', whatsappNumber: '+9613123456', supportEmail: 'hello@stimpy.local', instagramUrl: 'https://instagram.com/stimpy', timezone: 'Europe/Paris' });
     expect(out.announcement).toEqual({ text: 'Drop 002 is coming', linkUrl: '/drops' });
-    expect(out.homepage).toEqual({ heroHeadline: 'Hello', heroSubheadline: 'World', heroVideoUrl: null, heroImageUrl: IMG, featuredDropSlug: null });
+    expect(out.homepage).toEqual({ heroHeadline: 'Hello', heroSubheadline: 'World', heroVideoUrl: null, heroImageUrl: IMG, featuredDropSlug: null, featuredStimpieSlug: null, showDropSections: true });
     expect(out.policies).toEqual({ deliveryReturns: 'D\n\n**bold**', care: 'C', terms: 'T', privacy: 'P' });
     expect(out.about).toBe('About us');
     expect(out.howItWorks).toEqual({ steps: [{ title: 'One', text: 'First', mediaUrl: IMG }], promises: ['Tested zips'], faqs: [{ question: 'Q?', answer: 'A.' }] });
-    expect(out.faqs).toEqual([expect.objectContaining({ question: 'Second', group: 'Sizing', showOnHome: true })]);
-    expect(Object.keys(out.faqs[0]!).sort()).toEqual(['answer', 'group', 'id', 'question', 'showOnHome']);
-    expect(out.reviews).toHaveLength(1);
-    expect(Object.keys(out.reviews[0]!).sort()).toEqual(['id', 'mediaUrl', 'name', 'text']);
-    expect(out.reviews[0]).toMatchObject({ name: 'Rami', mediaUrl: IMG });
+    expect(out.faqs.items).toEqual([expect.objectContaining({ question: 'Second', group: 'Sizing', showOnHome: true })]);
+    expect(Object.keys(out.faqs.items[0]!).sort()).toEqual(['answer', 'group', 'id', 'question', 'showOnHome']);
+    expect(out.reviews.items).toHaveLength(1);
+    expect(Object.keys(out.reviews.items[0]!).sort()).toEqual(['id', 'mediaUrl', 'name', 'text']);
+    expect(out.reviews.items[0]).toMatchObject({ name: 'Rami', mediaUrl: IMG });
   });
 
   it('announcement is null when switched off or when its text is blank, even if text is stored', async () => {
@@ -84,7 +84,7 @@ describe('GET /content (public)', () => {
     const ids: number[] = [];
     for (const q of ['A', 'B', 'C']) ids.push((await c.post('/admin/faqs', { question: q, answer: 'x' })).json<Faq>().id);
     await c.put('/admin/faqs/order', { ids: [ids[2]!, ids[0]!, ids[1]!] });
-    expect((await t.client.get('/content')).json<Content>().faqs.map((f) => f.question)).toEqual(['C', 'A', 'B']);
+    expect((await t.client.get('/content')).json<Content>().faqs.items.map((f) => f.question)).toEqual(['C', 'A', 'B']);
   });
 });
 
@@ -98,7 +98,7 @@ describe('GET/PUT /admin/content/:key', () => {
     const c = await admin();
     const get = async (k: string) => (await c.get(`/admin/content/${k}`)).json<Record<string, unknown>>();
     expect(await get('announcement')).toEqual({ enabled: false, text: '', linkUrl: null });
-    expect(await get('homepage')).toEqual({ heroHeadline: '', heroSubheadline: '', heroVideoUrl: null, heroImageUrl: null, featuredDropSlug: null });
+    expect(await get('homepage')).toEqual({ heroHeadline: '', heroSubheadline: '', heroVideoUrl: null, heroImageUrl: null, featuredDropSlug: null, featuredStimpieSlug: null, showDropSections: true });
     expect(await get('policies')).toEqual({ deliveryReturns: '', care: '', terms: '', privacy: '' });
     expect(await get('about')).toEqual({ about: '' });
     expect(await get('how-it-works')).toEqual({ steps: [], promises: [], faqs: [] });
@@ -135,7 +135,7 @@ describe('GET/PUT /admin/content/:key', () => {
     await createDrop(t.prisma, { slug: 'drop-009' });
     const ok = await c.put('/admin/content/homepage', { heroHeadline: 'H', heroSubheadline: 'S', heroVideoUrl: 'http://localhost:4000/uploads/v.mp4', heroImageUrl: IMG, featuredDropSlug: 'drop-009' });
     expect(ok.status).toBe(200);
-    expect(ok.json()).toEqual({ heroHeadline: 'H', heroSubheadline: 'S', heroVideoUrl: 'http://localhost:4000/uploads/v.mp4', heroImageUrl: IMG, featuredDropSlug: 'drop-009' });
+    expect(ok.json()).toEqual({ heroHeadline: 'H', heroSubheadline: 'S', heroVideoUrl: 'http://localhost:4000/uploads/v.mp4', heroImageUrl: IMG, featuredDropSlug: 'drop-009', featuredStimpieSlug: null, showDropSections: true });
     expect((await c.get('/admin/content/homepage')).json()).toMatchObject({ featuredDropSlug: 'drop-009' });
     const bad = await c.put('/admin/content/homepage', { heroHeadline: 'x'.repeat(81), heroVideoUrl: 'javascript:1', heroImageUrl: 'not a url', featuredDropSlug: 'Bad Slug' });
     expect(Object.keys(bad.json<Err>().error.fields!).sort()).toEqual(['featuredDropSlug', 'heroHeadline', 'heroImageUrl', 'heroVideoUrl']);
@@ -143,7 +143,7 @@ describe('GET/PUT /admin/content/:key', () => {
     const missing = await c.put('/admin/content/homepage', { heroHeadline: 'H', featuredDropSlug: 'no-such-drop' });
     expect(missing.json<Err>().error.fields).toEqual({ featuredDropSlug: expect.any(String) });
     const cleared = await c.put('/admin/content/homepage', { heroHeadline: 'H' }); // optional fields reset to null / ''
-    expect(cleared.json()).toEqual({ heroHeadline: 'H', heroSubheadline: '', heroVideoUrl: null, heroImageUrl: null, featuredDropSlug: null });
+    expect(cleared.json()).toEqual({ heroHeadline: 'H', heroSubheadline: '', heroVideoUrl: null, heroImageUrl: null, featuredDropSlug: null, featuredStimpieSlug: null, showDropSections: true });
   });
 
   it('PUT policies: four texts up to 20000 characters each; all four are required; the how-to-measure text is not part of it', async () => {
@@ -271,9 +271,9 @@ describe('/admin/reviews', () => {
     // hide without deleting, show again
     const id = r1.json<Review>().id;
     expect((await c.patch(`/admin/reviews/${id}`, { visible: false })).json<Review>().visible).toBe(false);
-    expect((await t.client.get('/content')).json<Content>().reviews).toEqual([]);
+    expect((await t.client.get('/content')).json<Content>().reviews.items).toEqual([]);
     expect((await c.patch(`/admin/reviews/${id}`, { visible: true, text: 'Edited', mediaUrl: null })).json<Review>()).toMatchObject({ visible: true, text: 'Edited', mediaUrl: null });
-    expect((await t.client.get('/content')).json<Content>().reviews.map((r) => r.name)).toEqual(['Rami']);
+    expect((await t.client.get('/content')).json<Content>().reviews.items.map((r) => r.name)).toEqual(['Rami']);
 
     expect((await c.delete(`/admin/reviews/${id}`)).status).toBe(204);
     expect((await c.delete(`/admin/reviews/${id}`)).status).toBe(404);

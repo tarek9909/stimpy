@@ -6,7 +6,7 @@ import { fetchAllPages } from '../../lib/pagination';
 export type ContentKey = 'announcement' | 'homepage' | 'policies' | 'about' | 'how-it-works';
 
 export interface AnnouncementBlock { enabled: boolean; text: string; linkUrl: string | null }
-export interface HomepageBlock { heroHeadline: string; heroSubheadline: string; heroVideoUrl: string | null; heroImageUrl: string | null; featuredDropSlug: string | null }
+export interface HomepageBlock { heroHeadline: string; heroSubheadline: string; heroVideoUrl: string | null; heroImageUrl: string | null; featuredDropSlug: string | null; featuredStimpieSlug: string | null; showDropSections: boolean }
 export interface PoliciesBlock { deliveryReturns: string; care: string; terms: string; privacy: string }
 export interface AboutBlock { about: string }
 export interface HowItWorksBlock {
@@ -35,10 +35,12 @@ export function useContentBlock<K extends ContentKey>(key: K) {
 export function useSaveContent<K extends ContentKey>(key: K) {
   const qc = useQueryClient();
   return useMutation({
+    mutationKey: queryKeys.content(key),
     mutationFn: async (body: ContentBlocks[K]) =>
       (await unwrap(api.PUT('/api/v1/admin/content/{key}', { params: { path: { key } }, body: body as unknown as Record<string, unknown> }))) as unknown as ContentBlocks[K],
     onSuccess: (saved) => {
       qc.setQueryData(queryKeys.content(key), saved);
+      void qc.invalidateQueries({ queryKey: queryKeys.overview });
     },
   });
 }

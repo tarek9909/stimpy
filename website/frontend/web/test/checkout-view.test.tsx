@@ -370,7 +370,7 @@ describe('checkout view', () => {
       return inner(path, opts);
     };
     get = (path, opts) => {
-      if (path.endsWith('/products/stimpies')) return { data: [stimpie({ id: 8, slug: 'alt', name: 'THE EYE' })] };
+      if (path.endsWith('/products/stimpies')) return { data: { items: [stimpie({ id: 8, slug: 'alt', name: 'THE EYE' })], page: 1, pageSize: 100, total: 1 } };
       return defaultGet(path, opts);
     };
     await act(async () => {

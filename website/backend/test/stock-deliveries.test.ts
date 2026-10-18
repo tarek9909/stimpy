@@ -29,11 +29,12 @@ describe('admin stock', () => {
     const j = r.json();
     expect(j.colors.map((c: { name: string }) => c.name)).toEqual(['Black', 'Cream']);
     expect(j.sizes.map((s: { label: string }) => s.label)).toEqual(['S', 'M', 'L']);
-    expect(j.hoodies).toHaveLength(1);
-    expect(j.hoodies[0].cells).toHaveLength(6);
-    const cell = j.hoodies[0].cells.find((c: { colorId: number; sizeId: number }) => c.colorId === w.colors.black.id && c.sizeId === w.sizes.m.id);
+    expect(j.items).toHaveLength(1);
+    expect(j.total).toBe(1);
+    expect(j.items[0].cells).toHaveLength(6);
+    const cell = j.items[0].cells.find((c: { colorId: number; sizeId: number }) => c.colorId === w.colors.black.id && c.sizeId === w.sizes.m.id);
     expect(cell).toMatchObject({ quantity: 20, reserved: 1, available: 19 });
-    const order = j.hoodies[0].cells.map((c: { colorId: number; sizeId: number }) => [c.colorId, c.sizeId]);
+    const order = j.items[0].cells.map((c: { colorId: number; sizeId: number }) => [c.colorId, c.sizeId]);
     expect(order[0]).toEqual([w.colors.black.id, w.sizes.s.id]); // colour-major, size order
   });
 
@@ -44,6 +45,7 @@ describe('admin stock', () => {
     await t.ctx.settings.update({ orders: { lowStockThreshold: 5 } });
     const j = (await client.get('/admin/stock/stimpies')).json();
     expect(j.items).toHaveLength(5);
+    expect(j.total).toBe(5);
     const void_ = j.items.find((i: { name: string }) => i.name === 'THE VOID');
     expect(void_).toMatchObject({ type: 'CORE', dropName: null, quantity: 4, reserved: 0, available: 4, low: true });
     expect(j.items.find((i: { name: string }) => i.name === 'THE SIGNAL')).toMatchObject({ type: 'LIMITED', dropName: 'Drop 001', low: false });
@@ -189,7 +191,7 @@ describe('public GET /delivery/fees', () => {
     const r = await t.client.get('/delivery/fees');
     expect(r.status).toBe(200);
     const j = r.json();
-    expect(j.defaultFeeCents).toBe(300);
+    expect(j.defaultFeeCents).toBe(500);
     expect(j.areas.map((a: { name: string }) => a.name)).toEqual(['Beirut', 'Mount Lebanon']);
     expect(j.areas[0]).toMatchObject({ feeCents: null, estDays: null });
     expect(j.areas[1]).toMatchObject({ feeCents: 500, estDays: 3 });
@@ -347,7 +349,7 @@ describe('admin delivery settings', () => {
     const w = await buildWorld(t.prisma);
     const { client } = await t.adminClient();
     const got = (await client.get('/admin/settings/delivery')).json();
-    expect(got).toEqual({ defaultFeeCents: 300, estimateText: expect.any(String) });
+    expect(got).toEqual({ defaultFeeCents: 500, estimateText: '4–5 business days' });
     const upd = await client.patch('/admin/settings/delivery', { defaultFeeCents: 450 });
     expect(upd.json()).toMatchObject({ defaultFeeCents: 450, estimateText: got.estimateText });
     expect((await client.patch('/admin/settings/delivery', { estimateText: '2 to 3 days' })).json().estimateText).toBe('2 to 3 days');

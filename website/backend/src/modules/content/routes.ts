@@ -1,5 +1,5 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { errorResponses, idParams, pageSchema, publicCache } from '../../lib/http';
+import { errorResponses, idParams, pageQuerySchema, pageSchema, publicCache } from '../../lib/http';
 import { noContent } from '../auth/schemas';
 import { reorderBody } from '../options/schemas';
 import type { ModuleDef } from '../module';
@@ -23,10 +23,10 @@ import * as svc from './service';
 
 const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get('/content', {
-    schema: { tags: ['content'], summary: 'Everything the pages show that the owner edits (announcement, texts, FAQs, reviews)', response: { 200: publicContentSchema } },
-  }, async (_req, reply) => {
+    schema: { tags: ['content'], summary: 'Page content with paginated FAQs and reviews', querystring: pageQuerySchema, response: { 200: publicContentSchema } },
+  }, async (req, reply) => {
     publicCache(reply);
-    return svc.getPublicContent(app.ctx);
+    return svc.getPublicContent(app.ctx, req.query);
   });
 
   app.get('/builder/config', {
@@ -49,7 +49,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
     schema: {
       tags,
       summary: 'Replace a content block (the body is validated per key)',
-      description: 'announcement {enabled,text,linkUrl}; homepage {heroHeadline,heroSubheadline,heroVideoUrl,heroImageUrl,featuredDropSlug}; policies {deliveryReturns,care,terms,privacy}; about {about}; how-it-works {steps,promises,faqs}.',
+      description: 'announcement {enabled,text,linkUrl}; homepage {heroHeadline,heroSubheadline,heroVideoUrl,heroImageUrl,featuredDropSlug,featuredStimpieSlug,showDropSections}; policies {deliveryReturns,care,terms,privacy}; about {about}; how-it-works {steps,promises,faqs}.',
       params: contentKeyParams,
       body: contentBody,
       response: { 200: adminContentResponse, ...errorResponses },

@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo, cn } from '@stimpy/ui';
 import { cartItemCount } from '@/features/cart/helpers';
@@ -10,9 +8,10 @@ import { cartStore, useCart } from '@/features/cart/store';
 import { PRIMARY_NAV, isActivePath } from '@/lib/nav';
 import { track } from '@/lib/track';
 import { useSaveData } from '@/lib/useSaveData';
+import { NavigationLink as Link } from '../NavigationLink';
 import { Menu, ShoppingBag } from '../icons';
-
-const MobileMenu = dynamic(() => import('./MobileMenu').then((module) => module.MobileMenu), { ssr: false });
+import { preloadCartDrawer } from './CartDrawerGate';
+import { MobileMenu } from './MobileMenu';
 
 /** Count shown in the badge: capped at "9+" visually; the accessible name carries the real number. */
 export function badgeText(count: number): string {
@@ -74,7 +73,7 @@ export function Header() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    prefetch={saveData ? false : undefined}
+                    prefetch={!saveData}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => track('nav_click', { item: item.href })}
                     className={cn(
@@ -98,6 +97,9 @@ export function Header() {
             aria-label={cartLabel(shown)}
             aria-haspopup="dialog"
             title="Open shopping bag"
+            onMouseEnter={preloadCartDrawer}
+            onFocus={preloadCartDrawer}
+            onTouchStart={preloadCartDrawer}
             onClick={() => cartStore.getState().openDrawer()}
             className="relative inline-flex h-11 w-11 items-center justify-center rounded-md text-fg hover:bg-cream"
           >

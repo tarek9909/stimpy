@@ -4,7 +4,6 @@ import type { AppContext } from '../../context';
 import { jsonStringArray, isUniqueViolation } from '../../lib/db';
 import { AppError } from '../../lib/errors';
 import { parseSort, toPage, toSkipTake, type Page } from '../../lib/http';
-import { ensureVariants } from '../../services/variants';
 import type {
   OptionListQuery,
   colorCreateBody,
@@ -25,7 +24,7 @@ export type ColorDto = {
   builderTexture: string | null;
 };
 export type SizeDto = { id: number; label: string; position: number; active: boolean };
-export type StockSummary = { available: number; reserved: number };
+export type StockSummary = { available: number };
 
 export const toColorDto = (c: Color): ColorDto => ({
   id: c.id,
@@ -58,17 +57,17 @@ async function variantSums(ctx: AppContext, by: 'colorId' | 'sizeId', ids: numbe
   if (!ids.length) return out;
   const rows = await ctx.prisma.hoodieVariant.groupBy({
     by: [by],
-    where: { [by]: { in: ids } } as Prisma.HoodieVariantWhereInput,
+    where: { [by]: { in: ids }, active: true, hoodie: { active: true }, color: { active: true }, size: { active: true } } as Prisma.HoodieVariantWhereInput,
     _sum: { quantity: true, reserved: true },
   });
   for (const r of rows) {
     const q = r._sum.quantity ?? 0;
     const res = r._sum.reserved ?? 0;
-    out.set(r[by], { available: q - res, reserved: res });
+    out.set(r[by], { available: q - res });
   }
   return out;
 }
-const noStock: StockSummary = { available: 0, reserved: 0 };
+const noStock: StockSummary = { available: 0 };
 
 // ================================================================ colours
 
@@ -112,8 +111,6 @@ export async function createColor(ctx: AppContext, input: z.infer<typeof colorCr
           builderTexture: input.builderTexture ?? null,
         },
       });
-      // A new colour gets zero-stock variants for every hoodie x active size.
-      await ensureVariants(tx, { colorId: row.id });
       return row.id;
     });
     return await getColor(ctx, id);
@@ -140,8 +137,6 @@ export async function updateColor(ctx: AppContext, id: number, input: z.infer<ty
           ...(input.builderTexture !== undefined ? { builderTexture: input.builderTexture } : {}),
         },
       });
-      // Re-activating a colour fills any variants that were never created while it was hidden.
-      if (row.active) await ensureVariants(tx, { colorId: id });
     });
     return await getColor(ctx, id);
   } catch (e) {
@@ -198,8 +193,6 @@ export async function createSize(ctx: AppContext, input: z.infer<typeof sizeCrea
     const id = await ctx.prisma.$transaction(async (tx) => {
       const position = input.position ?? ((await tx.size.aggregate({ _max: { position: true } }))._max.position ?? 0) + 1;
       const row = await tx.size.create({ data: { label: input.label, position, active: input.active ?? true } });
-      // A new size gets zero-stock variants for every hoodie x active colour.
-      await ensureVariants(tx, { sizeId: row.id });
       return row.id;
     });
     return await getSize(ctx, id);
@@ -221,7 +214,6 @@ export async function updateSize(ctx: AppContext, id: number, input: z.infer<typ
           ...(input.active !== undefined ? { active: input.active } : {}),
         },
       });
-      if (row.active) await ensureVariants(tx, { sizeId: id });
     });
     return await getSize(ctx, id);
   } catch (e) {

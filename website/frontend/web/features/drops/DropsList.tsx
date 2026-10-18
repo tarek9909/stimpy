@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Badge, Button, Media, Pill, Section, accentTone, pluralize } from '@stimpy/ui';
+import { Badge, Button, Media, Pill, Section, accentColorStyle, accentTone, pluralize } from '@stimpy/ui';
 import type { Drop } from '@stimpy/api-client';
 import { DropStart } from '@/components/DropStart';
 import { HeroMedia } from '@/components/HeroMedia';
@@ -11,7 +11,7 @@ import { SubscribeForm } from './SubscribeForm';
 /** The current (live) drop: wide banner on the drop's own accent colour, the one accent of the page hero. */
 export function CurrentDropBanner({ drop, timeZone }: { drop: Drop; timeZone: string }) {
   return (
-    <Section tone="accent" accentColor={drop.accentColor} aria-label="Current drop">
+    <Section tone="accent" accentColor={drop.accentColor} accentHex={drop.accentHex} aria-label="Current drop">
       <div className="grid gap-8 md:grid-cols-2 md:items-center">
         <div className="flex flex-col gap-4">
           <Badge kind="CUSTOM" label="Live now" tone="black" className="self-start" />
@@ -47,7 +47,7 @@ export function UpcomingDropCard({ drop, timeZone }: { drop: Drop; timeZone: str
       <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge kind="UPCOMING" />
-          <Pill tone={accentTone(drop.accentColor)}>{drop.name}</Pill>
+          <Pill tone={accentTone(drop.accentColor)} style={accentColorStyle(drop.accentHex)}>{drop.name}</Pill>
         </div>
         <h3 className="text-h3 text-fg">
           <Link href={`/drops/${drop.slug}`}>{drop.name}</Link>
@@ -73,7 +73,7 @@ export function ArchiveDropCard({ drop }: { drop: Drop }) {
         <Media src={drop.teaserImage ?? drop.stimpies[0]?.artworkUrl} alt={`${drop.name} drop`} ratio="4 / 5" sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 50vw" />
       </div>
       <div className="flex flex-col gap-2 p-3 md:p-4">
-        <Pill tone={accentTone(drop.accentColor)} className="self-start">
+        <Pill tone={accentTone(drop.accentColor)} className="self-start" style={accentColorStyle(drop.accentHex)}>
           {drop.state === 'SOLD_OUT' ? 'Sold out' : 'Ended'}
         </Pill>
         <h3 className="text-h4 text-fg">

@@ -3,16 +3,6 @@ import type { Schemas } from '../../api/client';
 
 export type AdminDrop = Schemas['AdminDrop'];
 export type DropState = AdminDrop['state'];
-export type Accent = AdminDrop['accentColor'];
-
-/** Accent colours with their exact brand hexes (open-questions G1). The server returns the same hexes as `accentHex`. */
-export const ACCENTS: ReadonlyArray<{ value: Accent; label: string; hex: string }> = [
-  { value: 'BUTTER', label: 'Butter', hex: '#FFE45C' },
-  { value: 'SKY', label: 'Sky', hex: '#5CC8FF' },
-  { value: 'LILAC', label: 'Lilac', hex: '#C9B6FF' },
-];
-
-export const accentLabel = (a: Accent): string => ACCENTS.find((x) => x.value === a)?.label ?? a;
 
 export const STATE_LABEL: Record<DropState, string> = {
   UPCOMING: 'Upcoming',
@@ -37,9 +27,8 @@ export function dropControls(state: DropState) {
 export const dropSchema = z
   .object({
     name: z.string().trim().min(1, 'Enter a name.').max(120, 'Use at most 120 characters.'),
-    slug: z.string().trim().min(1, 'Enter a slug.').regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers and hyphens.'),
     story: z.string().max(2000, 'Use at most 2000 characters.'),
-    accentColor: z.enum(['BUTTER', 'SKY', 'LILAC']),
+    accentHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Enter a valid hex colour.'),
     startsAt: z.string().nullable(),
     endsAt: z.string().nullable(),
     stimpieIds: z.array(z.number()),
@@ -52,13 +41,12 @@ export const dropSchema = z
   });
 export type DropFormValues = z.infer<typeof dropSchema>;
 
-export const NEW_DROP: DropFormValues = { name: '', slug: '', story: '', accentColor: 'BUTTER', startsAt: null, endsAt: null, stimpieIds: [], teaserImage: null, teaserVideo: null };
+export const NEW_DROP: DropFormValues = { name: '', story: '', accentHex: '#FFE45C', startsAt: null, endsAt: null, stimpieIds: [], teaserImage: null, teaserVideo: null };
 
 export const toDropValues = (d: AdminDrop): DropFormValues => ({
   name: d.name,
-  slug: d.slug,
   story: d.story,
-  accentColor: d.accentColor,
+  accentHex: d.accentHex,
   startsAt: d.startsAt,
   endsAt: d.endsAt,
   stimpieIds: d.stimpies.map((s) => s.id),
@@ -70,9 +58,8 @@ export const toDropValues = (d: AdminDrop): DropFormValues => ({
 export function toDropBody(v: DropFormValues) {
   return {
     name: v.name.trim(),
-    slug: v.slug.trim(),
     story: v.story,
-    accentColor: v.accentColor,
+    accentHex: v.accentHex.toUpperCase(),
     startsAt: v.startsAt as string,
     endsAt: v.endsAt,
     stimpieIds: v.stimpieIds,

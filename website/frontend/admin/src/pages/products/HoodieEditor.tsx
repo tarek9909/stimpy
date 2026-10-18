@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useMemo, useState } from 'react';
+import { useForm, useFormContext, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import { Banner, Button, useToast } from '@stimpy/ui';
+import { Banner, Button, TextLink, useToast } from '@stimpy/ui';
 import { api, unwrap } from '../../api/client';
 import { queryKeys } from '../../api/queryKeys';
 import { AdminForm } from '../../components/form/AdminForm';
@@ -13,35 +13,37 @@ import { ImageListField, StringListField } from '../../components/form/ListField
 import { useFormDraft } from '../../components/form/useFormDraft';
 import { QueryBoundary } from '../../components/QueryBoundary';
 import { centsToDollarString } from '../../lib/format';
-import { dollarsToCents, moneySchema, slugify, slugSchema } from '../../lib/schemas';
+import { dollarsToCents, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
-import { invalidateFor, useHoodie, type AdminHoodie } from './api';
+import { invalidateFor, useColors, useHoodie, useSizes, type AdminHoodie } from './api';
 import { DeleteOrHide, EditorFrame } from './shared';
 import { Skeleton } from '@stimpy/ui';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Enter a name.').max(120, 'Use at most 120 characters.'),
-  slug: slugSchema,
   description: z.string().max(2000, 'Use at most 2000 characters.'),
   details: z.array(z.string().trim().min(1, 'Fill in or remove this line.')),
   price: moneySchema(),
   cost: moneySchema(),
   images: z.array(z.string()),
+  colorIds: z.array(z.number().int()),
+  sizeIds: z.array(z.number().int()),
   active: z.boolean(),
 });
 type Values = z.infer<typeof schema>;
 
-const NEW_DEFAULTS: Values = { name: '', slug: '', description: '', details: [], price: '', cost: '10.00', images: [], active: true };
+const NEW_DEFAULTS: Values = { name: '', description: '', details: [], price: '', cost: '10.00', images: [], colorIds: [], sizeIds: [], active: true };
 
 function toValues(h: AdminHoodie): Values {
   return {
     name: h.name,
-    slug: h.slug,
     description: h.description,
     details: h.details,
     price: centsToDollarString(h.priceCents),
     cost: centsToDollarString(h.costCents),
     images: h.images,
+    colorIds: h.colorIds,
+    sizeIds: h.sizeIds,
     active: h.active,
   };
 }
@@ -67,30 +69,59 @@ export function HoodieEditor({ id, onClose, onCreated }: EditorProps) {
   );
 }
 
+type Choice = { id: number; label: string; active: boolean; hex?: string };
+
+function VariantChoices({ name, label, choices }: { name: 'colorIds' | 'sizeIds'; label: string; choices: Choice[] }) {
+  const { control, setValue } = useFormContext<Values>();
+  const selected = useWatch({ control, name }) ?? [];
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="text-body-sm font-medium">{label}</legend>
+      {choices.length === 0 ? <p className="text-body-sm text-fg-muted">Add options in <TextLink href="/products?tab=options">Products → Options</TextLink> first.</p> : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {choices.map((choice) => (
+            <label key={choice.id} className="flex min-h-11 items-center gap-2 rounded-md border border-base px-3 py-2 text-body-sm">
+              <input
+                type="checkbox"
+                checked={selected.includes(choice.id)}
+                disabled={!choice.active && !selected.includes(choice.id)}
+                onChange={(event) => {
+                  const next = event.target.checked ? [...selected, choice.id] : selected.filter((id) => id !== choice.id);
+                  setValue(name, next, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                }}
+              />
+              {choice.hex ? <span className="h-4 w-4 shrink-0 rounded-full border border-base" style={{ backgroundColor: choice.hex }} aria-hidden="true" /> : null}
+              <span>{choice.label}</span>
+              {!choice.active ? <span className="text-caption text-fg-muted">Hidden</span> : null}
+            </label>
+          ))}
+        </div>
+      )}
+    </fieldset>
+  );
+}
+
 function HoodieForm({ initial, onClose, onCreated, crumbs }: { initial: AdminHoodie | null; onClose: () => void; onCreated?: EditorProps['onCreated']; crumbs: { label: string; to?: string }[] }) {
   const qc = useQueryClient();
   const toast = useToast();
+  const colors = useColors();
+  const sizes = useSizes();
   const defaults = useMemo(() => (initial ? toValues(initial) : NEW_DEFAULTS), [initial]);
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: defaults, mode: 'onSubmit', reValidateMode: 'onChange' });
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const draft = useFormDraft(form);
   const [uploading, setUploading] = useState(false);
-  const slugTouched = useRef(initial !== null);
-  const name = form.watch('name');
   const priceNow = form.watch('price');
-
-  useEffect(() => {
-    if (!slugTouched.current) form.setValue('slug', slugify(name), { shouldDirty: false });
-  }, [name, form]);
 
   const body = (v: Values) => ({
     name: v.name,
-    slug: v.slug,
     description: v.description,
     details: v.details,
     priceCents: dollarsToCents(v.price),
     costCents: dollarsToCents(v.cost),
     images: v.images,
+    colorIds: v.colorIds,
+    sizeIds: v.sizeIds,
     active: v.active,
   });
 
@@ -131,7 +162,7 @@ function HoodieForm({ initial, onClose, onCreated, crumbs }: { initial: AdminHoo
         />
       ) : null}
       <Button variant="secondary" onClick={onClose}>Cancel</Button>
-      <Button type="submit" form="hoodie-form" variant="primary" loading={form.formState.isSubmitting || save.isPending} disabled={uploading}>
+      <Button type="submit" form="hoodie-form" variant="primary" loading={form.formState.isSubmitting || save.isPending} disabled={uploading || colors.isPending || sizes.isPending || colors.isError || sizes.isError}>
         {initial ? 'Save hoodie' : 'Create hoodie'}
       </Button>
     </>
@@ -159,9 +190,6 @@ function HoodieForm({ initial, onClose, onCreated, crumbs }: { initial: AdminHoo
       >
         <FormSection title="Details">
           <TextField name="name" label="Name" required maxLength={120} autoComplete="off" />
-          <div onChange={() => { slugTouched.current = true; }}>
-            <TextField name="slug" label="Slug" required hint="Used in the website address. Lowercase letters, numbers and hyphens." autoComplete="off" />
-          </div>
           <TextAreaField name="description" label="Description" rows={4} maxLength={2000} showCount />
           <StringListField name="details" label="Details" addLabel="Add detail" placeholder="e.g. 400 gsm cotton fleece" hint="Short bullet points shown on the product page." />
         </FormSection>
@@ -171,6 +199,19 @@ function HoodieForm({ initial, onClose, onCreated, crumbs }: { initial: AdminHoo
             <MoneyField name="cost" label="Cost" required hint="Default $10. Hardware cost is added separately in Settings." />
           </div>
           {initial && centsToDollarString(initial.priceCents) !== priceNow.trim() ? <Banner variant="warning">New orders use the new price. Existing orders keep theirs.</Banner> : null}
+        </FormSection>
+        <FormSection title="Colours and sizes" description="Choose the options sold for this hoodie. Each selected colour/size pair gets its own quantity in Stock.">
+          {colors.isError || sizes.isError ? <p className="text-body-sm text-fg-danger">Couldn&apos;t load the available colours and sizes. Refresh this page to try again.</p> : null}
+          <VariantChoices
+            name="colorIds"
+            label="Colours"
+            choices={(colors.data?.items ?? []).map((color) => ({ id: color.id, label: color.name, active: color.active, hex: color.hex }))}
+          />
+          <VariantChoices
+            name="sizeIds"
+            label="Sizes"
+            choices={(sizes.data?.items ?? []).map((size) => ({ id: size.id, label: size.label, active: size.active }))}
+          />
         </FormSection>
         <FormSection title="Images">
           <ImageListField name="images" label="Photos" onBusyChange={setUploading} />

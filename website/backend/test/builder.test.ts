@@ -125,7 +125,7 @@ describe('GET /builder/config: shape', () => {
     expect((await t.client.get('/builder/config')).json<Public>().hoodie!.id).toBe(second.id);
   });
 
-  it('a colour is listed only once its look is set (2D asset, tint or texture), only while active, in colour order', async () => {
+  it('a colour is listed only once its look is set and it is active and assigned to the Builder hoodie, in colour order', async () => {
     const w = await buildWorld(t.prisma);
     const tinted = await createColor(t.prisma, { name: 'Tinted', position: 10 });
     await t.prisma.color.update({ where: { id: tinted.id }, data: { builderTint: '#00AAFF' } });
@@ -142,9 +142,9 @@ describe('GET /builder/config: shape', () => {
       ],
     });
     const b = (await t.client.get('/builder/config')).json<Public>();
-    expect(b.colors.map((c) => c.colorId)).toEqual([w.colors.cream.id, tinted.id]);
+    expect(b.colors.map((c) => c.colorId)).toEqual([w.colors.cream.id]);
     expect(b.colors.find((c) => c.colorId === unset.id)).toBeUndefined();
-    expect(b.colors[1]).toMatchObject({ tint: '#00AAFF', hoodieImage2d: null, placement2d: null });
+    expect(b.colors.find((c) => c.colorId === tinted.id)).toBeUndefined(); // the shared colour is not assigned to this hoodie
   });
 
   it('per-Stimpie textures are listed only for existing, active Stimpies', async () => {

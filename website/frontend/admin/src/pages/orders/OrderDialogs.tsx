@@ -45,7 +45,7 @@ function FormModal({
       title={title}
       description={description}
       size="md"
-      closeOnBackdrop={false}
+      closeOnBackdrop={!submitting}
       closeOnEsc={!submitting}
       footer={
         <>
@@ -235,7 +235,7 @@ export function EditDeliveryNumberDialog({
       onClose={onClose}
       title="Edit delivery number"
       size="sm"
-      closeOnBackdrop={false}
+      closeOnBackdrop={!busy}
       closeOnEsc={!busy}
       footer={
         <>

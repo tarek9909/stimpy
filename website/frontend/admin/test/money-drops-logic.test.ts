@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, averageProfitCents, describeRange, detectPreset, formatPercent, presetRange, unitsPerHour } from '../src/lib/ranges';
-import { ACCENTS, dropControls, dropSchema, formatDuration, hoursToSellOut, launchInPast, NEW_DROP, overlappingLive, toDropBody } from '../src/pages/drops/dropForm';
+import { dropControls, dropSchema, formatDuration, hoursToSellOut, launchInPast, NEW_DROP, overlappingLive, toDropBody } from '../src/pages/drops/dropForm';
 import { formatMoney } from '../src/lib/format';
 
 describe('range presets (business time zone dates)', () => {
@@ -46,26 +46,19 @@ describe('finance and insights formatting', () => {
 });
 
 describe('drop form and state controls', () => {
-  const valid = { ...NEW_DROP, name: 'Drop 03', slug: 'drop-03', startsAt: '2026-11-01T18:00:00.000Z' };
-  it('accent colours are exactly Butter/Sky/Lilac with the brand hexes', () => {
-    expect(ACCENTS.map((a) => [a.value, a.label, a.hex])).toEqual([
-      ['BUTTER', 'Butter', '#FFE45C'],
-      ['SKY', 'Sky', '#5CC8FF'],
-      ['LILAC', 'Lilac', '#C9B6FF'],
-    ]);
-  });
-  it('requires name, slug format, a launch and an end after the launch', () => {
+  const valid = { ...NEW_DROP, name: 'Drop 03', startsAt: '2026-11-01T18:00:00.000Z' };
+  it('requires a name, valid accent hex, launch and an end after launch', () => {
     expect(dropSchema.safeParse(valid).success).toBe(true);
-    const bad = dropSchema.safeParse({ ...valid, name: ' ', slug: 'Bad Slug', startsAt: null });
+    const bad = dropSchema.safeParse({ ...valid, name: ' ', accentHex: 'sky', startsAt: null });
     expect(bad.success).toBe(false);
     const paths = bad.success ? [] : bad.error.issues.map((i) => i.path[0]);
-    expect(paths).toEqual(expect.arrayContaining(['name', 'slug', 'startsAt']));
+    expect(paths).toEqual(expect.arrayContaining(['name', 'accentHex', 'startsAt']));
     const end = dropSchema.safeParse({ ...valid, endsAt: '2026-11-01T17:00:00.000Z' });
     expect(end.success ? '' : end.error.issues[0]?.message).toBe('The end must be after the launch.');
   });
   it('builds the API body with the assigned Stimpie ids', () => {
-    const body = toDropBody({ ...valid, stimpieIds: [3, 5], story: 's', accentColor: 'SKY' });
-    expect(body).toMatchObject({ name: 'Drop 03', slug: 'drop-03', accentColor: 'SKY', stimpieIds: [3, 5], endsAt: null, startsAt: '2026-11-01T18:00:00.000Z' });
+    const body = toDropBody({ ...valid, stimpieIds: [3, 5], story: 's', accentHex: '#5cc8ff' });
+    expect(body).toMatchObject({ name: 'Drop 03', accentHex: '#5CC8FF', stimpieIds: [3, 5], endsAt: null, startsAt: '2026-11-01T18:00:00.000Z' });
   });
   it('state controls: upcoming editable, live can end, ended read-only', () => {
     expect(dropControls('UPCOMING')).toMatchObject({ canEdit: true, startsAtLocked: false, canEnd: false });

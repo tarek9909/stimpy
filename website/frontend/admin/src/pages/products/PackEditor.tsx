@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +11,7 @@ import { FormSection } from '../../components/form/FormSection';
 import { useFormDraft } from '../../components/form/useFormDraft';
 import { QueryBoundary } from '../../components/QueryBoundary';
 import { centsToDollarString, formatMoney } from '../../lib/format';
-import { dollarsToCents, moneySchema, slugify, slugSchema } from '../../lib/schemas';
+import { dollarsToCents, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { invalidateFor, usePack, usePacks, type AdminPack } from './api';
 import { DeleteOrHide, EditorFrame } from './shared';
@@ -19,7 +19,6 @@ import type { EditorProps } from './HoodieEditor';
 
 const schema = z.object({
   name: z.string().trim().min(1, 'Enter a name.').max(120, 'Use at most 120 characters.'),
-  slug: slugSchema,
   description: z.string().max(2000, 'Use at most 2000 characters.'),
   stimpieCount: z.string().regex(/^[1-5]$/, 'Choose 1 to 5 Stimpies.'),
   price: moneySchema(),
@@ -28,10 +27,9 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-const NEW_DEFAULTS: Values = { name: '', slug: '', description: '', stimpieCount: '1', price: '', badge: '', active: true };
+const NEW_DEFAULTS: Values = { name: '', description: '', stimpieCount: '1', price: '', badge: '', active: true };
 const toValues = (p: AdminPack): Values => ({
   name: p.name,
-  slug: p.slug,
   description: p.description,
   stimpieCount: String(p.stimpieCount),
   price: centsToDollarString(p.priceCents),
@@ -59,15 +57,9 @@ function PackForm({ initial, onClose, crumbs }: { initial: AdminPack | null; onC
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: defaults, mode: 'onSubmit', reValidateMode: 'onChange' });
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const draft = useFormDraft(form);
-  const [name, price, count] = form.watch(['name', 'price', 'stimpieCount']);
-  const slugTouched = useRef(initial !== null);
-  useEffect(() => {
-    if (!slugTouched.current) form.setValue('slug', slugify(name));
-  }, [name, form]);
-
+  const [price, count] = form.watch(['price', 'stimpieCount']);
   const body = (v: Values) => ({
     name: v.name,
-    slug: v.slug,
     description: v.description,
     stimpieCount: Number(v.stimpieCount),
     priceCents: dollarsToCents(v.price),
@@ -135,11 +127,10 @@ function PackForm({ initial, onClose, crumbs }: { initial: AdminPack | null; onC
       >
         <FormSection title="Pack">
           <TextField name="name" label="Name" required maxLength={120} autoComplete="off" />
-          <div onChange={() => { slugTouched.current = true; }}><TextField name="slug" label="Slug" required autoComplete="off" hint="Lowercase letters, numbers and hyphens." /></div>
           <TextAreaField name="description" label="Description" rows={3} maxLength={2000} />
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectField name="stimpieCount" label="Stimpies in the pack" required options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))} />
-            <TextField name="badge" label="Badge" optional maxLength={30} placeholder="Most popular" />
+            <TextField name="badge" label="Badge" optional maxLength={30} placeholder="e.g. Two looks" />
           </div>
         </FormSection>
         <FormSection title="Price">

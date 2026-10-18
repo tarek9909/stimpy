@@ -134,7 +134,14 @@ const publicItem = z.object({
   qty: z.number().int(),
   unitPriceCents: z.number().int(),
   lineTotalCents: z.number().int(),
-  details: z.object({ hoodie: z.string().nullable(), color: z.string().nullable(), size: z.string().nullable(), stimpies: z.array(z.string()) }),
+  details: z.object({
+    hoodie: z.string().nullable(),
+    color: z.string().nullable(),
+    size: z.string().nullable(),
+    stimpies: z.array(z.string()),
+    hoodieImage: z.string().nullable().optional(),
+    stimpieImages: z.array(z.object({ name: z.string(), imageUrl: z.string().nullable() })).optional(),
+  }),
 });
 export const orderItemSchema = publicItem.meta({ id: 'OrderItem' });
 

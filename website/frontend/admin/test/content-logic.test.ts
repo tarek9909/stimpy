@@ -20,6 +20,7 @@ import {
 import { asToken, findTokens, insertAtCursor, unknownPlaceholders } from '../src/pages/content/placeholders';
 import { faqGroups, filterFaqs, moveInView, normalizeGroup, UNGROUPED } from '../src/pages/content/faqLogic';
 import {
+  builderOptionScope,
   effectiveModeOf,
   emptyColorEntry,
   formFingerprint,
@@ -289,6 +290,21 @@ const baseForm = (): AdminBuilder => ({
 });
 
 describe('Builder form mapping', () => {
+  it('previews only the selected hoodie options and falls back when that hoodie is hidden', () => {
+    const hoodies = [
+      { id: 1, slug: 'first', name: 'First', active: true, colorIds: [1], sizeIds: [10] },
+      { id: 2, slug: 'second', name: 'Second', active: true, colorIds: [2, 3], sizeIds: [11] },
+    ];
+    const colors = [{ id: 1, active: true }, { id: 2, active: true }, { id: 3, active: false }, { id: 4, active: true }];
+    const sizes = [{ id: 10, active: true }, { id: 11, active: true }];
+    expect(builderOptionScope(2, hoodies, colors, sizes).colors.map((c) => c.id)).toEqual([2]);
+    const hidden = hoodies.map((h) => ({ ...h, active: h.id !== 2 }));
+    const fallback = builderOptionScope(2, hidden, colors, sizes);
+    expect(fallback.hoodie?.id).toBe(1);
+    expect(fallback.colors.map((c) => c.id)).toEqual([1]);
+    expect(builderOptionScope(2, hoodies, colors, [{ id: 10, active: true }, { id: 11, active: false }]).colors).toEqual([]);
+    expect(builderOptionScope(null, [], colors, sizes).colors).toEqual([]);
+  });
   it('PUT body is the full writable object without the read-only mirrors', () => {
     const body = toPutBody(baseForm());
     expect(Object.keys(body).sort()).toEqual(['colors', 'defaultView', 'hoodieId', 'mode', 'model3d', 'stimpieTextures']);
@@ -321,11 +337,11 @@ describe('Builder form mapping', () => {
     expect(r).toEqual({ model3d: true, colors2d: [{ colorId: 1, ready: true }, { colorId: 2, ready: false }], overlays2d: 1, stimpieTextures: 1 });
     expect(modeNotes(f, r)).toEqual([]);
     const none = { ...f, model3d: null };
-    expect(modeNotes(none, readinessOf(none, [1, 2]))[0]).toBe('No 3D model uploaded yet. The website will fall back to 2D until you upload one.');
+    expect(modeNotes(none, readinessOf(none, [1, 2]))[0]).toBe('No 3D model is configured. The website will use 2D until the model is configured in code.');
     const empty = { ...f, mode: '2D' as const, colors: f.colors.map((c) => emptyColorEntry(c.colorId)) };
     expect(modeNotes(empty, readinessOf(empty, [1, 2])).join(' ')).toMatch(/No colour has a 2D image/);
   });
-  it('blocking validation: mesh, fov, camera and placement', () => {
+  it('blocking validation: editable colour placement', () => {
     expect(validateBuilder(baseForm())).toEqual({});
     const f = baseForm();
     f.model3d!.backPanelMesh = '';
@@ -333,7 +349,7 @@ describe('Builder form mapping', () => {
     f.model3d!.camera.position = [0, NaN, 1];
     f.model3d!.panelAspect = 0;
     f.colors[0]!.placement2d = { x: 2, y: 0.5, width: 0.3, rotation: 0 };
-    expect(Object.keys(validateBuilder(f)).sort()).toEqual(['colors.0.placement2d', 'model3d.backPanelMesh', 'model3d.camera.fov', 'model3d.camera.position', 'model3d.panelAspect']);
+    expect(Object.keys(validateBuilder(f)).sort()).toEqual(['colors.0.placement2d']);
   });
   it('preview data: BOTH toggle regardless of the edited mode, and 2D without a model', () => {
     const colors = [{ id: 1, name: 'Black', hex: '#111111', position: 1 }];

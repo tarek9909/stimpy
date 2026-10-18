@@ -1,5 +1,6 @@
 /** Primary navigation (website-pages 3.2). Labels are UI chrome, not business data. */
 export const PRIMARY_NAV = [
+  { href: '/', label: 'Home' },
   { href: '/shop', label: 'Shop' },
   { href: '/builder', label: 'Builder' },
   { href: '/drops', label: 'Drops' },

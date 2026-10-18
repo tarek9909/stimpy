@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BuilderConfig } from '@stimpy/api-client';
 import { storefrontBuilderConfig, toBuilderData, toTeaserData } from '@/features/builder/data';
+import { hoodie } from './fixtures';
 
 const config = {
   mode: 'BOTH',
@@ -51,5 +52,14 @@ describe('Builder data mapping', () => {
     expect(d.config.colors[0]?.texture3d).toBeNull();
     expect(d.config.stimpieTextures).toEqual([]);
     expect(JSON.stringify(d)).not.toContain('back_panel');
+  });
+  it('uses only the configured hoodie colours in both the Builder and home teaser', () => {
+    const selected = hoodie();
+    selected.colors = selected.colors.filter((color) => color.id === 2);
+    const args = { config, options: { colors: hoodie().colors, sizes: hoodie().sizes }, stimpies: [stimpie], hoodie: selected };
+    expect(toBuilderData({ ...args, packs: [] }).colors.map((color) => color.id)).toEqual([2]);
+    expect(toTeaserData(args).colors.map((color) => color.id)).toEqual([2]);
+    selected.colors = [];
+    expect(toTeaserData(args).colors).toEqual([]);
   });
 });

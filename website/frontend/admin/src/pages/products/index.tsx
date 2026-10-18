@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { Button, Modal, Tabs } from '@stimpy/ui';
 import { PageHeader } from '../../components/PageHeader';
-import { useIsLgUp } from '../../lib/hooks';
 import { enumParam, useUrlState } from '../../lib/urlState';
 import { HoodieEditor } from './HoodieEditor';
 import { HoodiesTab } from './HoodiesTab';
@@ -21,12 +20,11 @@ const params = { tab: enumParam(TABS, 'hoodies'), show: enumParam(['all', 'true'
 
 /**
  * Products (dashboard-pages 7). `/products?tab=` lists; `/products/<tab>/new` and
- * `/products/<tab>/:id` open the editor: a right drawer over the list from `lg`, a full page below.
+ * `/products/<tab>/:id` open the editor as a pop-up modal over the list.
  */
 function ProductsShell() {
   const urlParams = useParams();
   const navigate = useNavigate();
-  const isLg = useIsLgUp();
   const [{ tab: urlTab, show }, setParams] = useUrlState(params);
   const routeTab = urlParams.tab as Tab | undefined;
   const tab: Tab = routeTab && TABS.includes(routeTab) ? routeTab : urlTab;
@@ -44,9 +42,6 @@ function ProductsShell() {
   ) : (
     <PackEditor id={id} onClose={close} />
   );
-
-  // Below `lg` the editor is a page of its own.
-  if (editing && !isLg) return <>{editor}</>;
 
   return (
     <>
@@ -76,7 +71,6 @@ function ProductsShell() {
         onClose={() => setCreatedHoodie(null)}
         title="Hoodie created"
         size="sm"
-        closeOnBackdrop={false}
         footer={
           <>
             <Button variant="secondary" onClick={() => setCreatedHoodie(null)}>Later</Button>
@@ -84,7 +78,7 @@ function ProductsShell() {
           </>
         }
       >
-        <p>Variants for every active color and size were created with zero stock for {createdHoodie}. Set quantities in Stock.</p>
+        <p>Choose this hoodie&apos;s colours and sizes in its editor. Each selected combination appears in Stock, where you can set its quantity.</p>
       </Modal>
     </>
   );

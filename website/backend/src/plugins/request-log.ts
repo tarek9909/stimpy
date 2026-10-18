@@ -2,7 +2,7 @@ import fp from 'fastify-plugin';
 import { pathOf } from './route-group';
 
 /**
- * One structured log line per request (method, path, route, status, duration, request id, admin user id).
+ * One compact log line per request (method, path, status, duration).
  * Deliberately NOT logged: query strings, request bodies (never for /auth and /orders), cookies, phones, e-mails.
  */
 export default fp(async (app) => {
@@ -18,17 +18,7 @@ export default fp(async (app) => {
 
   app.addHook('onResponse', async (req, reply) => {
     const durationMs = Math.round(reply.elapsedTime * 10) / 10;
-    req.log.info(
-      {
-        method: req.method,
-        path: pathOf(req.url),
-        route: req.routeOptions?.url ?? null,
-        status: reply.statusCode,
-        durationMs,
-        requestId: req.id,
-        userId: req.auth?.user.id ?? null,
-      },
-      'request completed',
-    );
+    // A single message keeps pino-pretty from printing request fields on separate lines.
+    app.log.info(`${req.method} ${pathOf(req.url)} -> ${reply.statusCode} (${durationMs}ms)`);
   });
 }, { name: 'request-log' });

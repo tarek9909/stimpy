@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 import { publicEnv, serverEnv } from './lib/env';
 import { assertProductionPublicUrls } from './lib/production-env';
 import { buildContentSecurityPolicy, configuredImageOrigin } from './lib/security-policy';
-
+// Next.js config for Stimpy web
 const isProd = process.env.NODE_ENV === 'production';
 assertProductionPublicUrls(process.env);
 

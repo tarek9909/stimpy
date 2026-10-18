@@ -82,7 +82,7 @@ Sources: `website-pages.md` (W), `checkout-and-order-flow.md` (C), `builder.md` 
 | Colour slugs for share links | B6 | Share links use `colorId`; acceptable for v1 |
 | Responsive image sizes | B8 | No width parameter; `next/image` optimises remote images (the API host is in `remotePatterns`) |
 | Analytics events | B11 | No analytics endpoint; a privacy-friendly third-party/self-hosted tool is used on the website only, with no personal data |
-| `accentHex` | G1 | Always exactly the brand hex (`#FFE45C`, `#5CC8FF`, `#C9B6FF`) |
+| `accentHex` | G1 | Any validated `#RRGGBB` value selected with the dashboard color picker; old drops keep their existing brand hex |
 | Announcement bar style | G3 | Fixed black bar, white text; only `text` and `linkUrl` are configurable |
 | New-order notifications | S6 | The dashboard polls `GET /admin/orders/counts` every 30 s and uses `afterId` to fetch what is new; no push channel in v1 |
 | Revalidation after dashboard saves | W4, S11 | No on-demand revalidation in v1. Public catalog and content revalidate within 30–60 s; drop timing is handled by the countdown and the 10 s / `no-store` rules |

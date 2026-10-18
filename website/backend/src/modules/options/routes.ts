@@ -52,7 +52,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
   }, async (req) => svc.listColors(app.ctx, req.query));
 
   app.post('/colors', {
-    schema: { tags, summary: 'Create a colour (creates zero-stock variants)', body: colorCreateBody, response: { 201: adminColorSchema, ...errorResponses } },
+    schema: { tags, summary: 'Create a shared colour option', body: colorCreateBody, response: { 201: adminColorSchema, ...errorResponses } },
   }, async (req, reply) => reply.code(201).send(await svc.createColor(app.ctx, req.body)));
 
   app.put('/colors/order', {
@@ -83,7 +83,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
   }, async (req) => svc.listSizes(app.ctx, req.query));
 
   app.post('/sizes', {
-    schema: { tags, summary: 'Create a size (creates zero-stock variants)', body: sizeCreateBody, response: { 201: adminSizeSchema, ...errorResponses } },
+    schema: { tags, summary: 'Create a shared size option', body: sizeCreateBody, response: { 201: adminSizeSchema, ...errorResponses } },
   }, async (req, reply) => reply.code(201).send(await svc.createSize(app.ctx, req.body)));
 
   app.put('/sizes/order', {

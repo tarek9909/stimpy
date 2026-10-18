@@ -17,9 +17,9 @@ function setup(post: (req: Request) => Response | Promise<Response>) {
     'GET /api/v1/admin/orders/counts': () => json({ ALL: 0, NEW: 0, CONFIRMED: 0, PACKED: 0, OUT_FOR_DELIVERY: 0, DELIVERED: 0, CANCELLED: 0, RETURNED: 0 }),
     'GET /api/v1/admin/orders': () => json(emptyPage()),
     'GET /api/v1/admin/areas': () => json(emptyPage([{ id: 1, name: 'Beirut', feeCents: null, estDays: null, active: true }], 100)),
-    'GET /api/v1/products/hoodies': () => json([]),
-    'GET /api/v1/products/stimpies': () => json([STIMPIE, SOLD]),
-    'GET /api/v1/packs': () => json([]),
+    'GET /api/v1/products/hoodies': () => json({ items: [], page: 1, pageSize: 100, total: 0 }),
+    'GET /api/v1/products/stimpies': () => json({ items: [STIMPIE, SOLD], page: 1, pageSize: 100, total: 2 }),
+    'GET /api/v1/packs': () => json({ items: [], page: 1, pageSize: 100, total: 0 }),
     'GET /api/v1/delivery/fees': () => json({ defaultFeeCents: 300, areas: [], estimateText: '2-3 working days' }),
     'POST /api/v1/admin/orders': post,
   });

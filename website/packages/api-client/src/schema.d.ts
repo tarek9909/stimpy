@@ -371,10 +371,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Active hoodies */
+        /** Active hoodies (paginated) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -387,7 +390,30 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["HoodieSummary"][];
+                        "application/json": {
+                            items: components["schemas"]["HoodieSummary"][];
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -463,10 +489,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Stimpies (default: AVAILABLE, LOW and SOLD_OUT) */
+        /** Stimpies (default: AVAILABLE, LOW and SOLD_OUT; paginated) */
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    pageSize?: number;
                     type?: "CORE" | "LIMITED";
                     drop?: string;
                     includeSoldOut?: "true" | "false";
@@ -485,7 +513,12 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Stimpie"][];
+                        "application/json": {
+                            items: components["schemas"]["Stimpie"][];
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                        };
                     };
                 };
                 /** @description Default Response */
@@ -579,10 +612,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Active packs, ordered */
+        /** Active packs, ordered (paginated) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -595,7 +631,30 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Pack"][];
+                        "application/json": {
+                            items: components["schemas"]["Pack"][];
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -615,10 +674,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Live drop, upcoming drops and the archive (max-age 10, no-store within 60 s of a start) */
+        /** Live drop plus paginated upcoming drops and archive (max-age 10, no-store within 60 s of a start) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1263,10 +1325,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Everything the pages show that the owner edits (announcement, texts, FAQs, reviews) */
+        /** Page content with paginated FAQs and reviews */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1316,6 +1381,60 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["BuilderConfig"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List currently active promotions */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicPromotion"][];
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -1386,7 +1505,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a colour (creates zero-stock variants) */
+        /** Create a shared colour option */
         post: {
             parameters: {
                 query?: never;
@@ -1711,7 +1830,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a size (creates zero-stock variants) */
+        /** Create a shared size option */
         post: {
             parameters: {
                 query?: never;
@@ -2137,7 +2256,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create a hoodie (creates zero-stock variants) */
+        /** Create a hoodie with its selected colours and sizes */
         post: {
             parameters: {
                 query?: never;
@@ -2149,13 +2268,14 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        slug?: string;
                         description?: string;
                         details?: string[];
                         priceCents: number;
                         costCents?: number;
                         images?: string[];
                         active?: boolean;
+                        colorIds?: number[];
+                        sizeIds?: number[];
                     };
                 };
             };
@@ -2362,13 +2482,14 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
-                        slug?: string;
                         description?: string;
                         details?: string[];
                         priceCents?: number;
                         costCents?: number;
                         images?: string[];
                         active?: boolean;
+                        colorIds?: number[];
+                        sizeIds?: number[];
                     };
                 };
             };
@@ -2476,7 +2597,6 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        slug?: string;
                         /** @enum {string} */
                         type?: "CORE" | "LIMITED";
                         dropId?: number | null;
@@ -2634,7 +2754,6 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
-                        slug?: string;
                         /** @enum {string} */
                         type?: "CORE" | "LIMITED";
                         dropId?: number | null;
@@ -2751,7 +2870,6 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        slug?: string;
                         description?: string;
                         stimpieCount: number;
                         priceCents: number;
@@ -2964,7 +3082,6 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
-                        slug?: string;
                         description?: string;
                         stimpieCount?: number;
                         priceCents?: number;
@@ -3133,10 +3250,25 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        slug?: string;
+                        story?: string;
+                        /** @enum {string} */
+                        accentColor?: "BUTTER" | "SKY" | "LILAC";
+                        accentHex: string;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt?: string | null;
+                        /** Format: uri */
+                        teaserImage?: string | null;
+                        /** Format: uri */
+                        teaserVideo?: string | null;
+                        stimpieIds?: number[];
+                    } | {
+                        name: string;
                         story?: string;
                         /** @enum {string} */
                         accentColor: "BUTTER" | "SKY" | "LILAC";
+                        accentHex?: string;
                         /** Format: date-time */
                         startsAt: string;
                         /** Format: date-time */
@@ -3292,10 +3424,10 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
-                        slug?: string;
                         story?: string;
                         /** @enum {string} */
                         accentColor?: "BUTTER" | "SKY" | "LILAC";
+                        accentHex?: string;
                         /** Format: date-time */
                         startsAt?: string;
                         /** Format: date-time */
@@ -4459,10 +4591,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Hoodie stock grid (colour x size) */
+        /** Stock for each hoodie and its selected colour/size variants (paginated by hoodie) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -4476,20 +4611,25 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            colors: components["schemas"]["Color"][];
-                            sizes: components["schemas"]["Size"][];
-                            hoodies: {
+                            colors?: components["schemas"]["Color"][];
+                            sizes?: components["schemas"]["Size"][];
+                            items: {
                                 hoodieId: number;
                                 name: string;
+                                colors: components["schemas"]["Color"][];
+                                sizes: components["schemas"]["Size"][];
                                 cells: {
                                     variantId: number;
                                     colorId: number;
                                     sizeId: number;
                                     quantity: number;
-                                    reserved: number;
+                                    reserved?: number;
                                     available: number;
                                 }[];
                             }[];
+                            page: number;
+                            pageSize: number;
+                            total: number;
                         };
                     };
                 };
@@ -4531,7 +4671,10 @@ export interface paths {
         /** Stimpie stock list */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -4552,10 +4695,15 @@ export interface paths {
                                 type: "CORE" | "LIMITED";
                                 dropName: string | null;
                                 quantity: number;
-                                reserved: number;
+                                reserved?: number;
                                 available: number;
                                 low: boolean;
+                                artworkUrl?: string | null;
+                                imageUrl?: string | null;
                             }[];
+                            page: number;
+                            pageSize: number;
+                            total: number;
                         };
                     };
                 };
@@ -4596,7 +4744,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add or remove units (note required; never below reserved) */
+        /** Adjust on-hand quantity (note required; cannot reduce units committed to open orders) */
         post: {
             parameters: {
                 query?: never;
@@ -7962,12 +8110,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Profit for a date range (delivered orders, business timezone) */
+        /** Profit for a date range (delivered orders, business timezone; by-order rows paginated) */
         get: {
             parameters: {
                 query?: {
                     from?: string;
                     to?: string;
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -8019,10 +8169,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Cash outstanding, grouped by delivery number */
+        /** Cash outstanding, grouped by delivery number (groups paginated) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -8782,7 +8935,7 @@ export interface paths {
         };
         /**
          * Replace a content block (the body is validated per key)
-         * @description announcement {enabled,text,linkUrl}; homepage {heroHeadline,heroSubheadline,heroVideoUrl,heroImageUrl,featuredDropSlug}; policies {deliveryReturns,care,terms,privacy}; about {about}; how-it-works {steps,promises,faqs}.
+         * @description announcement {enabled,text,linkUrl}; homepage {heroHeadline,heroSubheadline,heroVideoUrl,heroImageUrl,featuredDropSlug,featuredStimpieSlug,showDropSections}; policies {deliveryReturns,care,terms,privacy}; about {about}; how-it-works {steps,promises,faqs}.
          */
         put: {
             parameters: {
@@ -10360,6 +10513,282 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List promotions */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["AdminPromotion"][];
+                            page: number;
+                            pageSize: number;
+                            total: number;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a product promotion */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        /** @enum {string} */
+                        discountType: "PERCENTAGE" | "FIXED";
+                        discountValue: number;
+                        allProducts: boolean;
+                        targets: {
+                            /** @enum {string} */
+                            productType: "HOODIE" | "STIMPIE" | "PACK";
+                            productId: number;
+                        }[];
+                        enabled?: boolean;
+                        /** Format: date-time */
+                        startsAt?: string | null;
+                        /** Format: date-time */
+                        endsAt?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminPromotion"];
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/promotions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a promotion */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminPromotion"];
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Delete a promotion */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": null;
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Update or pause a promotion */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        /** @enum {string} */
+                        discountType?: "PERCENTAGE" | "FIXED";
+                        discountValue?: number;
+                        allProducts?: boolean;
+                        targets?: {
+                            /** @enum {string} */
+                            productType: "HOODIE" | "STIMPIE" | "PACK";
+                            productId: number;
+                        }[];
+                        enabled?: boolean;
+                        /** Format: date-time */
+                        startsAt?: string | null;
+                        /** Format: date-time */
+                        endsAt?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AdminPromotion"];
+                    };
+                };
+                /** @description Default Response */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Default Response */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -10410,7 +10839,6 @@ export interface components {
             builderTint: string | null;
             builderTexture: string | null;
             available: number;
-            reserved: number;
         };
         AdminSizeInput: {
             id: number;
@@ -10418,7 +10846,6 @@ export interface components {
             position: number;
             active: boolean;
             available: number;
-            reserved: number;
         };
         AdminSizeChartInput: {
             columns: {
@@ -10443,6 +10870,7 @@ export interface components {
             /** @enum {string} */
             type: "CORE" | "LIMITED";
             priceCents: number;
+            compareAtPriceCents: number | null;
             story: string;
             images: string[];
             artworkUrl: string;
@@ -10469,6 +10897,7 @@ export interface components {
             name: string;
             description: string;
             priceCents: number;
+            compareAtPriceCents: number | null;
             images: string[];
             colors: {
                 id: number;
@@ -10483,6 +10912,7 @@ export interface components {
             name: string;
             description: string;
             priceCents: number;
+            compareAtPriceCents: number | null;
             images: string[];
             inStock: boolean;
             details: string[];
@@ -10502,6 +10932,7 @@ export interface components {
             description: string;
             stimpieCount: number;
             priceCents: number;
+            compareAtPriceCents: number | null;
             badge: string | null;
         };
         AdminHoodieInput: {
@@ -10515,8 +10946,9 @@ export interface components {
             images: string[];
             active: boolean;
             position: number;
+            colorIds: number[];
+            sizeIds: number[];
             available: number;
-            reserved: number;
         };
         AdminStimpieInput: {
             id: number;
@@ -10536,7 +10968,6 @@ export interface components {
             position: number;
             quantity: number;
             available: number;
-            reserved: number;
         };
         AdminPackInput: {
             id: number;
@@ -10688,6 +11119,8 @@ export interface components {
                 heroVideoUrl: string | null;
                 heroImageUrl: string | null;
                 featuredDropSlug: string | null;
+                featuredStimpieSlug: string | null;
+                showDropSections: boolean;
             };
             policies: {
                 deliveryReturns: string;
@@ -10709,18 +11142,28 @@ export interface components {
                 }[];
             };
             faqs: {
-                id: number;
-                question: string;
-                answer: string;
-                group: string | null;
-                showOnHome: boolean;
-            }[];
+                items: {
+                    id: number;
+                    question: string;
+                    answer: string;
+                    group: string | null;
+                    showOnHome: boolean;
+                }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
             reviews: {
-                id: number;
-                name: string;
-                text: string;
-                mediaUrl: string | null;
-            }[];
+                items: {
+                    id: number;
+                    name: string;
+                    text: string;
+                    mediaUrl: string | null;
+                }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
         };
         AdminContentBlockInput: {
             enabled: boolean;
@@ -10732,6 +11175,8 @@ export interface components {
             heroVideoUrl: string | null;
             heroImageUrl: string | null;
             featuredDropSlug: string | null;
+            featuredStimpieSlug: string | null;
+            showDropSections: boolean;
         } | {
             deliveryReturns: string;
             care: string;
@@ -11052,8 +11497,18 @@ export interface components {
         };
         DropsOverviewInput: {
             live: components["schemas"]["DropInput"] | null;
-            upcoming: components["schemas"]["DropInput"][];
-            archive: components["schemas"]["DropInput"][];
+            upcoming: {
+                items: components["schemas"]["DropInput"][];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
+            archive: {
+                items: components["schemas"]["DropInput"][];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
         };
         AdminDropInput: {
             id: number;
@@ -11082,6 +11537,7 @@ export interface components {
                 /** @enum {string} */
                 type: "CORE" | "LIMITED";
                 priceCents: number;
+                compareAtPriceCents: number | null;
                 story: string;
                 images: string[];
                 artworkUrl: string;
@@ -11129,12 +11585,17 @@ export interface components {
             profitCents: number;
             ordersCount: number;
             byOrder: {
-                orderNumber: string;
-                date: string;
-                revenueCents: number;
-                costCents: number;
-                profitCents: number;
-            }[];
+                items: {
+                    orderNumber: string;
+                    date: string;
+                    revenueCents: number;
+                    costCents: number;
+                    profitCents: number;
+                }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
             planMargins: {
                 pack35: number;
                 pack45: number;
@@ -11143,15 +11604,20 @@ export interface components {
         FinanceCashInput: {
             outstandingCents: number;
             groups: {
-                deliveryNumber: string | null;
-                orders: {
-                    orderId: number;
-                    orderNumber: string;
-                    cashDueCents: number;
-                    settled: boolean;
+                items: {
+                    deliveryNumber: string | null;
+                    orders: {
+                        orderId: number;
+                        orderNumber: string;
+                        cashDueCents: number;
+                        settled: boolean;
+                    }[];
+                    totalDueCents: number;
                 }[];
-                totalDueCents: number;
-            }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
         };
         InsightsSalesInput: {
             series: {
@@ -11272,6 +11738,39 @@ export interface components {
                 }[];
             };
         };
+        PublicPromotionInput: {
+            id: number;
+            name: string;
+            /** @enum {string} */
+            discountType: "PERCENTAGE" | "FIXED";
+            discountValue: number;
+            allProducts: boolean;
+            targets: {
+                /** @enum {string} */
+                productType: "HOODIE" | "STIMPIE" | "PACK";
+                productId: number;
+            }[];
+        };
+        AdminPromotionInput: {
+            id: number;
+            name: string;
+            /** @enum {string} */
+            discountType: "PERCENTAGE" | "FIXED";
+            discountValue: number;
+            allProducts: boolean;
+            targets: {
+                /** @enum {string} */
+                productType: "HOODIE" | "STIMPIE" | "PACK";
+                productId: number;
+            }[];
+            enabled: boolean;
+            startsAt: string | null;
+            endsAt: string | null;
+            /** @enum {string} */
+            state: "ACTIVE" | "SCHEDULED" | "ENDED" | "PAUSED";
+            createdAt: string;
+            updatedAt: string;
+        };
         SettingsInput: {
             business: {
                 /** @default Stimpy */
@@ -11346,7 +11845,7 @@ export interface components {
         };
         StockSnapshotInput: {
             quantity: number;
-            reserved: number;
+            reserved?: number;
             available: number;
         };
         UploadInput: {
@@ -11417,7 +11916,6 @@ export interface components {
             builderTint: string | null;
             builderTexture: string | null;
             available: number;
-            reserved: number;
         };
         AdminSize: {
             id: number;
@@ -11425,7 +11923,6 @@ export interface components {
             position: number;
             active: boolean;
             available: number;
-            reserved: number;
         };
         AdminSizeChart: {
             columns: {
@@ -11450,6 +11947,7 @@ export interface components {
             /** @enum {string} */
             type: "CORE" | "LIMITED";
             priceCents: number;
+            compareAtPriceCents: number | null;
             story: string;
             images: string[];
             artworkUrl: string;
@@ -11476,6 +11974,7 @@ export interface components {
             name: string;
             description: string;
             priceCents: number;
+            compareAtPriceCents: number | null;
             images: string[];
             colors: {
                 id: number;
@@ -11490,6 +11989,7 @@ export interface components {
             name: string;
             description: string;
             priceCents: number;
+            compareAtPriceCents: number | null;
             images: string[];
             inStock: boolean;
             details: string[];
@@ -11509,6 +12009,7 @@ export interface components {
             description: string;
             stimpieCount: number;
             priceCents: number;
+            compareAtPriceCents: number | null;
             badge: string | null;
         };
         AdminHoodie: {
@@ -11522,8 +12023,9 @@ export interface components {
             images: string[];
             active: boolean;
             position: number;
+            colorIds: number[];
+            sizeIds: number[];
             available: number;
-            reserved: number;
         };
         AdminStimpie: {
             id: number;
@@ -11543,7 +12045,6 @@ export interface components {
             position: number;
             quantity: number;
             available: number;
-            reserved: number;
         };
         AdminPack: {
             id: number;
@@ -11695,6 +12196,8 @@ export interface components {
                 heroVideoUrl: string | null;
                 heroImageUrl: string | null;
                 featuredDropSlug: string | null;
+                featuredStimpieSlug: string | null;
+                showDropSections: boolean;
             };
             policies: {
                 deliveryReturns: string;
@@ -11716,18 +12219,28 @@ export interface components {
                 }[];
             };
             faqs: {
-                id: number;
-                question: string;
-                answer: string;
-                group: string | null;
-                showOnHome: boolean;
-            }[];
+                items: {
+                    id: number;
+                    question: string;
+                    answer: string;
+                    group: string | null;
+                    showOnHome: boolean;
+                }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
             reviews: {
-                id: number;
-                name: string;
-                text: string;
-                mediaUrl: string | null;
-            }[];
+                items: {
+                    id: number;
+                    name: string;
+                    text: string;
+                    mediaUrl: string | null;
+                }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
         };
         AdminContentBlock: {
             enabled: boolean;
@@ -11739,6 +12252,8 @@ export interface components {
             heroVideoUrl: string | null;
             heroImageUrl: string | null;
             featuredDropSlug: string | null;
+            featuredStimpieSlug: string | null;
+            showDropSections: boolean;
         } | {
             deliveryReturns: string;
             care: string;
@@ -12059,8 +12574,18 @@ export interface components {
         };
         DropsOverview: {
             live: components["schemas"]["Drop"] | null;
-            upcoming: components["schemas"]["Drop"][];
-            archive: components["schemas"]["Drop"][];
+            upcoming: {
+                items: components["schemas"]["Drop"][];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
+            archive: {
+                items: components["schemas"]["Drop"][];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
         };
         AdminDrop: {
             id: number;
@@ -12089,6 +12614,7 @@ export interface components {
                 /** @enum {string} */
                 type: "CORE" | "LIMITED";
                 priceCents: number;
+                compareAtPriceCents: number | null;
                 story: string;
                 images: string[];
                 artworkUrl: string;
@@ -12136,12 +12662,17 @@ export interface components {
             profitCents: number;
             ordersCount: number;
             byOrder: {
-                orderNumber: string;
-                date: string;
-                revenueCents: number;
-                costCents: number;
-                profitCents: number;
-            }[];
+                items: {
+                    orderNumber: string;
+                    date: string;
+                    revenueCents: number;
+                    costCents: number;
+                    profitCents: number;
+                }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
             planMargins: {
                 pack35: number;
                 pack45: number;
@@ -12150,15 +12681,20 @@ export interface components {
         FinanceCash: {
             outstandingCents: number;
             groups: {
-                deliveryNumber: string | null;
-                orders: {
-                    orderId: number;
-                    orderNumber: string;
-                    cashDueCents: number;
-                    settled: boolean;
+                items: {
+                    deliveryNumber: string | null;
+                    orders: {
+                        orderId: number;
+                        orderNumber: string;
+                        cashDueCents: number;
+                        settled: boolean;
+                    }[];
+                    totalDueCents: number;
                 }[];
-                totalDueCents: number;
-            }[];
+                page: number;
+                pageSize: number;
+                total: number;
+            };
         };
         InsightsSales: {
             series: {
@@ -12279,6 +12815,39 @@ export interface components {
                 }[];
             };
         };
+        PublicPromotion: {
+            id: number;
+            name: string;
+            /** @enum {string} */
+            discountType: "PERCENTAGE" | "FIXED";
+            discountValue: number;
+            allProducts: boolean;
+            targets: {
+                /** @enum {string} */
+                productType: "HOODIE" | "STIMPIE" | "PACK";
+                productId: number;
+            }[];
+        };
+        AdminPromotion: {
+            id: number;
+            name: string;
+            /** @enum {string} */
+            discountType: "PERCENTAGE" | "FIXED";
+            discountValue: number;
+            allProducts: boolean;
+            targets: {
+                /** @enum {string} */
+                productType: "HOODIE" | "STIMPIE" | "PACK";
+                productId: number;
+            }[];
+            enabled: boolean;
+            startsAt: string | null;
+            endsAt: string | null;
+            /** @enum {string} */
+            state: "ACTIVE" | "SCHEDULED" | "ENDED" | "PAUSED";
+            createdAt: string;
+            updatedAt: string;
+        };
         Settings: {
             business: {
                 /** @default Stimpy */
@@ -12353,7 +12922,7 @@ export interface components {
         };
         StockSnapshot: {
             quantity: number;
-            reserved: number;
+            reserved?: number;
             available: number;
         };
         Upload: {

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Banknote, Ruler, Truck } from '@/components/icons';
-import { RichText, Section, TextLink, WhatsAppButton, formatCents } from '@stimpy/ui';
+import { RichText, Section, TextLink, formatCents } from '@stimpy/ui';
 import { ContactBox } from '@/components/ContactBox';
 import { must } from '@/lib/api-server';
 import { getContent, getDeliveryFees } from '@/lib/data';
@@ -10,8 +10,8 @@ import { pageMetadata } from '@/lib/seo';
 export const revalidate = 60;
 
 export const metadata: Metadata = pageMetadata({
-  title: 'Delivery & returns',
-  description: 'Delivery fees, timing, cash on delivery and our exchange policy.',
+  title: 'Delivery',
+  description: 'Delivery fees, timing and cash on delivery across Lebanon.',
   path: '/delivery-returns',
 });
 
@@ -21,7 +21,7 @@ export default async function DeliveryReturnsPage() {
   const hasPolicy = policy.trim().length > 0;
 
   return (
-    <Section tone="white" heading="Delivery & returns" headingLevel={1}>
+    <Section tone="white" heading="Delivery" headingLevel={1}>
       <div className="grid gap-10 lg:grid-cols-[1fr_20rem] lg:gap-16">
         <div className="flex max-w-3xl flex-col gap-10">
           {fees ? (
@@ -91,19 +91,14 @@ export default async function DeliveryReturnsPage() {
             </section>
           ) : null}
 
-          <section aria-labelledby="returns-heading">
-            <h2 id="returns-heading" className="mb-4 text-h2">
-              Returns and exchanges
-            </h2>
-            {hasPolicy ? (
+          {hasPolicy ? (
+            <section aria-labelledby="delivery-details-heading">
+              <h2 id="delivery-details-heading" className="mb-4 text-h2">
+                Delivery details
+              </h2>
               <RichText text={policy} className="max-w-prose" />
-            ) : (
-              <div className="flex flex-col items-start gap-3">
-                <p className="text-body text-fg-muted">Ask us about delivery, exchanges and returns.</p>
-                <WhatsAppButton number={content.business.whatsappNumber} text="Hi Stimpy" label="Ask us on WhatsApp" />
-              </div>
-            )}
-          </section>
+            </section>
+          ) : null}
 
           <p className="flex items-center gap-2 text-body">
             <Ruler width={20} height={20} aria-hidden="true" />

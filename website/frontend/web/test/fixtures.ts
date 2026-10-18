@@ -31,6 +31,7 @@ export const stimpie = (over: Partial<Stimpie> = {}): Stimpie => ({
   name: 'THE VOID',
   type: 'CORE',
   priceCents: 1000,
+  compareAtPriceCents: null,
   story: 's',
   images: [],
   artworkUrl: 'http://x/a.webp',
@@ -44,8 +45,8 @@ export const stimpie = (over: Partial<Stimpie> = {}): Stimpie => ({
 });
 
 export const packs: Pack[] = [
-  { id: 1, slug: 'one', name: 'Hoodie + 1 Stimpie', description: '', stimpieCount: 1, priceCents: 3500, badge: null },
-  { id: 2, slug: 'two', name: 'Hoodie + 2 Stimpies', description: '', stimpieCount: 2, priceCents: 4500, badge: 'Most popular' },
+  { id: 1, slug: 'one', name: 'Hoodie + 1 Stimpie', description: '', stimpieCount: 1, priceCents: 3500, compareAtPriceCents: null, badge: null },
+  { id: 2, slug: 'two', name: 'Hoodie + 2 Stimpies', description: '', stimpieCount: 2, priceCents: 4500, compareAtPriceCents: null, badge: 'Most popular' },
 ];
 
 export const hoodie = (): HoodieDetail => ({
@@ -54,6 +55,7 @@ export const hoodie = (): HoodieDetail => ({
   name: 'Stimpy Hoodie',
   description: '',
   priceCents: 2500,
+  compareAtPriceCents: null,
   images: ['http://x/h.webp'],
   inStock: true,
   details: [],

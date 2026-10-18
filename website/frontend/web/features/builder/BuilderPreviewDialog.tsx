@@ -6,11 +6,11 @@ import { Button, Modal } from '@stimpy/ui';
 import { ArrowRight, Box, Focus, LoaderCircle, RotateCcw, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
 import type { BuilderConfig } from '@stimpy/api-client';
 import type { BuilderStimpie, JoinedColor } from '@stimpy/builder';
-import { BuilderStage2D } from '@stimpy/builder/src/BuilderStage2D';
 import { BuilderCanvas3D, Canvas3DBoundary, type Canvas3DHandle } from '@stimpy/builder/src/BuilderCanvas3D';
 import { ColorSwatchRow } from '@stimpy/builder/src/parts';
 import { browserApi } from '@/lib/api-browser';
 import { storefrontBuilderConfig } from './data';
+import { CampaignHoodieStage } from './CampaignHoodieStage';
 
 interface Props {
   colors: readonly JoinedColor[];
@@ -80,8 +80,7 @@ export default function BuilderPreviewDialog(props: Props) {
     <div className="store-preview-layout">
       <div className="store-preview-scene" data-store-preview-scene data-preview-ready={ready && !failed}>
         <div className="store-preview-poster" style={{ visibility: ready && !failed ? 'hidden' : 'visible' }} aria-hidden={ready && !failed}>
-          <BuilderStage2D color={{ key: color.id, hoodieSrc: color.hoodieImage2d, overlaySrc: color.overlay2d, placement: color.placement2d, alt: `${color.name} Stimpy hoodie, back view` }}
-            art={{ key: stimpie.id, src: stimpie.artworkUrl, alt: `${stimpie.name} Stimpie` }} instant active priority chip={false} className="store-preview-2d" />
+          <CampaignHoodieStage color={color} stimpie={stimpie} priority className="store-preview-2d" />
         </div>
         {model && !failed ? <Canvas3DBoundary key={attempt} onError={() => setFailed(true)}>
           <BuilderCanvas3D model={model} tint={configColor?.tint ?? color.hex} fabricTextureUrl={configColor?.texture3d ?? null}
@@ -99,7 +98,7 @@ export default function BuilderPreviewDialog(props: Props) {
         <div><p className="store-eyebrow">Your selected look</p><h3>{stimpie.name}</h3><p className="store-preview-product">{color.name} Stimpy hoodie</p></div>
         <ColorSwatchRow colors={props.colors} selectedId={color.id} soldOutIds={NO_SOLD_OUT_COLORS} onSelect={props.onColorChange} />
         <div><p className="text-body-sm font-medium">Stimpie</p><div className="store-preview-artworks" role="group" aria-label="Choose a Stimpie">
-          {props.stimpies.map((item) => <button key={item.id} type="button" aria-label={item.name} aria-pressed={item.id === stimpie.id} disabled={props.disabledStimpieIds?.has(item.id)} title={props.disabledStimpieIds?.has(item.id) ? `${item.name}: already in your other pack slot` : item.name} onClick={() => props.onStimpieChange(item)}>
+          {props.stimpies.map((item) => <button key={item.id} type="button" aria-label={item.name} aria-pressed={item.id === stimpie.id} title={props.disabledStimpieIds?.has(item.id) ? `${item.name}: already selected in another pack slot; select it to replace that slot` : item.name} onClick={() => props.onStimpieChange(item)}>
             <img src={item.artworkUrl} alt="" loading="lazy" width={160} height={250} /><span>{item.name}</span>
           </button>)}
         </div></div>

@@ -198,11 +198,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "reserved": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -214,8 +209,7 @@
           "images",
           "builderTint",
           "builderTexture",
-          "available",
-          "reserved"
+          "available"
         ]
       },
       "AdminSizeInput": {
@@ -241,11 +235,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "reserved": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -253,8 +242,7 @@
           "label",
           "position",
           "active",
-          "available",
-          "reserved"
+          "available"
         ]
       },
       "AdminSizeChartInput": {
@@ -353,6 +341,12 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "compareAtPriceCents": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "story": {
             "type": "string"
           },
@@ -447,6 +441,7 @@
           "name",
           "type",
           "priceCents",
+          "compareAtPriceCents",
           "story",
           "images",
           "artworkUrl",
@@ -476,6 +471,12 @@
             "type": "string"
           },
           "priceCents": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "compareAtPriceCents": {
+            "nullable": true,
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -520,6 +521,7 @@
           "name",
           "description",
           "priceCents",
+          "compareAtPriceCents",
           "images",
           "colors",
           "inStock"
@@ -543,6 +545,12 @@
             "type": "string"
           },
           "priceCents": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "compareAtPriceCents": {
+            "nullable": true,
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -614,6 +622,7 @@
           "name",
           "description",
           "priceCents",
+          "compareAtPriceCents",
           "images",
           "inStock",
           "details",
@@ -649,6 +658,12 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "compareAtPriceCents": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "badge": {
             "nullable": true,
             "type": "string"
@@ -661,6 +676,7 @@
           "description",
           "stimpieCount",
           "priceCents",
+          "compareAtPriceCents",
           "badge"
         ]
       },
@@ -711,12 +727,23 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
-          "available": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
+          "colorIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
           },
-          "reserved": {
+          "sizeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "available": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -733,8 +760,9 @@
           "images",
           "active",
           "position",
-          "available",
-          "reserved"
+          "colorIds",
+          "sizeIds",
+          "available"
         ]
       },
       "AdminStimpieInput": {
@@ -815,11 +843,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "reserved": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -838,8 +861,7 @@
           "active",
           "position",
           "quantity",
-          "available",
-          "reserved"
+          "available"
         ]
       },
       "AdminPackInput": {
@@ -1578,6 +1600,13 @@
               "featuredDropSlug": {
                 "nullable": true,
                 "type": "string"
+              },
+              "featuredStimpieSlug": {
+                "nullable": true,
+                "type": "string"
+              },
+              "showDropSections": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1585,7 +1614,9 @@
               "heroSubheadline",
               "heroVideoUrl",
               "heroImageUrl",
-              "featuredDropSlug"
+              "featuredDropSlug",
+              "featuredStimpieSlug",
+              "showDropSections"
             ]
           },
           "policies": {
@@ -1672,66 +1703,118 @@
             ]
           },
           "faqs": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "question": {
-                  "type": "string"
-                },
-                "answer": {
-                  "type": "string"
-                },
-                "group": {
-                  "nullable": true,
-                  "type": "string"
-                },
-                "showOnHome": {
-                  "type": "boolean"
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "question": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    },
+                    "group": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "showOnHome": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "question",
+                    "answer",
+                    "group",
+                    "showOnHome"
+                  ]
                 }
               },
-              "required": [
-                "id",
-                "question",
-                "answer",
-                "group",
-                "showOnHome"
-              ]
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ]
           },
           "reviews": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "name": {
-                  "type": "string"
-                },
-                "text": {
-                  "type": "string"
-                },
-                "mediaUrl": {
-                  "nullable": true,
-                  "type": "string"
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "mediaUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "text",
+                    "mediaUrl"
+                  ]
                 }
               },
-              "required": [
-                "id",
-                "name",
-                "text",
-                "mediaUrl"
-              ]
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ]
           }
         },
         "required": [
@@ -1787,6 +1870,13 @@
               "featuredDropSlug": {
                 "nullable": true,
                 "type": "string"
+              },
+              "featuredStimpieSlug": {
+                "nullable": true,
+                "type": "string"
+              },
+              "showDropSections": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1794,7 +1884,9 @@
               "heroSubheadline",
               "heroVideoUrl",
               "heroImageUrl",
-              "featuredDropSlug"
+              "featuredDropSlug",
+              "featuredStimpieSlug",
+              "showDropSections"
             ]
           },
           {
@@ -3378,16 +3470,68 @@
             ]
           },
           "upcoming": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DropInput"
-            }
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DropInput"
+                }
+              },
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ]
           },
           "archive": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DropInput"
-            }
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DropInput"
+                }
+              },
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ]
           }
         },
         "required": [
@@ -3504,6 +3648,12 @@
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
                 },
+                "compareAtPriceCents": {
+                  "nullable": true,
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
                 "story": {
                   "type": "string"
                 },
@@ -3610,6 +3760,7 @@
                 "name",
                 "type",
                 "priceCents",
+                "compareAtPriceCents",
                 "story",
                 "images",
                 "artworkUrl",
@@ -3747,40 +3898,66 @@
             "maximum": 9007199254740991
           },
           "byOrder": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "orderNumber": {
-                  "type": "string"
-                },
-                "date": {
-                  "type": "string"
-                },
-                "revenueCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "costCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "profitCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "orderNumber": {
+                      "type": "string"
+                    },
+                    "date": {
+                      "type": "string"
+                    },
+                    "revenueCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "costCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "profitCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "orderNumber",
+                    "date",
+                    "revenueCents",
+                    "costCents",
+                    "profitCents"
+                  ]
                 }
               },
-              "required": [
-                "orderNumber",
-                "date",
-                "revenueCents",
-                "costCents",
-                "profitCents"
-              ]
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ]
           },
           "planMargins": {
             "type": "object",
@@ -3825,56 +4002,82 @@
             "maximum": 9007199254740991
           },
           "groups": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "deliveryNumber": {
-                  "nullable": true,
-                  "type": "string"
-                },
-                "orders": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "orderId": {
-                        "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      "orderNumber": {
-                        "type": "string"
-                      },
-                      "cashDueCents": {
-                        "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      "settled": {
-                        "type": "boolean"
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "deliveryNumber": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "orders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "orderId": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "orderNumber": {
+                            "type": "string"
+                          },
+                          "cashDueCents": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "settled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "orderId",
+                          "orderNumber",
+                          "cashDueCents",
+                          "settled"
+                        ]
                       }
                     },
-                    "required": [
-                      "orderId",
-                      "orderNumber",
-                      "cashDueCents",
-                      "settled"
-                    ]
-                  }
-                },
-                "totalDueCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
+                    "totalDueCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "deliveryNumber",
+                    "orders",
+                    "totalDueCents"
+                  ]
                 }
               },
-              "required": [
-                "deliveryNumber",
-                "orders",
-                "totalDueCents"
-              ]
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ]
           }
         },
         "required": [
@@ -4485,6 +4688,160 @@
           "setup"
         ]
       },
+      "PublicPromotionInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "name": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED"
+            ]
+          },
+          "discountValue": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allProducts": {
+            "type": "boolean"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productType": {
+                  "type": "string",
+                  "enum": [
+                    "HOODIE",
+                    "STIMPIE",
+                    "PACK"
+                  ]
+                },
+                "productId": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "productType",
+                "productId"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "discountType",
+          "discountValue",
+          "allProducts",
+          "targets"
+        ]
+      },
+      "AdminPromotionInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "name": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED"
+            ]
+          },
+          "discountValue": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allProducts": {
+            "type": "boolean"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productType": {
+                  "type": "string",
+                  "enum": [
+                    "HOODIE",
+                    "STIMPIE",
+                    "PACK"
+                  ]
+                },
+                "productId": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "productType",
+                "productId"
+              ]
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "startsAt": {
+            "nullable": true,
+            "type": "string"
+          },
+          "endsAt": {
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SCHEDULED",
+              "ENDED",
+              "PAUSED"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "discountType",
+          "discountValue",
+          "allProducts",
+          "targets",
+          "enabled",
+          "startsAt",
+          "endsAt",
+          "state",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "SettingsInput": {
         "type": "object",
         "properties": {
@@ -4678,7 +5035,6 @@
         },
         "required": [
           "quantity",
-          "reserved",
           "available"
         ]
       },
@@ -4975,11 +5331,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "reserved": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -4991,8 +5342,7 @@
           "images",
           "builderTint",
           "builderTexture",
-          "available",
-          "reserved"
+          "available"
         ],
         "additionalProperties": false
       },
@@ -5019,11 +5369,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "reserved": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -5031,8 +5376,7 @@
           "label",
           "position",
           "active",
-          "available",
-          "reserved"
+          "available"
         ],
         "additionalProperties": false
       },
@@ -5135,6 +5479,12 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "compareAtPriceCents": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "story": {
             "type": "string"
           },
@@ -5230,6 +5580,7 @@
           "name",
           "type",
           "priceCents",
+          "compareAtPriceCents",
           "story",
           "images",
           "artworkUrl",
@@ -5260,6 +5611,12 @@
             "type": "string"
           },
           "priceCents": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "compareAtPriceCents": {
+            "nullable": true,
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -5305,6 +5662,7 @@
           "name",
           "description",
           "priceCents",
+          "compareAtPriceCents",
           "images",
           "colors",
           "inStock"
@@ -5329,6 +5687,12 @@
             "type": "string"
           },
           "priceCents": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "compareAtPriceCents": {
+            "nullable": true,
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -5401,6 +5765,7 @@
           "name",
           "description",
           "priceCents",
+          "compareAtPriceCents",
           "images",
           "inStock",
           "details",
@@ -5437,6 +5802,12 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "compareAtPriceCents": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "badge": {
             "nullable": true,
             "type": "string"
@@ -5449,6 +5820,7 @@
           "description",
           "stimpieCount",
           "priceCents",
+          "compareAtPriceCents",
           "badge"
         ],
         "additionalProperties": false
@@ -5500,12 +5872,23 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
-          "available": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
+          "colorIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
           },
-          "reserved": {
+          "sizeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "available": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -5522,8 +5905,9 @@
           "images",
           "active",
           "position",
-          "available",
-          "reserved"
+          "colorIds",
+          "sizeIds",
+          "available"
         ],
         "additionalProperties": false
       },
@@ -5605,11 +5989,6 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
-          },
-          "reserved": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
           }
         },
         "required": [
@@ -5628,8 +6007,7 @@
           "active",
           "position",
           "quantity",
-          "available",
-          "reserved"
+          "available"
         ],
         "additionalProperties": false
       },
@@ -6391,6 +6769,13 @@
               "featuredDropSlug": {
                 "nullable": true,
                 "type": "string"
+              },
+              "featuredStimpieSlug": {
+                "nullable": true,
+                "type": "string"
+              },
+              "showDropSections": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -6398,7 +6783,9 @@
               "heroSubheadline",
               "heroVideoUrl",
               "heroImageUrl",
-              "featuredDropSlug"
+              "featuredDropSlug",
+              "featuredStimpieSlug",
+              "showDropSections"
             ],
             "additionalProperties": false
           },
@@ -6490,68 +6877,122 @@
             "additionalProperties": false
           },
           "faqs": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "question": {
-                  "type": "string"
-                },
-                "answer": {
-                  "type": "string"
-                },
-                "group": {
-                  "nullable": true,
-                  "type": "string"
-                },
-                "showOnHome": {
-                  "type": "boolean"
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "question": {
+                      "type": "string"
+                    },
+                    "answer": {
+                      "type": "string"
+                    },
+                    "group": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "showOnHome": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "question",
+                    "answer",
+                    "group",
+                    "showOnHome"
+                  ],
+                  "additionalProperties": false
                 }
               },
-              "required": [
-                "id",
-                "question",
-                "answer",
-                "group",
-                "showOnHome"
-              ],
-              "additionalProperties": false
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "additionalProperties": false
           },
           "reviews": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "name": {
-                  "type": "string"
-                },
-                "text": {
-                  "type": "string"
-                },
-                "mediaUrl": {
-                  "nullable": true,
-                  "type": "string"
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "mediaUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "text",
+                    "mediaUrl"
+                  ],
+                  "additionalProperties": false
                 }
               },
-              "required": [
-                "id",
-                "name",
-                "text",
-                "mediaUrl"
-              ],
-              "additionalProperties": false
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -6609,6 +7050,13 @@
               "featuredDropSlug": {
                 "nullable": true,
                 "type": "string"
+              },
+              "featuredStimpieSlug": {
+                "nullable": true,
+                "type": "string"
+              },
+              "showDropSections": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -6616,7 +7064,9 @@
               "heroSubheadline",
               "heroVideoUrl",
               "heroImageUrl",
-              "featuredDropSlug"
+              "featuredDropSlug",
+              "featuredStimpieSlug",
+              "showDropSections"
             ],
             "additionalProperties": false
           },
@@ -8237,16 +8687,70 @@
             ]
           },
           "upcoming": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Drop"
-            }
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Drop"
+                }
+              },
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "additionalProperties": false
           },
           "archive": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Drop"
-            }
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Drop"
+                }
+              },
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -8364,6 +8868,12 @@
                   "minimum": -9007199254740991,
                   "maximum": 9007199254740991
                 },
+                "compareAtPriceCents": {
+                  "nullable": true,
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
                 "story": {
                   "type": "string"
                 },
@@ -8471,6 +8981,7 @@
                 "name",
                 "type",
                 "priceCents",
+                "compareAtPriceCents",
                 "story",
                 "images",
                 "artworkUrl",
@@ -8612,41 +9123,68 @@
             "maximum": 9007199254740991
           },
           "byOrder": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "orderNumber": {
-                  "type": "string"
-                },
-                "date": {
-                  "type": "string"
-                },
-                "revenueCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "costCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
-                },
-                "profitCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "orderNumber": {
+                      "type": "string"
+                    },
+                    "date": {
+                      "type": "string"
+                    },
+                    "revenueCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "costCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "profitCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "orderNumber",
+                    "date",
+                    "revenueCents",
+                    "costCents",
+                    "profitCents"
+                  ],
+                  "additionalProperties": false
                 }
               },
-              "required": [
-                "orderNumber",
-                "date",
-                "revenueCents",
-                "costCents",
-                "profitCents"
-              ],
-              "additionalProperties": false
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "additionalProperties": false
           },
           "planMargins": {
             "type": "object",
@@ -8693,58 +9231,85 @@
             "maximum": 9007199254740991
           },
           "groups": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "deliveryNumber": {
-                  "nullable": true,
-                  "type": "string"
-                },
-                "orders": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "orderId": {
-                        "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      "orderNumber": {
-                        "type": "string"
-                      },
-                      "cashDueCents": {
-                        "type": "integer",
-                        "minimum": -9007199254740991,
-                        "maximum": 9007199254740991
-                      },
-                      "settled": {
-                        "type": "boolean"
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "deliveryNumber": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "orders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "orderId": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "orderNumber": {
+                            "type": "string"
+                          },
+                          "cashDueCents": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "settled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "orderId",
+                          "orderNumber",
+                          "cashDueCents",
+                          "settled"
+                        ],
+                        "additionalProperties": false
                       }
                     },
-                    "required": [
-                      "orderId",
-                      "orderNumber",
-                      "cashDueCents",
-                      "settled"
-                    ],
-                    "additionalProperties": false
-                  }
-                },
-                "totalDueCents": {
-                  "type": "integer",
-                  "minimum": -9007199254740991,
-                  "maximum": 9007199254740991
+                    "totalDueCents": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "deliveryNumber",
+                    "orders",
+                    "totalDueCents"
+                  ],
+                  "additionalProperties": false
                 }
               },
-              "required": [
-                "deliveryNumber",
-                "orders",
-                "totalDueCents"
-              ],
-              "additionalProperties": false
-            }
+              "page": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pageSize": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "total": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "items",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -9379,6 +9944,164 @@
         ],
         "additionalProperties": false
       },
+      "PublicPromotion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "name": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED"
+            ]
+          },
+          "discountValue": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allProducts": {
+            "type": "boolean"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productType": {
+                  "type": "string",
+                  "enum": [
+                    "HOODIE",
+                    "STIMPIE",
+                    "PACK"
+                  ]
+                },
+                "productId": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "productType",
+                "productId"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "discountType",
+          "discountValue",
+          "allProducts",
+          "targets"
+        ],
+        "additionalProperties": false
+      },
+      "AdminPromotion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "name": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string",
+            "enum": [
+              "PERCENTAGE",
+              "FIXED"
+            ]
+          },
+          "discountValue": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allProducts": {
+            "type": "boolean"
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productType": {
+                  "type": "string",
+                  "enum": [
+                    "HOODIE",
+                    "STIMPIE",
+                    "PACK"
+                  ]
+                },
+                "productId": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "productType",
+                "productId"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "startsAt": {
+            "nullable": true,
+            "type": "string"
+          },
+          "endsAt": {
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SCHEDULED",
+              "ENDED",
+              "PAUSED"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "discountType",
+          "discountValue",
+          "allProducts",
+          "targets",
+          "enabled",
+          "startsAt",
+          "endsAt",
+          "state",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
       "Settings": {
         "type": "object",
         "properties": {
@@ -9610,7 +10333,6 @@
         },
         "required": [
           "quantity",
-          "reserved",
           "available"
         ],
         "additionalProperties": false
@@ -10153,9 +10875,33 @@
     },
     "/api/v1/products/hoodies": {
       "get": {
-        "summary": "Active hoodies",
+        "summary": "Active hoodies (paginated)",
         "tags": [
           "catalog"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "responses": {
           "200": {
@@ -10163,10 +10909,57 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/HoodieSummary"
-                  }
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/HoodieSummary"
+                      }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -10228,11 +11021,33 @@
     },
     "/api/v1/products/stimpies": {
       "get": {
-        "summary": "Stimpies (default: AVAILABLE, LOW and SOLD_OUT)",
+        "summary": "Stimpies (default: AVAILABLE, LOW and SOLD_OUT; paginated)",
         "tags": [
           "catalog"
         ],
         "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          },
           {
             "schema": {
               "type": "string",
@@ -10298,10 +11113,37 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Stimpie"
-                  }
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Stimpie"
+                      }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -10383,9 +11225,33 @@
     },
     "/api/v1/packs": {
       "get": {
-        "summary": "Active packs, ordered",
+        "summary": "Active packs, ordered (paginated)",
         "tags": [
           "catalog"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "responses": {
           "200": {
@@ -10393,10 +11259,57 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Pack"
-                  }
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Pack"
+                      }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -10406,9 +11319,33 @@
     },
     "/api/v1/drops": {
       "get": {
-        "summary": "Live drop, upcoming drops and the archive (max-age 10, no-store within 60 s of a start)",
+        "summary": "Live drop plus paginated upcoming drops and archive (max-age 10, no-store within 60 s of a start)",
         "tags": [
           "drops"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "responses": {
           "200": {
@@ -11445,9 +12382,33 @@
     },
     "/api/v1/content": {
       "get": {
-        "summary": "Everything the pages show that the owner edits (announcement, texts, FAQs, reviews)",
+        "summary": "Page content with paginated FAQs and reviews",
         "tags": [
           "content"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "responses": {
           "200": {
@@ -11476,6 +12437,49 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BuilderConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/promotions": {
+      "get": {
+        "summary": "List currently active promotions",
+        "tags": [
+          "promotions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicPromotion"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -11612,7 +12616,7 @@
         }
       },
       "post": {
-        "summary": "Create a colour (creates zero-stock variants)",
+        "summary": "Create a shared colour option",
         "tags": [
           "options"
         ],
@@ -12136,7 +13140,7 @@
         }
       },
       "post": {
-        "summary": "Create a size (creates zero-stock variants)",
+        "summary": "Create a shared size option",
         "tags": [
           "options"
         ],
@@ -12784,7 +13788,7 @@
         }
       },
       "post": {
-        "summary": "Create a hoodie (creates zero-stock variants)",
+        "summary": "Create a hoodie with its selected colours and sizes",
         "tags": [
           "catalog"
         ],
@@ -12799,11 +13803,6 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 120
-                  },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
                   },
                   "description": {
                     "type": "string",
@@ -12839,6 +13838,24 @@
                   },
                   "active": {
                     "type": "boolean"
+                  },
+                  "colorIds": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "sizeIds": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
                   }
                 },
                 "required": [
@@ -13038,11 +14055,6 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-                  },
                   "description": {
                     "type": "string",
                     "maxLength": 2000
@@ -13077,6 +14089,24 @@
                   },
                   "active": {
                     "type": "boolean"
+                  },
+                  "colorIds": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "sizeIds": {
+                    "maxItems": 100,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -13362,11 +14392,6 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-                  },
                   "type": {
                     "type": "string",
                     "enum": [
@@ -13538,11 +14563,6 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 120
-                  },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
                   },
                   "type": {
                     "type": "string",
@@ -13855,11 +14875,6 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-                  },
                   "description": {
                     "type": "string",
                     "maxLength": 2000
@@ -14086,11 +15101,6 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 120
-                  },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
                   },
                   "description": {
                     "type": "string",
@@ -14422,69 +15432,136 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 120
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "story": {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      "accentColor": {
+                        "type": "string",
+                        "enum": [
+                          "BUTTER",
+                          "SKY",
+                          "LILAC"
+                        ]
+                      },
+                      "accentHex": {
+                        "type": "string",
+                        "pattern": "^#[0-9A-Fa-f]{6}$"
+                      },
+                      "startsAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      "endsAt": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      "teaserImage": {
+                        "nullable": true,
+                        "type": "string",
+                        "maxLength": 500,
+                        "format": "uri"
+                      },
+                      "teaserVideo": {
+                        "nullable": true,
+                        "type": "string",
+                        "maxLength": 500,
+                        "format": "uri"
+                      },
+                      "stimpieIds": {
+                        "maxItems": 100,
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "accentHex",
+                      "startsAt"
+                    ],
+                    "additionalProperties": false
                   },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-                  },
-                  "story": {
-                    "type": "string",
-                    "maxLength": 2000
-                  },
-                  "accentColor": {
-                    "type": "string",
-                    "enum": [
-                      "BUTTER",
-                      "SKY",
-                      "LILAC"
-                    ]
-                  },
-                  "startsAt": {
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-                  },
-                  "endsAt": {
-                    "nullable": true,
-                    "type": "string",
-                    "format": "date-time",
-                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
-                  },
-                  "teaserImage": {
-                    "nullable": true,
-                    "type": "string",
-                    "maxLength": 500,
-                    "format": "uri"
-                  },
-                  "teaserVideo": {
-                    "nullable": true,
-                    "type": "string",
-                    "maxLength": 500,
-                    "format": "uri"
-                  },
-                  "stimpieIds": {
-                    "maxItems": 100,
-                    "type": "array",
-                    "items": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 9007199254740991
-                    }
+                  {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      },
+                      "story": {
+                        "type": "string",
+                        "maxLength": 2000
+                      },
+                      "accentColor": {
+                        "type": "string",
+                        "enum": [
+                          "BUTTER",
+                          "SKY",
+                          "LILAC"
+                        ]
+                      },
+                      "accentHex": {
+                        "type": "string",
+                        "pattern": "^#[0-9A-Fa-f]{6}$"
+                      },
+                      "startsAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      "endsAt": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                      },
+                      "teaserImage": {
+                        "nullable": true,
+                        "type": "string",
+                        "maxLength": 500,
+                        "format": "uri"
+                      },
+                      "teaserVideo": {
+                        "nullable": true,
+                        "type": "string",
+                        "maxLength": 500,
+                        "format": "uri"
+                      },
+                      "stimpieIds": {
+                        "maxItems": 100,
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "accentColor",
+                      "startsAt"
+                    ],
+                    "additionalProperties": false
                   }
-                },
-                "required": [
-                  "name",
-                  "accentColor",
-                  "startsAt"
-                ],
-                "additionalProperties": false
+                ]
               }
             }
           }
@@ -14601,11 +15678,6 @@
                     "minLength": 1,
                     "maxLength": 120
                   },
-                  "slug": {
-                    "type": "string",
-                    "maxLength": 140,
-                    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
-                  },
                   "story": {
                     "type": "string",
                     "maxLength": 2000
@@ -14617,6 +15689,10 @@
                       "SKY",
                       "LILAC"
                     ]
+                  },
+                  "accentHex": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}$"
                   },
                   "startsAt": {
                     "type": "string",
@@ -16691,9 +17767,33 @@
     },
     "/api/v1/admin/stock/hoodies": {
       "get": {
-        "summary": "Hoodie stock grid (colour x size)",
+        "summary": "Stock for each hoodie and its selected colour/size variants (paginated by hoodie)",
         "tags": [
           "stock"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "security": [
           {
@@ -16720,7 +17820,7 @@
                         "$ref": "#/components/schemas/Size"
                       }
                     },
-                    "hoodies": {
+                    "items": {
                       "type": "array",
                       "items": {
                         "type": "object",
@@ -16732,6 +17832,18 @@
                           },
                           "name": {
                             "type": "string"
+                          },
+                          "colors": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Color"
+                            }
+                          },
+                          "sizes": {
+                            "type": "array",
+                            "items": {
+                              "$ref": "#/components/schemas/Size"
+                            }
                           },
                           "cells": {
                             "type": "array",
@@ -16774,7 +17886,6 @@
                                 "colorId",
                                 "sizeId",
                                 "quantity",
-                                "reserved",
                                 "available"
                               ],
                               "additionalProperties": false
@@ -16784,16 +17895,34 @@
                         "required": [
                           "hoodieId",
                           "name",
+                          "colors",
+                          "sizes",
                           "cells"
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     }
                   },
                   "required": [
-                    "colors",
-                    "sizes",
-                    "hoodies"
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
                   ],
                   "additionalProperties": false
                 }
@@ -16828,6 +17957,30 @@
         "summary": "Stimpie stock list",
         "tags": [
           "stock"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "security": [
           {
@@ -16883,6 +18036,14 @@
                           },
                           "low": {
                             "type": "boolean"
+                          },
+                          "artworkUrl": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "imageUrl": {
+                            "nullable": true,
+                            "type": "string"
                           }
                         },
                         "required": [
@@ -16891,16 +18052,33 @@
                           "type",
                           "dropName",
                           "quantity",
-                          "reserved",
                           "available",
                           "low"
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
                     }
                   },
                   "required": [
-                    "items"
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
                   ],
                   "additionalProperties": false
                 }
@@ -16932,7 +18110,7 @@
     },
     "/api/v1/admin/stock/adjust": {
       "post": {
-        "summary": "Add or remove units (note required; never below reserved)",
+        "summary": "Adjust on-hand quantity (note required; cannot reduce units committed to open orders)",
         "tags": [
           "stock"
         ],
@@ -23962,7 +25140,7 @@
     },
     "/api/v1/admin/finance/profit": {
       "get": {
-        "summary": "Profit for a date range (delivered orders, business timezone)",
+        "summary": "Profit for a date range (delivered orders, business timezone; by-order rows paginated)",
         "tags": [
           "finance"
         ],
@@ -23983,6 +25161,28 @@
             },
             "in": "query",
             "name": "to",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
             "required": false
           }
         ],
@@ -24027,9 +25227,33 @@
     },
     "/api/v1/admin/finance/cash": {
       "get": {
-        "summary": "Cash outstanding, grouped by delivery number",
+        "summary": "Cash outstanding, grouped by delivery number (groups paginated)",
         "tags": [
           "finance"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
         ],
         "security": [
           {
@@ -25136,7 +26360,7 @@
         "tags": [
           "content"
         ],
-        "description": "announcement {enabled,text,linkUrl}; homepage {heroHeadline,heroSubheadline,heroVideoUrl,heroImageUrl,featuredDropSlug}; policies {deliveryReturns,care,terms,privacy}; about {about}; how-it-works {steps,promises,faqs}.",
+        "description": "announcement {enabled,text,linkUrl}; homepage {heroHeadline,heroSubheadline,heroVideoUrl,heroImageUrl,featuredDropSlug,featuredStimpieSlug,showDropSections}; policies {deliveryReturns,care,terms,privacy}; about {about}; how-it-works {steps,promises,faqs}.",
         "requestBody": {
           "required": true,
           "content": {
@@ -27481,6 +28705,475 @@
                   "items": {
                     "$ref": "#/components/schemas/AuthUser"
                   }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions": {
+      "get": {
+        "summary": "List promotions",
+        "tags": [
+          "promotions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": 1,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "in": "query",
+            "name": "pageSize",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AdminPromotion"
+                      }
+                    },
+                    "page": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "page",
+                    "pageSize",
+                    "total"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a product promotion",
+        "tags": [
+          "promotions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "discountType": {
+                    "type": "string",
+                    "enum": [
+                      "PERCENTAGE",
+                      "FIXED"
+                    ]
+                  },
+                  "discountValue": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000000
+                  },
+                  "allProducts": {
+                    "type": "boolean"
+                  },
+                  "targets": {
+                    "maxItems": 5000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productType": {
+                          "type": "string",
+                          "enum": [
+                            "HOODIE",
+                            "STIMPIE",
+                            "PACK"
+                          ]
+                        },
+                        "productId": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "productType",
+                        "productId"
+                      ]
+                    }
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "startsAt": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "endsAt": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  }
+                },
+                "required": [
+                  "name",
+                  "discountType",
+                  "discountValue",
+                  "allProducts",
+                  "targets"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPromotion"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/promotions/{id}": {
+      "get": {
+        "summary": "Get a promotion",
+        "tags": [
+          "promotions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPromotion"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update or pause a promotion",
+        "tags": [
+          "promotions"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "discountType": {
+                    "type": "string",
+                    "enum": [
+                      "PERCENTAGE",
+                      "FIXED"
+                    ]
+                  },
+                  "discountValue": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000000
+                  },
+                  "allProducts": {
+                    "type": "boolean"
+                  },
+                  "targets": {
+                    "maxItems": 5000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productType": {
+                          "type": "string",
+                          "enum": [
+                            "HOODIE",
+                            "STIMPIE",
+                            "PACK"
+                          ]
+                        },
+                        "productId": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "productType",
+                        "productId"
+                      ]
+                    }
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "startsAt": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  },
+                  "endsAt": {
+                    "nullable": true,
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPromotion"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a promotion",
+        "tags": [
+          "promotions"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    null
+                  ],
+                  "description": "No content"
                 }
               }
             }

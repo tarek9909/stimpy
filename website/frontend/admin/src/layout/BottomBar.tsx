@@ -47,7 +47,7 @@ function BarLink({ item, active }: { item: NavItem; active: boolean }) {
   );
 }
 
-/** Phone navigation: Overview, Orders, Deliveries, Stock and a More sheet (dashboard-pages 2.2). */
+/** Phone navigation: Overview, Orders, Stock and a More sheet (dashboard-pages 2.2). */
 export function BottomBar() {
   const { pathname } = useLocation();
   const { user } = useSession();

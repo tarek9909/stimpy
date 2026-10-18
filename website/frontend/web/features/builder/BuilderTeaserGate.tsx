@@ -35,7 +35,7 @@ export function BuilderTeaserGate({ data, fallback }: { data: BuilderData; fallb
   }, []);
 
   return (
-    <div ref={section}>
+    <div ref={section} onPointerEnter={() => setActive(true)} onFocusCapture={() => setActive(true)}>
       {active ? (
         <Suspense fallback={fallback}>
           <InteractiveTeaser data={data} />

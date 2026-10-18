@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { AccentColor } from './types';
 
 /**
@@ -26,4 +27,29 @@ export function accentSurface(accent: AccentColor | null | undefined): SurfaceTo
     default:
       return 'butter';
   }
+}
+
+/** Inline surface values for a user-picked drop colour, with readable foreground and controls. */
+export function accentColorStyle(hex: string | null | undefined): CSSProperties | undefined {
+  if (!hex || !/^#[0-9A-Fa-f]{6}$/.test(hex)) return undefined;
+  const channels = [1, 3, 5].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255);
+  const weights = [0.2126, 0.7152, 0.0722] as const;
+  const luminance = channels
+    .map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+    .reduce((sum, channel, index) => sum + channel * weights[index]!, 0);
+  const darkText = luminance >= 0.179;
+  const foreground = darkText ? 'var(--color-black)' : 'white';
+  return {
+    backgroundColor: hex,
+    color: foreground,
+    '--bg': hex,
+    '--fg': foreground,
+    '--fg-muted': foreground,
+    '--border': darkText ? 'color-mix(in srgb, black 35%, transparent)' : 'color-mix(in srgb, white 35%, transparent)',
+    '--border-control': foreground,
+    '--fg-inverse': darkText ? 'white' : 'var(--color-black)',
+    '--fg-danger': foreground,
+    '--focus-ring': foreground,
+    '--zip-line': foreground,
+  } as CSSProperties;
 }

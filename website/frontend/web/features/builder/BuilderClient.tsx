@@ -10,6 +10,7 @@ import { track } from '@/lib/track';
 import { readOverrides, type BuilderOverrides } from './overrides';
 import { browserApi } from '@/lib/api-browser';
 import { toBuilderHoodie } from './data';
+import { CampaignHoodieStage } from './CampaignHoodieStage';
 
 const BuilderPreviewDialog = dynamic(() => import('./BuilderPreviewDialog'), { ssr: false });
 
@@ -61,6 +62,9 @@ export function BuilderClient({ data, share, source }: { data: BuilderData; shar
       onAddToCart={onAddToCart}
       refreshInventory={refreshInventory}
       renderPreviewAction={(preview) => <BuilderPagePreview {...preview} />}
+      render2DStage={({ color, stimpie }) => <CampaignHoodieStage color={color} stimpie={stimpie} priority />}
+      stageAspect="1 / 1"
+      hrefs={{ sizeGuide: '/help?tab=size' }}
       track={track}
       force3d={overrides.force3d}
       debug3d={!!overrides.force3d}

@@ -5,6 +5,7 @@ import { AppError } from '../lib/errors';
 import { purchaseBlockReason, type PurchaseReason } from './drops';
 import type { ProblemRef, StockNeed, StockRef } from './stock';
 import { mergeNeeds } from './stock';
+import { promotionPriceKey, promotionPriceMap } from './promotions';
 
 /**
  * PRICING SERVICE (work package B). Turns cart items into priced, validated lines (business-rules section 1),
@@ -120,7 +121,7 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
     packIds.length ? db.pack.findMany({ where: { id: { in: uniq(packIds) } } }) : Promise.resolve([]),
     stimpieIds.length ? db.stimpie.findMany({ where: { id: { in: uniq(stimpieIds) } }, include: { drop: true } }) : Promise.resolve([]),
     hoodieIds.length
-      ? db.hoodieVariant.findMany({ where: { hoodieId: { in: uniq(hoodieIds) }, colorId: { in: uniq(colorIds) }, sizeId: { in: uniq(sizeIds) } } })
+      ? db.hoodieVariant.findMany({ where: { hoodieId: { in: uniq(hoodieIds) }, colorId: { in: uniq(colorIds) }, sizeId: { in: uniq(sizeIds) }, active: true } })
       : Promise.resolve([]),
     ctx.settings.get('orders'),
     resolveDelivery(ctx, db, input.areaId, input.areaPath ?? 'delivery.areaId'),
@@ -133,6 +134,11 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
   const variantBy = new Map(variants.map((v) => [`${v.hoodieId}-${v.colorId}-${v.sizeId}`, v]));
 
   const at = now();
+  const promotionPrices = await promotionPriceMap(db, [
+    ...hoodies.map((h) => ({ productType: 'HOODIE' as const, productId: h.id, priceCents: h.priceCents })),
+    ...stimpies.map((s) => ({ productType: 'STIMPIE' as const, productId: s.id, priceCents: s.priceCents })),
+    ...packs.map((p) => ({ productType: 'PACK' as const, productId: p.id, priceCents: p.priceCents })),
+  ], at);
   const fields: Record<string, string> = {};
   const lines: PricedLine[] = [];
   const allProblems: PurchaseProblem[] = [];
@@ -169,7 +175,7 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
         ok = false;
       } else {
         checkStimpie(item.stimpieId, `${p}.stimpieId`);
-        price = s.priceCents;
+        price = promotionPrices.get(promotionPriceKey('STIMPIE', s.id))?.priceCents ?? s.priceCents;
         name = s.name;
         detail = { hoodie: null, color: null, size: null, stimpies: [s.name] };
         cost = s.costCents;
@@ -220,11 +226,11 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
         cost = hoodie.costCents + settings.hardwareCostCents;
         if (item.kind === 'pack' && pack) {
           item.stimpieIds.forEach((sid, m) => checkStimpie(sid, `${p}.stimpieIds.${m}`));
-          price = pack.priceCents;
+          price = promotionPrices.get(promotionPriceKey('PACK', pack.id))?.priceCents ?? pack.priceCents;
           name = pack.name;
           detail = { hoodie: hoodie.name, color: color.name, size: size.label, stimpies: stimpieNames };
         } else {
-          price = hoodie.priceCents;
+          price = promotionPrices.get(promotionPriceKey('HOODIE', hoodie.id))?.priceCents ?? hoodie.priceCents;
           name = hoodie.name;
           detail = { hoodie: hoodie.name, color: color.name, size: size.label, stimpies: [] };
         }

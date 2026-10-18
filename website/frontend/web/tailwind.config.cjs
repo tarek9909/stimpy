@@ -3,13 +3,7 @@ module.exports = {
   presets: [require('@stimpy/ui/preset')],
   theme: {
     extend: {
-      colors: {
-        action: '#191919',
-        cream: '#F3F4F3',
-        surface: { DEFAULT: '#F5F5F4' },
-        line: '#E2E3E1',
-        'disabled-bg': '#EBECEA',
-      },
+
       fontSize: {
         display: ['4rem', { lineHeight: '1.08', letterSpacing: '0', fontWeight: '700' }],
         h1: ['2.5rem', { lineHeight: '1.15', letterSpacing: '0', fontWeight: '500' }],

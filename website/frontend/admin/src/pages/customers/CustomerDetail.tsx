@@ -374,7 +374,7 @@ function EditCustomerDialog({ customer, open, onClose }: { customer: Customer; o
       onClose={onClose}
       title="Edit customer"
       size="md"
-      closeOnBackdrop={false}
+      closeOnBackdrop={!form.formState.isSubmitting}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={form.formState.isSubmitting}>

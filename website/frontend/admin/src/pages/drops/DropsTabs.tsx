@@ -31,7 +31,7 @@ export function UpcomingTab() {
   const columns: Column<AdminDrop>[] = [
     { id: 'name', header: 'Drop', priority: 'primary', cell: (d) => <TextLink href={`/drops/${d.id}`} className="font-medium">{d.name}</TextLink> },
     { id: 'launch', header: 'Launch', priority: 'primary', mobileLabel: '', cell: (d) => <time dateTime={d.startsAt} className="tabular-nums">{f.dateTime(d.startsAt)}</time> },
-    { id: 'accent', header: 'Accent', cell: (d) => <AccentChip accent={d.accentColor} /> },
+    { id: 'accent', header: 'Accent', cell: (d) => <AccentChip accentHex={d.accentHex} /> },
     { id: 'stimpies', header: 'Stimpies', numeric: true, cell: (d) => d.stimpies.length },
     { id: 'units', header: 'Total units', numeric: true, cell: (d) => d.unitsTotal },
     { id: 'edit', header: 'Edit', mobileLabel: '', cell: (d) => <EditLink drop={d} /> },
@@ -74,7 +74,7 @@ function LiveDropPanel({ drop }: { drop: AdminDrop }) {
           </h2>
           <div className="flex flex-wrap items-center gap-3">
             <StateBadge state={drop.state} />
-            <AccentChip accent={drop.accentColor} />
+            <AccentChip accentHex={drop.accentHex} />
             <span className="text-body-sm text-fg-muted" data-testid="drop-ends">
               {drop.endsAt ? `Ends in ${remainingText(drop.endsAt, now)} (${f.dateTime(drop.endsAt)})` : 'No end date'}
             </span>

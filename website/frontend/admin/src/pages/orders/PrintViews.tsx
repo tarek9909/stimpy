@@ -56,13 +56,14 @@ function LabelCard({ order, compact = false }: { order: AdminOrder; compact?: bo
     >
       <p className="text-caption uppercase tracking-wide">Order number</p>
       <p className={`font-mono font-bold tabular-nums ${compact ? 'text-h2' : 'text-display'}`}>{order.number}</p>
-      {order.deliveryNumber ? (
-        <p className="mt-3">
-          <span className="text-caption uppercase tracking-wide">Delivery number</span>
-          <br />
-          <span className="font-mono text-h2 font-bold">{order.deliveryNumber}</span>
-        </p>
-      ) : null}
+      <p className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-line pb-2">
+        <span className="text-caption uppercase tracking-wide">Delivery number</span>
+        {order.deliveryNumber ? (
+          <span className={`font-mono font-bold ${compact ? 'text-h3' : 'text-h2'}`}>{order.deliveryNumber}</span>
+        ) : (
+          <span className="text-body-sm text-fg-muted print:text-ink">Assigned when sent out for delivery</span>
+        )}
+      </p>
       <hr className="my-3 border-ink" />
       <p className="text-h3 font-bold">{order.customer.name}</p>
       <p className="text-h5 tabular-nums">{order.contact.phone}</p>

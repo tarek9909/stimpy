@@ -39,7 +39,9 @@
 | `OrderSource` | `WEBSITE`, `INSTAGRAM`, `WHATSAPP`, `MANUAL` |
 | `OrderItemKind` | `PACK`, `HOODIE`, `STIMPIE` |
 | `StimpieType` | `CORE`, `LIMITED` |
-| `AccentColor` | `BUTTER`, `SKY`, `LILAC` (hex values are fixed in code: `#FFE45C`, `#5CC8FF`, `#C9B6FF`) |
+| `PromotionDiscountType` | `PERCENTAGE`, `FIXED` |
+| `PromotionProductType` | `HOODIE`, `STIMPIE`, `PACK` |
+| `AccentColor` | `BUTTER`, `SKY`, `LILAC` (legacy compatibility palette; exact drop color is stored in `accent_hex`) |
 | `StockItemType` | `HOODIE_VARIANT`, `STIMPIE` |
 | `StockField` | `QUANTITY`, `RESERVED` |
 | `StockReason` | `INITIAL`, `RESTOCK`, `CORRECTION`, `DAMAGED`, `ORDER_RESERVED`, `ORDER_RELEASED`, `ORDER_SOLD`, `ORDER_RETURNED`, `ORDER_WRITTEN_OFF` |
@@ -154,7 +156,8 @@ Available = `quantity - reserved`. Variants are created automatically when a hoo
 | id | INT PK | |
 | name, slug (UNIQUE) | | |
 | story | TEXT | |
-| accent_color | `AccentColor` | |
+| accent_color | `AccentColor` | nearest legacy color for compatibility |
+| accent_hex | VARCHAR(7) | exact dashboard-picked `#RRGGBB` storefront accent |
 | starts_at | DATETIME(3) | |
 | ends_at | DATETIME(3) NULL | planned end |
 | ended_at | DATETIME(3) NULL | set when the founder ends it early |
@@ -180,6 +183,20 @@ The drop's `state` is **derived**, never stored (see [business rules §6](busine
 
 ### `packs`
 `id`, `name`, `slug` UNIQUE, `description` TEXT, `stimpie_count` INT (1–5), `price_cents` INT, `badge` VARCHAR(40) NULL, `active`, `position`.
+
+### `promotions`
+| Column | Type | Notes |
+|---|---|---|
+| id | INT PK | |
+| name | VARCHAR(120) | dashboard label |
+| discount_type | `PromotionDiscountType` | percentage or fixed amount |
+| discount_value | INT | whole percent (1–100), or fixed USD cents |
+| all_products | TINYINT(1) | applies to future catalog products too |
+| enabled | TINYINT(1) | manual pause/resume switch |
+| starts_at, ends_at | DATETIME(3) NULL | null start = immediately; null end = no expiry |
+| created_at, updated_at | DATETIME(3) | |
+
+`promotion_items` maps a promotion to `(product_type, product_id)` for selected hoodies, Stimpies and packs. The product reference is polymorphic, so there is no product FK; the API checks selected ids when saving. Active overlapping promotions do not stack: the lowest resulting item price wins. Checkout recalculates the active price and snapshots it on each order line.
 
 ### `areas`
 `id`, `name` UNIQUE, `fee_cents` INT NULL (null = use the default fee), `est_days` INT NULL, `active`.

@@ -55,11 +55,20 @@ export function HeroMedia({ videoUrl, imageUrl, alt, ratio, priority, sizes, cla
   const videoRef = useRef<HTMLVideoElement>(null);
   const wantsPlayback = useRef(false);
   const [visible, setVisible] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [autoplayAllowed, setAutoplayAllowed] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!videoUrl) return;
+    const update = () => setPageVisible(!document.hidden);
+    update();
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
+  }, [videoUrl]);
 
   useEffect(() => {
     if (!videoUrl) return;
@@ -79,6 +88,7 @@ export function HeroMedia({ videoUrl, imageUrl, alt, ratio, priority, sizes, cla
   }, [videoUrl]);
 
   useEffect(() => {
+    if (!videoUrl) return;
     const target = containerRef.current;
     if (!target) return;
     if (typeof IntersectionObserver === 'undefined') {
@@ -88,33 +98,32 @@ export function HeroMedia({ videoUrl, imageUrl, alt, ratio, priority, sizes, cla
     const observer = new IntersectionObserver(([entry]) => setVisible(!!entry?.isIntersecting));
     observer.observe(target);
     return () => observer.disconnect();
-  }, []);
+  }, [videoUrl]);
 
   // Defer even the video element/source until visible and idle. The uploaded asset is expected to meet the documented
   // mobile budget (<= 1.5 MB, 720p); no source request competes with the poster/LCP before this point.
   useEffect(() => {
-    if (!videoUrl || !visible || !autoplayAllowed || reduced || loaded) return;
+    if (!videoUrl || !visible || !pageVisible || !autoplayAllowed || reduced || loaded) return;
     return scheduleIdle(() => {
       wantsPlayback.current = true;
       setLoaded(true);
     });
-  }, [videoUrl, visible, autoplayAllowed, reduced, loaded]);
+  }, [videoUrl, visible, pageVisible, autoplayAllowed, reduced, loaded]);
 
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !loaded) return;
-    if (!visible) {
+    if (!visible || !pageVisible) {
       el.pause();
       return;
     }
-    if (wantsPlayback.current || (autoplayAllowed && !reduced)) {
-      wantsPlayback.current = true;
-      void el.play().catch(() => {
+    if (wantsPlayback.current) {
+      void el.play()?.catch?.(() => {
         wantsPlayback.current = false;
         setPlaying(false);
       });
     }
-  }, [loaded, visible, autoplayAllowed, reduced]);
+  }, [loaded, visible, pageVisible]);
 
   function toggle() {
     const el = videoRef.current;
@@ -125,7 +134,7 @@ export function HeroMedia({ videoUrl, imageUrl, alt, ratio, priority, sizes, cla
     }
     if (el.paused) {
       wantsPlayback.current = true;
-      void el.play().catch(() => {
+      void el.play()?.catch?.(() => {
         wantsPlayback.current = false;
         setPlaying(false);
       });

@@ -15,11 +15,11 @@ export type Area =
   | 'products'
   | 'stock'
   | 'drops'
+  | 'promotions'
   | 'customers'
   | 'finance'
   | 'insights'
   | 'content'
-  | 'deliveries'
   | 'settings';
 
 export const ROLE_ACCESS: Record<Role, Area[] | 'all'> = {

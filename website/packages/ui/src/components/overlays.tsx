@@ -237,13 +237,12 @@ function DialogShell({
       tabIndex={-1}
       className={cn(
         'relative flex max-h-[92dvh] w-full flex-col bg-surface-base text-fg shadow-overlay',
-        placement === 'center' &&
+        (placement === 'center' || placement === 'right') &&
           cn(
             'animate-stimpy-fade-in sm:max-h-[85dvh] sm:rounded-lg',
             sheetOnMobile ? 'animate-stimpy-slide-up rounded-t-sheet sm:animate-stimpy-fade-in' : 'rounded-lg',
             sizeClass,
           ),
-        placement === 'right' && 'ml-auto h-full max-h-none max-w-drawer animate-stimpy-slide-left rounded-l-lg',
         placement === 'bottom' && 'animate-stimpy-slide-up rounded-t-sheet',
         className,
       )}
@@ -298,8 +297,8 @@ function DialogShell({
     <div
       className={cn(
         'fixed inset-0 z-overlay flex',
-        placement === 'center' && (sheetOnMobile ? 'items-end justify-center sm:items-center sm:p-4' : 'items-center justify-center p-4'),
-        placement === 'right' && 'justify-end',
+        (placement === 'center' || placement === 'right') &&
+          (sheetOnMobile ? 'items-end justify-center sm:items-center sm:p-4' : 'items-center justify-center p-4'),
         placement === 'bottom' && 'items-end justify-center',
       )}
     >
@@ -307,6 +306,9 @@ function DialogShell({
         className="absolute inset-0 animate-stimpy-fade-in bg-ink/40"
         aria-hidden="true"
         onMouseDown={() => {
+          if (closeOnBackdrop) onClose();
+        }}
+        onClick={() => {
           if (closeOnBackdrop) onClose();
         }}
       />
@@ -330,12 +332,13 @@ export function Modal(props: ModalProps) {
 }
 
 export interface DrawerProps extends DialogBaseProps {
-  side?: 'right' | 'bottom';
+  side?: 'right' | 'bottom' | 'center';
 }
 
-/** Side panel (cart drawer, filters) 420px max, or a bottom sheet. Same focus rules as Modal. */
-export function Drawer({ side = 'right', ...props }: DrawerProps) {
-  return <DialogShell {...props} placement={side} handle={side === 'bottom'} />;
+/** Side panel or pop-up dialog. Centered on desktop, closed on backdrop press. */
+export function Drawer({ side = 'center', ...props }: DrawerProps) {
+  const placement = side === 'right' ? 'center' : side;
+  return <DialogShell {...props} placement={placement} handle={placement === 'bottom'} />;
 }
 
 /** Drawer `bottom` preset with a drag handle. Drag down to dismiss. */

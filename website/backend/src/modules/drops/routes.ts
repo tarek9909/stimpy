@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
-import { errorResponses, idParams, pageSchema } from '../../lib/http';
+import { errorResponses, idParams, pageQuerySchema, pageSchema } from '../../lib/http';
 import { RATE_RULES } from '../../lib/rate-limiter';
 import { noContent } from '../auth/schemas';
 import type { ModuleDef } from '../module';
@@ -22,9 +22,9 @@ const publicRoutes: FastifyPluginAsyncZod = async (app) => {
   const tags = ['drops'];
 
   app.get('/drops', {
-    schema: { tags, summary: 'Live drop, upcoming drops and the archive (max-age 10, no-store within 60 s of a start)', response: { 200: dropsResponseSchema } },
-  }, async (_req, reply) => {
-    const body = await svc.listPublicDrops(app.ctx);
+    schema: { tags, summary: 'Live drop plus paginated upcoming drops and archive (max-age 10, no-store within 60 s of a start)', querystring: pageQuerySchema, response: { 200: dropsResponseSchema } },
+  }, async (req, reply) => {
+    const body = await svc.listPublicDrops(app.ctx, req.query);
     reply.header('Cache-Control', await svc.dropCacheControl(app.ctx));
     return body;
   });

@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { Button, Drawer, SegmentedControl, Switch } from '@stimpy/ui';
+import { Button, Modal, SegmentedControl, Switch } from '@stimpy/ui';
 import { asApiError, useNotifyError } from '../../api/errors';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Breadcrumbs, type Crumb } from '../../components/PageHeader';
-import { useIsLgUp, useOnline } from '../../lib/hooks';
+import { useOnline } from '../../lib/hooks';
 
 export type ActiveView = 'all' | 'true' | 'false';
 
@@ -34,26 +34,13 @@ export function ActiveCell({ active, name, onChange }: { active: boolean; name: 
 }
 
 /**
- * Editor surface: a right drawer from `lg`, a full page below it (dashboard-pages 7: "right drawer
- * on desktop, full page on phone"). `actions` sit in the drawer footer / a sticky bar above the
- * phone bottom navigation.
+ * Editor surface: a centered pop-up modal with closeOnBackdrop enabled.
  */
 export function EditorFrame({ title, crumbs, onClose, actions, children }: { title: string; crumbs: Crumb[]; onClose: () => void; actions: ReactNode; children: ReactNode }) {
-  const isLg = useIsLgUp();
-  if (isLg) {
-    return (
-      <Drawer open onClose={onClose} title={title} className="!max-w-xl" closeOnBackdrop={false} footer={actions}>
-        {children}
-      </Drawer>
-    );
-  }
   return (
-    <div>
-      <Breadcrumbs items={crumbs} className="mb-3" />
-      <h2 className="mb-4 text-h3">{title}</h2>
+    <Modal open onClose={onClose} title={title} size="lg" className="!max-w-2xl" closeOnBackdrop footer={actions}>
       {children}
-      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 -mx-4 mt-6 flex flex-col-reverse gap-2 border-t border-base bg-surface-base px-4 py-3 md:bottom-0 md:flex-row md:justify-end">{actions}</div>
-    </div>
+    </Modal>
   );
 }
 
