@@ -2,7 +2,7 @@
 import { drawFrame } from './scene';
 import { PostFX } from './post';
 import { DURATION, SONG, sectionAt } from './song';
-import { CARDS, cardCanvas } from './cards';
+import { CARDS, cardCanvas, loadStimpies } from './cards';
 import { W, H } from './worlds';
 import { avatar } from './avatar';
 
@@ -58,6 +58,7 @@ async function boot() {
       document.fonts.add(f);
     }),
   );
+  await loadStimpies();
   CARDS.forEach((c) => cardCanvas(c.n));
   if (params.has('avatar')) {
     // 3D avatar is opt-in: ?avatar

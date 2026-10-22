@@ -1,5 +1,5 @@
-// The Stimpies: six generative back panels (each with an alternate colourway for the collection) plus the
-// hand-drawn custom one made in "Yours". Drawn once at boot in panel units (300 × 364).
+// The Stimpies: six drop 001 prints (each with an alternate for the collection) plus the hand-drawn custom
+// one made in "Yours". Drawn once at boot in panel units (300 × 364).
 import { makeCanvas, text, scribble, type Ctx } from '../engine/draw2d';
 import { mulberry, TAU } from '../engine/util';
 
@@ -11,30 +11,12 @@ export interface Design {
   no: string;
   name: string;
   word: string;     // the identity it gives you (identities scene)
+  altName?: string; // the alternate's name when it is a different print
   pal: { bg: string; fg: string; accent: string; ink: string }; // world palette
   draw: (c: Ctx, v: number) => void;
 }
 
 // ---------------------------------------------------------------- helpers
-function halftoneOrb(c: Ctx, cx: number, cy: number, R: number, color: string, step = 6.5) {
-  c.fillStyle = color;
-  for (let y = cy - R - step; y < cy + R + step; y += step) {
-    const row = Math.round((y - cy) / step);
-    for (let x = cx - R - step; x < cx + R + step; x += step) {
-      const px = x + (row % 2 ? step / 2 : 0);
-      const dx = (px - cx) / R, dy = (y - cy) / R;
-      const d2 = dx * dx + dy * dy;
-      if (d2 > 1) continue;
-      const nz = Math.sqrt(1 - d2);
-      const lum = Math.max(0, -0.55 * dx - 0.6 * dy + 0.58 * nz); // lit from top-left
-      const r = (1 - lum) * step * 0.56 + 0.35;
-      c.beginPath();
-      c.arc(px, y, r, 0, TAU);
-      c.fill();
-    }
-  }
-}
-
 export function flower(c: Ctx, x: number, y: number, r: number, petals: number, col: string, center: string, rot = 0, grow = 1) {
   if (grow <= 0) return;
   c.save();
@@ -90,15 +72,6 @@ export function tigerStripes(c: Ctx, w: number, h: number, color: string, seed: 
   }
 }
 
-function crescent(c: Ctx, x: number, y: number, r: number, col: string) {
-  const { cv, c: m } = makeCanvas(r * 2 + 4, r * 2 + 4, 4);
-  m.fillStyle = col;
-  m.beginPath(); m.arc(r + 2, r + 2, r, 0, TAU); m.fill();
-  m.globalCompositeOperation = 'destination-out';
-  m.beginPath(); m.arc(r + 2 + r * 0.42, r + 2 - r * 0.2, r * 0.86, 0, TAU); m.fill();
-  c.drawImage(cv, x - r - 2, y - r - 2, r * 2 + 4, r * 2 + 4);
-}
-
 export function stars(c: Ctx, w: number, h: number, seed: number, n: number, col: string, tw = 0) {
   const rnd = mulberry(seed);
   c.fillStyle = col;
@@ -127,13 +100,6 @@ export function skyline(c: Ctx, w: number, base: number, seed: number, col: stri
   }
 }
 
-function barcode(c: Ctx, x: number, y: number, w: number, h: number, col: string, seed: number) {
-  const rnd = mulberry(seed);
-  c.fillStyle = col;
-  let p = x;
-  while (p < x + w) { const bw = rnd() < 0.3 ? 2 : 0.8; c.fillRect(p, y, bw, h); p += bw + 0.8 + rnd() * 2; }
-}
-
 export function checkerTunnel(c: Ctx, cx: number, cy: number, R: number, a: string, b: string, t = 0, rings = 16, sectors = 24) {
   c.fillStyle = b;
   c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.fill();
@@ -155,160 +121,73 @@ export function checkerTunnel(c: Ctx, cx: number, cy: number, R: number, a: stri
   }
 }
 
-function textOnCircle(c: Ctx, s: string, cx: number, cy: number, r: number, size: number, col: string, a0 = -Math.PI / 2) {
-  c.save();
-  c.font = `500 ${size}px Plex`;
-  c.fillStyle = col;
-  c.textAlign = 'center';
-  const step = TAU / s.length;
-  for (let i = 0; i < s.length; i++) {
-    const a = a0 + i * step;
-    c.save();
-    c.translate(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-    c.rotate(a + Math.PI / 2);
-    c.fillText(s[i]!, 0, 0);
-    c.restore();
-  }
-  c.restore();
+// ---------------------------------------------------------------- the designs: the drop 001 prints
+// Each panel is a finished print (public/stimpies, exported from content/drop-001); loadStimpies() must
+// resolve before renderDesign(). v = 1 is the collection's alternate: a second print, or the same one on
+// another backing.
+const ART = {
+  scruffy: '01-scruffy-black-cat.webp',
+  sabotage: '02-sabotage.webp',
+  manga: '03-pink-haired-manga-girl.webp',
+  split: '04-split-tone-abstract.webp',
+  halfEvil: '05-half-evil-333.webp',
+  maneki: '06-maneki-neko-tiger.webp',
+  irritated: '07-irritated-cat-comic.webp',
+  neon: '08-neon-spectrum.webp',
+};
+const IMAGES = new Map<string, HTMLImageElement>();
+export function loadStimpies(): Promise<void> {
+  return Promise.all(Object.values(ART).map(async (f) => {
+    const img = new Image();
+    img.src = `stimpies/${f}`;
+    await img.decode();
+    IMAGES.set(f, img);
+  })).then(() => undefined);
 }
 
-// ---------------------------------------------------------------- the designs
+type Side = { file: string; back: string; name?: string; cover?: boolean };
+function print(c: Ctx, s: Side) {
+  c.fillStyle = s.back; c.fillRect(0, 0, PW_, PH_);
+  const img = IMAGES.get(s.file);
+  if (!img) return;
+  const pad = s.cover ? 0 : 14;
+  const k = s.cover ? Math.max(PW_ / img.width, PH_ / img.height) : Math.min((PW_ - pad * 2) / img.width, (PH_ - pad * 2) / img.height);
+  const w = img.width * k, h = img.height * k;
+  c.imageSmoothingQuality = 'high';
+  c.drawImage(img, (PW_ - w) / 2, (PH_ - h) / 2, w, h);
+}
+const sides = (core: Side, alt: Side) => ({ altName: alt.name, draw: (c: Ctx, v: number) => print(c, v ? alt : core) });
+
 export const DESIGNS: Design[] = [
   {
-    id: 'static', no: '001', name: 'STATIC', word: 'LOUD',
+    id: 'static', no: '001', name: 'SABOTAGE', word: 'LOUD',
     pal: { bg: '#E9E4DA', fg: INK, accent: '#FF3B1F', ink: INK },
-    draw(c, v) {
-      const bg = v ? INK : '#E9E4DA', fg = v ? BONE : INK, red = '#FF3B1F';
-      c.fillStyle = bg; c.fillRect(0, 0, PW_, PH_);
-      halftoneOrb(c, 150, 148, 104, fg, 6.2);
-      // misregistered glitch slices
-      const rnd = mulberry(11 + v);
-      for (let i = 0; i < 5; i++) {
-        const y = 60 + rnd() * 180, h = 3 + rnd() * 9, dx = (rnd() - 0.5) * 28;
-        const S = c.getTransform().a;
-        c.drawImage(c.canvas, 0, y * S, PW_ * S, h * S, dx, y, PW_, h);
-      }
-      c.fillStyle = red; c.fillRect(0, 250, PW_, 50);
-      text(c, 'STATIC', 152, 291, { size: 47, family: 'ArchivoX', weight: 900, color: fg, align: 'center', track: -0.02 });
-      text(c, 'STATIC', 150, 289, { size: 47, family: 'ArchivoX', weight: 900, color: bg, align: 'center', track: -0.02 });
-      text(c, 'Nº001', 16, 24, { size: 9, family: 'Plex', weight: 500, color: fg, track: 0.1 });
-      text(c, 'SIGNAL LOST', 284, 24, { size: 9, family: 'Plex', weight: 500, color: fg, align: 'right', track: 0.1 });
-      barcode(c, 16, 318, 110, 22, fg, 5);
-      text(c, 'STIMPY / DROP 01', 284, 336, { size: 8, family: 'Plex', weight: 500, color: fg, align: 'right', track: 0.12 });
-    },
+    ...sides({ file: ART.sabotage, back: INK }, { file: ART.halfEvil, back: INK, name: 'HALF EVIL' }),
   },
   {
-    id: 'bloom', no: '002', name: 'BLOOM', word: 'soft',
+    id: 'bloom', no: '002', name: 'MANGA GIRL', word: 'soft',
     pal: { bg: '#F2C4CC', fg: '#8E1420', accent: '#F2892B', ink: '#8E1420' },
-    draw(c, v) {
-      const bg = v ? '#1F3B2C' : '#F2C4CC', ink = v ? '#F2C4CC' : '#8E1420';
-      c.fillStyle = bg; c.fillRect(0, 0, PW_, PH_);
-      const rnd = mulberry(7 + v * 3);
-      const cols = v ? ['#F2C4CC', '#FFF4E4', '#F2892B', '#E0607E'] : ['#FFF4E4', '#C8232C', '#F2892B', '#E0607E'];
-      // stems
-      c.strokeStyle = v ? '#9DB17C' : '#5E6B2F'; c.lineWidth = 2.2; c.lineCap = 'round';
-      const heads: [number, number, number][] = [];
-      for (let i = 0; i < 11; i++) heads.push([40 + rnd() * 220, 40 + rnd() * 190, 22 + rnd() * 26]);
-      for (const [x, y] of heads) { c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + (150 - x) * 0.2, y + 120, 150, 300); c.stroke(); }
-      // leaves
-      c.fillStyle = v ? '#9DB17C' : '#5E6B2F';
-      for (let i = 0; i < 6; i++) {
-        c.save(); c.translate(100 + rnd() * 100, 200 + rnd() * 70); c.rotate(rnd() * TAU);
-        c.beginPath(); c.ellipse(0, 0, 5, 16, 0, 0, TAU); c.fill(); c.restore();
-      }
-      heads.sort((a, b) => a[2] - b[2]);
-      heads.forEach(([x, y, r], i) => flower(c, x, y, r, 5 + (i % 4), cols[i % cols.length]!, '#F6C945', rnd() * TAU));
-      text(c, 'bloom', 150, 336, { size: 84, family: 'Corm', weight: 600, italic: true, color: ink, align: 'center' });
-      text(c, 'Nº002', 16, 24, { size: 9, family: 'Plex', weight: 500, color: ink, track: 0.1 });
-      text(c, 'SOFT HOURS', 284, 24, { size: 9, family: 'Plex', weight: 500, color: ink, align: 'right', track: 0.1 });
-    },
+    ...sides({ file: ART.manga, back: '#F2C4CC' }, { file: ART.manga, back: '#1F3B2C' }),
   },
   {
-    id: 'orbit', no: '003', name: 'ORBIT', word: 'SPACED OUT',
+    id: 'orbit', no: '003', name: 'SPLIT TONE', word: 'SPACED OUT',
     pal: { bg: BLUE, fg: BONE, accent: '#FF6A2B', ink: BONE },
-    draw(c, v) {
-      const bg = v ? BONE : BLUE, fg = v ? BLUE : BONE, sun = '#FF6A2B';
-      c.fillStyle = bg; c.fillRect(0, 0, PW_, PH_);
-      c.save();
-      c.translate(150, 158);
-      c.rotate(-0.32);
-      c.strokeStyle = fg; c.lineWidth = 1.1;
-      const rs = [52, 76, 100, 124, 146];
-      rs.forEach((r, i) => {
-        c.setLineDash(i === 2 ? [2, 4] : []);
-        c.beginPath(); c.ellipse(0, 0, r, r * 0.42, 0, 0, TAU); c.stroke();
-      });
-      c.setLineDash([]);
-      c.fillStyle = sun;
-      c.beginPath(); c.arc(0, 0, 30, 0, TAU); c.fill();
-      c.fillStyle = fg;
-      const pl: [number, number, number][] = [[52, 0.6, 5], [76, 2.4, 7], [100, 4.1, 4], [124, 5.3, 10], [146, 1.2, 6]];
-      pl.forEach(([r, a, s], i) => {
-        const x = Math.cos(a) * r, y = Math.sin(a) * r * 0.42;
-        c.beginPath(); c.arc(x, y, s, 0, TAU); c.fill();
-        if (i === 3) { c.strokeStyle = fg; c.lineWidth = 1.4; c.beginPath(); c.ellipse(x, y, s * 2, s * 0.6, 0.4, 0, TAU); c.stroke(); }
-      });
-      c.restore();
-      c.strokeStyle = fg; c.lineWidth = 1;
-      c.beginPath(); c.moveTo(262, 30); c.lineTo(282, 30); c.moveTo(272, 20); c.lineTo(272, 40); c.stroke();
-      c.beginPath(); c.arc(272, 30, 6, 0, TAU); c.stroke();
-      text(c, 'ORBIT', 150, 330, { size: 62, family: 'ArchivoX', weight: 900, color: fg, align: 'center', track: -0.03 });
-      text(c, 'Nº003', 16, 24, { size: 9, family: 'Plex', weight: 500, color: fg, track: 0.1 });
-      text(c, 'RA 05h 35m  DEC −05° 23′', 16, 268, { size: 7.5, family: 'Plex', weight: 400, color: fg, track: 0.06 });
-    },
+    ...sides({ file: ART.split, back: BLUE }, { file: ART.split, back: BONE }),
   },
   {
-    id: 'night', no: '004', name: 'NIGHT SHIFT', word: 'OUT LATE',
+    id: 'night', no: '004', name: 'NEON SPECTRUM', word: 'OUT LATE',
     pal: { bg: '#0A1030', fg: '#F4E7C5', accent: '#FFD66B', ink: '#F4E7C5' },
-    draw(c, v) {
-      const g = c.createLinearGradient(0, 0, 0, PH_);
-      if (v) { g.addColorStop(0, '#2A1450'); g.addColorStop(0.7, '#B8466A'); g.addColorStop(1, '#F08A4B'); }
-      else { g.addColorStop(0, '#070B24'); g.addColorStop(1, '#26357A'); }
-      c.fillStyle = g; c.fillRect(0, 0, PW_, PH_);
-      stars(c, PW_, 230, 21 + v, 120, '#F4E7C5');
-      crescent(c, 200, 104, 50, '#F4E7C5');
-      skyline(c, PW_, 300, 4, v ? '#1A0C2B' : '#04060F', '#FFD66B', 1, 0.3);
-      c.fillStyle = v ? '#1A0C2B' : '#04060F'; c.fillRect(0, 298, PW_, 70);
-      text(c, 'NIGHT SHIFT', 150, 336, { size: 25, family: 'ArchivoX', weight: 700, color: '#F4E7C5', align: 'center', track: 0.08 });
-      text(c, 'OPEN 23:00 — 06:00', 150, 352, { size: 7.5, family: 'Plex', weight: 500, color: '#FFD66B', align: 'center', track: 0.2 });
-      text(c, 'Nº004', 16, 24, { size: 9, family: 'Plex', weight: 500, color: '#F4E7C5', track: 0.1 });
-    },
+    ...sides({ file: ART.neon, back: '#0A1030', cover: true }, { file: ART.neon, back: '#0A1030' }),
   },
   {
-    id: 'heat', no: '005', name: 'HEAT', word: 'ON FIRE',
+    id: 'heat', no: '005', name: 'MANEKI TIGER', word: 'ON FIRE',
     pal: { bg: '#FF3B1F', fg: '#121010', accent: '#FFD23F', ink: '#121010' },
-    draw(c, v) {
-      if (v) { c.fillStyle = '#121010'; c.fillRect(0, 0, PW_, PH_); }
-      else {
-        const g = c.createLinearGradient(0, 0, 0, PH_);
-        g.addColorStop(0, '#FF2E1A'); g.addColorStop(0.55, '#FF7A1A'); g.addColorStop(1, '#FFD23F');
-        c.fillStyle = g; c.fillRect(0, 0, PW_, PH_);
-      }
-      tigerStripes(c, PW_, PH_, v ? '#FF6A1A' : '#121010', 3 + v, 30);
-      c.save();
-      c.translate(150, 205);
-      c.rotate(-0.06);
-      text(c, 'HEAT', 5, 5, { size: 118, family: 'ArchivoC', weight: 900, color: v ? '#FF6A1A' : '#121010', align: 'center', baseline: 'middle', track: -0.02 });
-      text(c, 'HEAT', 0, 0, { size: 118, family: 'ArchivoC', weight: 900, color: v ? '#121010' : BONE, align: 'center', baseline: 'middle', track: -0.02 });
-      c.restore();
-      text(c, 'Nº005', 16, 24, { size: 9, family: 'Plex', weight: 700, color: v ? '#FF6A1A' : '#121010', track: 0.1 });
-      text(c, 'HANDLE WITH CARE', 284, 346, { size: 8, family: 'Plex', weight: 700, color: v ? '#FF6A1A' : '#121010', align: 'right', track: 0.14 });
-    },
+    ...sides({ file: ART.maneki, back: '#121010' }, { file: ART.maneki, back: BONE }),
   },
   {
-    id: 'acid', no: '006', name: 'ACID', word: 'UNHINGED',
+    id: 'acid', no: '006', name: 'IRRITATED CAT', word: 'UNHINGED',
     pal: { bg: '#D4FF3A', fg: '#0B0B0B', accent: '#FF4FA3', ink: '#0B0B0B' },
-    draw(c, v) {
-      const a = v ? '#FF4FA3' : '#D4FF3A', b = '#0B0B0B';
-      c.fillStyle = a; c.fillRect(0, 0, PW_, PH_);
-      checkerTunnel(c, 150, 182, 240, a, b, 0.3, 18, 26);
-      c.fillStyle = b;
-      c.beginPath(); c.arc(150, 182, 74, 0, TAU); c.fill();
-      c.strokeStyle = a; c.lineWidth = 1.2;
-      c.beginPath(); c.arc(150, 182, 68, 0, TAU); c.stroke();
-      textOnCircle(c, 'Nº006 · ACID · DROP 01 · STIMPY · ', 150, 182, 58, 8.5, a);
-      text(c, 'ACID', 150, 197, { size: 40, family: 'ArchivoX', weight: 900, color: a, align: 'center', track: -0.03 });
-    },
+    ...sides({ file: ART.irritated, back: '#D4FF3A' }, { file: ART.scruffy, back: '#0B0B0B', name: 'SCRUFFY CAT' }),
   },
 ];
 
@@ -401,7 +280,7 @@ export function renderCard(d: Design, v: number, art: HTMLCanvasElement, scale =
   c.fillStyle = frame; c.fillRect(0, 0, 240, 336);
   c.drawImage(art, 12, 12 + 12 - 12, 216, 262);
   text(c, `Nº ${d.no}${v ? '·B' : ''}`, 14, 300, { size: 10, family: 'Plex', weight: 700, color: ink, track: 0.08 });
-  text(c, d.name, 14, 320, { size: 15, family: 'ArchivoX', weight: 900, color: ink, track: -0.01 });
+  text(c, (v && d.altName) || d.name, 14, 320, { size: 15, family: 'ArchivoX', weight: 900, color: ink, track: -0.01 });
   text(c, 'DROP 01', 226, 300, { size: 8, family: 'Plex', weight: 500, color: ink, align: 'right', track: 0.14 });
   text(c, v ? 'ALT' : 'CORE', 226, 320, { size: 8, family: 'Plex', weight: 500, color: '#2B3DFF', align: 'right', track: 0.14 });
   return cv;

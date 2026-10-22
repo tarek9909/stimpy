@@ -1,7 +1,7 @@
 // Entry: preview player (default) or export mode (?export=1, driven by scripts/render.ts).
 // URL: ?film=logo&v=<variant>&t=<seconds>&scale=<1|2>
 import { Engine, SAFE, W, H, type Film } from './engine/engine';
-import { cacheDesigns } from './art/designs';
+import { cacheDesigns, loadStimpies } from './art/designs';
 import { FILMS, findFilm } from './films';
 import { toWav } from './audio/score';
 
@@ -28,6 +28,7 @@ async function load(id: string, variant?: string) {
 
 async function boot() {
   await Engine.loadAssets();
+  await loadStimpies();
   cacheDesigns();
   document.getElementById('loading')!.remove();
   if (EXPORT) setupExport(); else await setupPlayer();

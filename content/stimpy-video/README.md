@@ -6,7 +6,7 @@ a new Stimpie on every click. The music is synthesized from code too, so every c
 ## Layout
 
 - `song/synth.py` — the track (128 BPM, F minor, EDM). Writes `app/public/stimpy.wav` and the timing map `app/src/song.json`.
-- `app/src/cards.ts` — the 17 Stimpie designs (tarot-card format: number, art, nameplate, edition).
+- `app/src/cards.ts` — the 17 Stimpie cards (tarot-card format: number, art, nameplate, edition), carrying the drop 001 prints.
 - `app/src/hoodie.ts` — the ghost hoodie, the Stimpie slot and the snap studs.
 - `app/src/worlds.ts` — Darkness, THE VOID, AFTER DARK, THE CEDAR, THE DREAMER, studio, end.
 - `app/src/scene.ts` — the edit: what happens when, all driven by `song.json`.
@@ -43,7 +43,8 @@ python -m venv .venv
 .venv/Scripts/python synth.py
 ```
 
-## Swapping in real Stimpie artwork
+## Stimpie artwork
 
-Each card in `CARDS` (`app/src/cards.ts`) draws its art with a function. To use a real design, draw an image
-into the card canvas instead (keep the 800×1250 card size, or 0.64 aspect).
+The cards carry the drop 001 prints from `content/drop-001`, exported (trimmed, 1600 px max, WebP) into
+`app/public/stimpies/`. To change a design, replace its file there and point the card in `CARDS`
+(`app/src/cards.ts`) at it; transparent prints are fitted whole, full-bleed ones use `print(file, 'cover')`.

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { PW, PH } from './gl';
 import { Stage } from './stage';
 import { loadFonts } from './draw2d';
+import { loadStimpies } from '../art/designs';
 
 export interface SceneDef { id: string; start: number; end: number; draw: (S: Stage, t: number) => void }
 
@@ -81,6 +82,7 @@ export class Engine {
 
   async init(timeline: SceneDef[], duration: number) {
     await loadFonts();
+    await loadStimpies();
     this.stage.init(this.renderer);
     this.timeline = timeline;
     this.duration = duration;
