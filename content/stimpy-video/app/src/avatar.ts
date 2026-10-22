@@ -214,7 +214,7 @@ export class Avatar {
     const gp = geo.attributes.position;
     for (let i = 0; i < gp.count; i++) gp.setZ(i, -BEND * gp.getX(i) * gp.getX(i));
     geo.computeVertexNormals();
-    this.cardMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0 });
+    this.cardMat = new THREE.MeshStandardMaterial({ roughness: 0.75, metalness: 0, transparent: true, alphaTest: 0.02 });
     this.card = new THREE.Mesh(geo, this.cardMat);
     this.card.castShadow = true;
     this.slot.add(this.card);

@@ -354,10 +354,8 @@ function drawSlot(c: CanvasRenderingContext2D, o: HoodieOpts) {
     c.shadowColor = 'rgba(0,0,0,0.8)';
     c.shadowBlur = 18;
     c.shadowOffsetY = 6;
-    c.fillStyle = '#000';
-    c.fillRect(cx - cw / 2, cy - ch / 2, cw, ch);
-    c.restore();
     c.drawImage(cardCanvas(o.card), cx - cw / 2, cy - ch / 2, cw, ch);
+    c.restore();
     // the card sits on fabric: darken edges, let the drape run through it
     c.save();
     c.beginPath();

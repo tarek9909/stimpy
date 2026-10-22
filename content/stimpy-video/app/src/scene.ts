@@ -1,7 +1,7 @@
 // The edit. drawFrame(ctx, t) paints the whole frame for song time t and returns
 // the post-processing parameters. Every value derives from t and song.json.
 import { SONG, T, BEAT, BAR, pulse, since } from './song';
-import { CARDS, cardCanvas, CARD_ASPECT, BONE, BLACK, RED, num, edition } from './cards';
+import { CARDS, cardCanvas, CARD_ASPECT, BONE, BLACK, RED } from './cards';
 import { drawHoodie, slotRect, HoodieOpts } from './hoodie';
 import { avatar } from './avatar';
 import {
@@ -84,13 +84,11 @@ function drawCard(c: Ctx, n: number, cx: number, cy: number, w: number, rot: num
   c.globalAlpha = clamp(alpha);
   c.translate(cx, cy);
   c.rotate(rot);
+  // the shadow follows the picture's own shape
   if (shadow > 0) {
     c.shadowColor = `rgba(0,0,0,${shadow})`;
     c.shadowBlur = w * 0.12;
     c.shadowOffsetY = w * 0.05;
-    c.fillStyle = '#000';
-    c.fillRect(-w / 2, -h / 2, w, h);
-    c.shadowColor = 'transparent';
   }
   c.drawImage(cardCanvas(n), -w / 2, -h / 2, w, h);
   c.restore();
@@ -280,9 +278,7 @@ export function drawFrame(c: Ctx, t: number): Post {
       topHud(c, ink, 1);
       const card = CARDS[wi + 1];
       const u = inv(wt + 0.05, wt + 0.5, t);
-      text(c, scramble(`STIMPIE N° ${num(card.n)}`, u, wi * 10), 84, 1500, '600 26px PlexB', wi === 0 ? RED : ink, 'left', 1, 3);
       text(c, scramble(card.name, inv(wt + 0.1, wt + 0.6, t), wi * 10 + 3), 80, 1572, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), ink);
-      text(c, scramble(`EDITION ${edition(card.n)} · ${String(wi + 1).padStart(2, '0')}/04`, inv(wt + 0.2, wt + 0.8, t), wi * 10 + 5), 84, 1616, '400 24px Plex', ink, 'left', 0.85, 2);
     };
   } else if (t < T(20)) {
     // ------------------------------------------------ DECK: the system
@@ -385,9 +381,7 @@ export function drawFrame(c: Ctx, t: number): Post {
     post.bloom = 0.5;
     hud = () => {
       topHud(c, pal.ink, 1);
-      text(c, `STIMPIE N° ${num(card.n)}`, 84, 1500, '600 26px PlexB', pal.ink, 'left', 1, 3);
       text(c, card.name, 80, 1572, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), pal.ink);
-      text(c, `${String(k + 5).padStart(2, '0')}/16`, W - 84, 1572, '600 26px PlexB', pal.ink, 'right', 1, 3);
     };
   } else {
     // ------------------------------------------------ LOGO
