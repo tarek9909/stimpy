@@ -124,4 +124,26 @@ describe('cart store', () => {
     vi.useRealTimers();
     spy.mockRestore();
   });
+  it('keeps only contract keys of stored items and at most 20 lines (the API schemas are strict)', () => {
+    const line = (i: number, extra: object = {}) => ({
+      lineId: `l${i}`,
+      item: { kind: 'stimpie', stimpieId: i, qty: 1, ...extra },
+      ui: { title: `S${i}`, unitPriceCents: 1000 },
+      check: { state: 'OK', reasons: [], checkedAt: null },
+    });
+    const lines = [line(1, { legacyPrice: 1000 }), ...Array.from({ length: 21 }, (_, i) => line(i + 2))];
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ v: 1, updatedAt: new Date().toISOString(), lines }));
+    const s = createCartStore();
+    s.getState().hydrate();
+    expect(s.getState().lines).toHaveLength(20);
+    expect(s.getState().lines[0]?.item).toEqual({ kind: 'stimpie', stimpieId: 1, qty: 1 });
+  });
+
+  it('drops a stored pack with more than 5 Stimpies', () => {
+    const bad = { lineId: 'p', item: pack({ stimpieIds: [1, 2, 3, 4, 5, 6] }), ui: { title: 'P', unitPriceCents: 1 }, check: { state: 'OK', reasons: [], checkedAt: null } };
+    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify({ v: 1, updatedAt: new Date().toISOString(), lines: [bad] }));
+    const s = createCartStore();
+    s.getState().hydrate();
+    expect(s.getState().lines).toHaveLength(0);
+  });
 });

@@ -518,4 +518,26 @@ describe('checkout view', () => {
     const last = sent.filter((s) => s.path.endsWith('/cart/validate')).at(-1)!;
     expect(last.body).toMatchObject({ areaId: 2, items: [{ kind: 'stimpie', stimpieId: 4, qty: 2 }] });
   });
+  it('PRICE_CHANGED "Review": the "Place order for {total}" label is dropped once the cart changes', async () => {
+    resetCart();
+    await ready();
+    await fillValid();
+    const inner = post;
+    let first = true;
+    post = (path, opts) => {
+      if (path.endsWith('/orders') && first) {
+        first = false;
+        return apiError('PRICE_CHANGED', 422, { details: { totalCents: 1800 } });
+      }
+      return inner(path, opts);
+    };
+    await act(async () => {
+      fireEvent.click(placeButton());
+    });
+    const dialog = await screen.findByRole('dialog', { name: 'The price changed' });
+    fireEvent.click(within(dialog).getByRole('button', { name: /review/i }));
+    await waitFor(() => expect(placeButton()).toHaveTextContent('Place order for $18'));
+    fireEvent.click(screen.getByRole('button', { name: 'Increase quantity' }));
+    await waitFor(() => expect(placeButton()).toHaveTextContent(/^Place order$/));
+  });
 });

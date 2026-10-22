@@ -365,6 +365,12 @@ describe('sniffing helpers', () => {
     expect(sniffFileType(Buffer.from([]))).toBeNull();
     expect(svgProblem(Buffer.from('<svg><rect fill="#fff"/></svg>'))).toBeNull();
     expect(svgProblem(Buffer.from('<svg><image href="data:image/png;base64,AAAA"/></svg>'))).toBeNull();
+    expect(svgProblem(Buffer.from('<?xml version="1.0" encoding="utf-8"?>\n<svg>\t<rect/>\r\n</svg>'))).toBeNull();
+    // Encodings other than UTF-8 can hide markup from a byte scan (ISO-2022-JP escapes split "<script" in two).
+    expect(svgProblem(Buffer.from('<?xml version="1.0" encoding="ISO-2022-JP"?><svg><scr\x1b$B\x1b(Bipt>alert(1)</scr\x1b$B\x1b(Bipt></svg>', 'latin1'))).toMatch(/encoding/);
+    expect(svgProblem(Buffer.from('<svg><scr\x1b(Bipt>alert(1)</script></svg>', 'latin1'))).not.toBeNull();
+    expect(svgProblem(Buffer.from('<?xml version="1.0"?><?xml-stylesheet type="text/xsl" href="#x"?><svg/>'))).toMatch(/stylesheet/);
+    expect(svgProblem(Buffer.from('<svg><g/onload="alert(1)"/></svg>'))).toMatch(/event handler/);
     expect(glbProblem(glb(4))).toBeNull();
   });
 });

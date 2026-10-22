@@ -18,7 +18,7 @@ export { useInView, useReducedMotion } from './hooks';
 export type * from './types';
 
 // Pure functions (each unit-tested)
-export { colorsForView, joinColors, resolveColorForView, stimpieBlockReason, stimpieTag, tintFor, textureUrlFor, usable2D, usable3D } from './lib/join';
+export { colorsForView, engineArtFor, joinColors, resolveColorForView, stimpieBlockReason, stimpieTag, tintFor, textureUrlFor, usable2D, usable3D } from './lib/join';
 export { STIMPIE_ASPECT, placementPx, placementStyle } from './lib/placement';
 export type { PlacementPx } from './lib/placement';
 export {

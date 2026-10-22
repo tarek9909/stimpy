@@ -150,7 +150,16 @@ const envSchema = z.object({
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(12, 'must be at least 12 characters').optional(),
   LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']).optional(),
-  TRUST_PROXY: bool.default(false),
+  /**
+   * How many reverse proxies sit in front of the API. `true` means exactly one (the usual Caddy/nginx). Only the
+   * addresses those hops appended to X-Forwarded-For are believed; trusting every hop would let any client choose its
+   * own IP by sending an X-Forwarded-For header and so bypass every per-IP rate limit.
+   */
+  TRUST_PROXY: z
+    .string()
+    .regex(/^(true|false|\d)$/, 'must be true, false or a proxy hop count (0-9)')
+    .transform((v) => (v === 'true' ? 1 : v === 'false' ? 0 : Number(v)))
+    .default(0),
   DISABLE_JOBS: bool.default(false),
   MAILPIT_URL: url.default('http://localhost:8025'),
 });
@@ -177,7 +186,8 @@ export type Config = {
   adminEmail?: string;
   adminPassword?: string;
   logLevel: string;
-  trustProxy: boolean;
+  /** Number of trusted reverse-proxy hops (0 = use the socket address). */
+  trustProxy: number;
   disableJobs: boolean;
   mailpitUrl: string;
 };

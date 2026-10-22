@@ -222,6 +222,25 @@ describe('POST /drops/:id/subscribe', () => {
     expect(await t.prisma.subscriber.count({ where: { contact: 'race@y.com' } })).toBe(1);
   });
 
+  it('an anonymous subscribe records consent but never undoes an unsubscribe or a marketing opt-out', async () => {
+    const d = await createDrop(t.prisma);
+    const unsubscribedAt = new Date('2026-10-01T00:00:00Z');
+    const gone = await t.prisma.customer.create({
+      data: { phone: '+96171000001', whatsapp: '+96171000001', name: 'Gone', email: 'gone@example.com', emailConsent: false, unsubscribedAt },
+    });
+    const optedOut = await t.prisma.customer.create({
+      data: { phone: '+96171000002', whatsapp: '+96171000002', name: 'Out', email: 'out@example.com', marketingOptOutAt: unsubscribedAt },
+    });
+    const fresh = await t.prisma.customer.create({ data: { phone: '+96171000003', whatsapp: '+96171000003', name: 'Fresh', email: 'fresh@example.com' } });
+    for (const contact of ['gone@example.com', 'out@example.com', 'fresh@example.com']) expect((await sub(d.id, { contact, type: 'EMAIL' })).status).toBe(204);
+    expect((await sub(d.id, { contact: '71 000 002', type: 'WHATSAPP' })).status).toBe(204);
+    expect(await t.prisma.customer.findUniqueOrThrow({ where: { id: gone.id } })).toMatchObject({ emailConsent: false, unsubscribedAt });
+    expect(await t.prisma.customer.findUniqueOrThrow({ where: { id: optedOut.id } })).toMatchObject({ emailConsent: false, whatsappConsent: false });
+    expect(await t.prisma.customer.findUniqueOrThrow({ where: { id: fresh.id } })).toMatchObject({ emailConsent: true, unsubscribedAt: null });
+    // the subscriber rows are still stored and linked
+    expect(await t.prisma.subscriber.count({ where: { dropId: d.id, customerId: { not: null } } })).toBe(4);
+  });
+
   it('VALIDATION_ERROR on fields.contact for a bad e-mail or a bad Lebanese number', async () => {
     const d = await createDrop(t.prisma);
     const e = await sub(d.id, { contact: 'not-an-email', type: 'EMAIL' });

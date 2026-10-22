@@ -24,9 +24,15 @@ export function useDeliveries(filters: DeliveryFilters) {
 }
 export type DeliveryRow = NonNullable<ReturnType<typeof useDeliveries>['data']>['items'][number];
 
-/** Confirmation copy shared by Finance -> Cash and Orders -> Delivered. */
-export function groupSettlementConfirmation(deliveryNumber: string, orderCount: number, received: string): string {
-  return `Mark ${orderCount} unsettled ${orderCount === 1 ? 'order' : 'orders'} on ${deliveryNumber} as settled? You received ${received}.`;
+/**
+ * Confirmation copy shared by Finance -> Cash and Orders -> Delivered (dashboard-pages 11.2: "Mark all 3 orders on
+ * D-88231 as settled? You received $174.00."). The server only flips the UNSETTLED orders of the group, so when some
+ * were settled earlier the copy names just the ones that change and the cash they represent.
+ */
+export function groupSettlementConfirmation(deliveryNumber: string, orderCount: number, received: string, wholeGroup = true): string {
+  const orders = orderCount === 1 ? 'order' : 'orders';
+  if (wholeGroup) return `Mark ${orderCount === 1 ? '1 order' : `all ${orderCount} orders`} on ${deliveryNumber} as settled? You received ${received}.`;
+  return `Mark ${orderCount} unsettled ${orders} on ${deliveryNumber} as settled? You received ${received}.`;
 }
 
 /**

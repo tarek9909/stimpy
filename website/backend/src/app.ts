@@ -18,7 +18,7 @@ import prismaPlugin from './plugins/prisma';
 import rateLimit from './plugins/rate-limit';
 import requestId from './plugins/request-id';
 import requestLog from './plugins/request-log';
-import { API_PREFIX } from './plugins/route-group';
+import { API_PREFIX, decodedPathOf } from './plugins/route-group';
 import securityHeaders from './plugins/security-headers';
 import type { RouteInfo } from './types';
 import './types';
@@ -49,7 +49,9 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
     logController: new LogController({ disableRequestLogging: true }),
     genReqId: () => randomUUID(),
     requestIdHeader: false, // never trust a client-supplied id
-    trustProxy: config.trustProxy,
+    // Trust exactly `trustProxy` hops (what Fastify does for a number; its types omit it). Never `true`: that believes the
+    // left-most, client-written X-Forwarded-For entry and makes every per-IP rate limit bypassable.
+    trustProxy: config.trustProxy > 0 ? (_addr: string, hop: number) => hop < config.trustProxy : false,
     bodyLimit: JSON_BODY_LIMIT,
     routerOptions: { ignoreTrailingSlash: true, maxParamLength: 200 },
   });
@@ -60,7 +62,7 @@ export async function buildApp(opts: BuildAppOptions): Promise<FastifyInstance> 
   app.decorate('ctx', ctx);
   app.decorate('routeList', [] as RouteInfo[]);
   app.addHook('onSend', async (req, reply, payload) => {
-    if (!req.url.startsWith(`${API_PREFIX}/`) || !String(reply.getHeader('content-type') ?? '').includes('application/json')) return payload;
+    if (!decodedPathOf(req.url).startsWith(`${API_PREFIX}/`) || !String(reply.getHeader('content-type') ?? '').includes('application/json')) return payload;
     const text = typeof payload === 'string' ? payload : Buffer.isBuffer(payload) ? payload.toString('utf8') : null;
     if (text === null) return payload;
     const rebased = rebaseUploadUrlsInJson(text, config.apiPublicUrl);

@@ -33,6 +33,8 @@ export type EnqueueInput = {
 export type OrderEmailTemplate = 'order_received' | 'order_confirmed' | 'order_out_for_delivery' | 'order_delivered' | 'order_cancelled';
 
 export const SUBJECT_MAX = 250; // email_log.subject column
+/** Address suffix written over `email_log.to_email` by the customer personal-data erasure. */
+export const ERASED_EMAIL_SUFFIX = '@privacy.invalid';
 const EMAIL_SHAPE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 
 export const MAX_ATTEMPTS = 4;
@@ -66,13 +68,15 @@ export async function renderPlainEmail(
 export async function renderEmail(ctx: AppContext, input: { subject: string; body: string; values: Record<string, string | undefined> }): Promise<RenderedEmail> {
   const url = input.values.tracking_url;
   const shopUrl = input.values.shop_url;
+  // Marketing mail (CRM bulk sends and campaigns) carries a server-built unsubscribe link; it must be clickable in the HTML part.
+  const unsubscribeUrl = input.values.unsubscribe_url;
   // The tracking link becomes a button when the author used {tracking_url}; only server-built URLs are ever linkified.
   const usesTracking = Boolean(url) && extractPlaceholders(input.body).includes('tracking_url');
   return renderPlainEmail(ctx, {
     subject: renderTemplate(input.subject, input.values),
     body: renderTemplate(input.body, input.values),
     button: usesTracking ? { label: 'Track your order', url: url! } : null,
-    linkUrls: [url, shopUrl].filter((value): value is string => Boolean(value)),
+    linkUrls: [url, shopUrl, unsubscribeUrl].filter((value): value is string => Boolean(value)),
   });
 }
 
@@ -344,11 +348,13 @@ export async function processDueEmails(ctx: AppContext): Promise<{ sent: number;
 /** `POST /admin/email-log/:id/retry`: resets a FAILED row to PENDING (attempts restart, due immediately). */
 export async function retryFailedEmail(ctx: AppContext, id: number): Promise<{ id: number; status: 'PENDING' }> {
   const res = await ctx.prisma.emailLog.updateMany({
-    where: { id, status: 'FAILED' },
+    // Rows whose recipient was erased (customers personal-data erasure) only hold a placeholder body and a dead address.
+    where: { id, status: 'FAILED', NOT: { toEmail: { endsWith: ERASED_EMAIL_SUFFIX } } },
     data: { status: 'PENDING', attempts: 0, nextAttemptAt: now(), error: null },
   });
   if (res.count === 1) return { id, status: 'PENDING' };
-  const row = await ctx.prisma.emailLog.findUnique({ where: { id }, select: { status: true } });
+  const row = await ctx.prisma.emailLog.findUnique({ where: { id }, select: { status: true, toEmail: true } });
   if (!row) throw AppError.notFound('Email not found.');
+  if (row.toEmail.endsWith(ERASED_EMAIL_SUFFIX)) throw AppError.conflict("This customer's personal data was erased; the email cannot be sent again.", 'status');
   throw AppError.conflict('Only failed emails can be retried.', 'status');
 }

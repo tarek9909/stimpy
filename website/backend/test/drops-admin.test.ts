@@ -238,6 +238,21 @@ describe('PATCH /admin/drops/:id', () => {
     expect(r.teaserImage).toBeNull();
   });
 
+  it('a Stimpie taken out of an upcoming drop is hidden, so it does not become buyable before the launch', async () => {
+    freezeTime(T0);
+    const c = await admin();
+    const a = await createStimpie(t.prisma, { slug: 'early-a', type: 'LIMITED', quantity: 5 });
+    const b = await createStimpie(t.prisma, { slug: 'early-b', type: 'LIMITED', quantity: 5 });
+    const d = (await c.post('/admin/drops', { name: 'Soon', accentColor: 'SKY', startsAt: at(24 * 60).toISOString(), stimpieIds: [a.id, b.id] })).json<ADrop>();
+    expect((await c.patch(`/admin/drops/${d.id}`, { stimpieIds: [b.id] })).status).toBe(200);
+    expect(await t.prisma.stimpie.findUniqueOrThrow({ where: { id: a.id } })).toMatchObject({ dropId: null, active: false });
+    expect(await t.prisma.stimpie.findUniqueOrThrow({ where: { id: b.id } })).toMatchObject({ dropId: d.id, active: true });
+    const v = await t.client.post('/cart/validate', { items: [{ kind: 'stimpie', stimpieId: a.id, qty: 1 }] }, { origin: 'http://localhost:3000' });
+    expect(v.status).toBe(200);
+    expect(v.json().lines[0].problems[0]).toMatchObject({ kind: 'STIMPIE', stimpieId: a.id, reason: 'INACTIVE' });
+    expect((await t.client.get('/products/stimpies/early-a')).status).toBe(404);
+  });
+
   it('validates the time window against the stored values and rejects a bad slug collision', async () => {
     freezeTime(T0);
     const c = await admin();

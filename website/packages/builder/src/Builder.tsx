@@ -45,7 +45,7 @@ import {
   readTierVerdict,
   writeSession,
 } from './lib/env';
-import { colorsForView, joinColors, resolveColorForView, stimpieBlockReason, textureUrlFor, tintFor, usable2D } from './lib/join';
+import { colorsForView, engineArtFor, joinColors, resolveColorForView, stimpieBlockReason, tintFor, usable2D } from './lib/join';
 import { applyThrottle, applyWebGLSimulation, decideMode, formatMegabytes } from './lib/mode';
 import {
   buildCartItem,
@@ -307,9 +307,7 @@ export function Builder({
       }
     : null;
   const stage2dArt = stimpie ? { key: stimpie.id, src: stimpie.artworkUrl, alt: `${stimpie.name} Stimpie` } : null;
-  const engineArt = stimpie
-    ? { id: stimpie.id, url: textureUrlFor(stimpie, config.stimpieTextures), width: stimpie.artworkWidth, height: stimpie.artworkHeight }
-    : null;
+  const engineArt = stimpie ? engineArtFor(stimpie, config.stimpieTextures) : null;
   const label3d = `3D preview of a ${color?.name ?? ''} Stimpy hoodie${stimpie ? ` with the ${stimpie.name} Stimpie on the back` : ''}. Drag to rotate.`;
   const tier: Tier = env?.tierVerdict.tier ?? decision?.tier ?? 'mid';
   const sim = typeof throttleSimulator === 'object' ? throttleSimulator : undefined;
@@ -566,12 +564,7 @@ export function Builder({
                   tint={tintFor(color)}
                   fabricTextureUrl={color.texture3d}
                   art={engineArt}
-                  neighbours={neighbours.map((n) => ({
-                    id: n.id,
-                    url: textureUrlFor(n, config.stimpieTextures),
-                    width: n.artworkWidth,
-                    height: n.artworkHeight,
-                  }))}
+                  neighbours={neighbours.map((n) => engineArtFor(n, config.stimpieTextures))}
                   tier={tier}
                   reducedMotion={reduced}
                   label={label3d}

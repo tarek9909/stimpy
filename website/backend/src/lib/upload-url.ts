@@ -1,15 +1,29 @@
+/** Hosts an earlier run of this API may have used (dev ports, LAN addresses for phone testing). */
+function isLocalOrPrivateHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  return host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host === '0.0.0.0' || host === '::1'
+    || /^127(?:\.\d{1,3}){3}$/.test(host) || /^10(?:\.\d{1,3}){3}$/.test(host) || /^192\.168(?:\.\d{1,3}){2}$/.test(host)
+    || /^172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}$/.test(host);
+}
+
 /**
  * Upload URLs are persisted as absolute URLs for the API contract, but the API may move between hosts/ports.
- * This resolves only paths served by the local /uploads static mount; external URLs stay untouched.
+ * This resolves only paths served by the local /uploads static mount: root-relative `/uploads/...` values and absolute
+ * http(s) URLs on this API's host or on a local/private development host. External URLs and free text stay untouched.
  */
 export function rebaseUploadUrl(value: string, publicBaseUrl: string): string {
+  if (!value.startsWith('/uploads/') && !/^https?:\/\//i.test(value)) return value;
   let parsed: URL;
+  let base: URL;
   try {
-    parsed = new URL(value, `${publicBaseUrl.replace(/\/+$/, '')}/`);
+    base = new URL(`${publicBaseUrl.replace(/\/+$/, '')}/`);
+    parsed = new URL(value, base);
   } catch {
     return value;
   }
   if (!parsed.pathname.startsWith('/uploads/')) return value;
+  if (!value.startsWith('/uploads/') && parsed.hostname !== base.hostname && !isLocalOrPrivateHost(parsed.hostname)) return value;
+  if (parsed.search || parsed.hash) return value;
 
   const parts = parsed.pathname.slice('/uploads/'.length).split('/');
   try {

@@ -28,17 +28,21 @@ function CashBody({ data }: { data: Cash }) {
   const notify = useNotifyError();
   const settleGroup = useSettleDelivery();
   const settleOrder = useSettleOrder();
-  const [confirm, setConfirm] = useState<{ deliveryNumber: string; totalOrders: number; receivedCents: number } | null>(null);
+  const [confirm, setConfirm] = useState<{ deliveryNumber: string; totalOrders: number; receivedCents: number; wholeGroup: boolean } | null>(null);
   const [preparingDelivery, setPreparingDelivery] = useState<string | null>(null);
   const [showSettled, setShowSettled] = useState(false);
   const open = useMemo(() => data.groups.filter((g) => !groupSettled(g)), [data.groups]);
   const settled = useMemo(() => data.groups.filter(groupSettled), [data.groups]);
 
-  const settleDelivery = async (deliveryNumber: string, value: boolean) => {
-    await settleGroup.mutateAsync({ deliveryNumber, settled: value });
+  /** `wholeGroup` false: some orders were already settled, so Undo reverts only the orders this action changed. */
+  const settleDelivery = async (deliveryNumber: string, value: boolean, wholeGroup = true) => {
+    const res = await settleGroup.mutateAsync({ deliveryNumber, settled: value });
+    const undo = wholeGroup
+      ? () => settleGroup.mutateAsync({ deliveryNumber, settled: !value })
+      : () => Promise.all(res.orderIds.map((id) => settleOrder.mutateAsync({ id, settled: !value })));
     toast.success(value ? `Delivery ${deliveryNumber} marked settled.` : `Delivery ${deliveryNumber} is no longer settled.`, {
       durationMs: 6000,
-      action: { label: 'Undo', onClick: () => settleGroup.mutateAsync({ deliveryNumber, settled: !value }).catch((e) => notify(e)) },
+      action: { label: 'Undo', onClick: () => undo().catch((e) => notify(e)) },
     });
   };
   const settleOne = async (orderId: number, orderNumber: string, value: boolean) => {
@@ -64,6 +68,7 @@ function CashBody({ data }: { data: Cash }) {
         deliveryNumber,
         totalOrders: unsettledOrders.length,
         receivedCents: unsettledOrders.reduce((sum, order) => sum + order.cashDueCents, 0),
+        wholeGroup: unsettledOrders.length === orders.length,
       });
     } catch (e) {
       notify(e);
@@ -146,13 +151,13 @@ function CashBody({ data }: { data: Cash }) {
         open={confirm !== null}
         onClose={() => setConfirm(null)}
         title="Mark delivery settled?"
-        description={confirm ? groupSettlementConfirmation(confirm.deliveryNumber, confirm.totalOrders, f.money(confirm.receivedCents)) : null}
+        description={confirm ? groupSettlementConfirmation(confirm.deliveryNumber, confirm.totalOrders, f.money(confirm.receivedCents), confirm.wholeGroup) : null}
         confirmLabel="Mark settled"
         reportErrors={false}
         onConfirm={async () => {
           if (!confirm) return;
           try {
-            await settleDelivery(confirm.deliveryNumber, true);
+            await settleDelivery(confirm.deliveryNumber, true, confirm.wholeGroup);
           } catch (e) {
             notify(e);
             throw e;

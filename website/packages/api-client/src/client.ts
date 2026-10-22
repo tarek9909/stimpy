@@ -47,7 +47,9 @@ function buildFetch(options: ClientOptions): (input: Request) => Promise<Respons
       controller.abort();
     }, timeoutFor(request, timeouts));
     const onCallerAbort = () => controller.abort();
-    request.signal.addEventListener('abort', onCallerAbort, { once: true });
+    // An 'abort' event never fires again for a signal that is already aborted: honour it now.
+    if (request.signal.aborted) controller.abort();
+    else request.signal.addEventListener('abort', onCallerAbort, { once: true });
     try {
       // Rebuild the request with our signal so the timeout can cancel it.
       const guarded = new Request(request, { signal: controller.signal });

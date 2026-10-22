@@ -190,3 +190,69 @@ describe('Origin check on non-GET /admin and /auth (CSRF)', () => {
     expect((await t.client.post('/_probe/echo', {}, { origin: EVIL })).status).toBe(200);
   });
 });
+
+describe('percent-encoded paths are classified like the router sees them', () => {
+  // find-my-way decodes the path before matching, so `/api/v1/%61dmin/...` reaches the admin routes.
+  it('applies the Origin check (CSRF) to encoded /admin and /auth paths', async () => {
+    for (const path of ['/api/v1/%61dmin/colors', '/api/v1/%61%64%6D%69%6E/colors', '/api/v1/%61uth/logout', '/api/v1/admin/%63olors']) {
+      const res = await t.client.request('POST', path, { origin: EVIL, body: {} });
+      expect(res.status, path).toBe(403);
+      expect(res.json<{ error: { code: string } }>().error.code).toBe('FORBIDDEN');
+    }
+  });
+
+  it('gives encoded admin paths the admin CORS and no-store headers, and they still need a session', async () => {
+    const res = await t.client.get('/api/v1/%61dmin/colors', { origin: ADMIN });
+    expect(res.status).toBe(401);
+    expect(res.header('cache-control')).toBe('no-store');
+    expect(res.header('access-control-allow-credentials')).toBe('true');
+    const pre = await preflight('/api/v1/%61dmin/colors', WEB, 'POST');
+    expect(pre.header('access-control-allow-origin')).toBeUndefined();
+  });
+
+  it('classifies an encoded 404 under /admin as admin too', async () => {
+    const res = await t.client.request('POST', '/api/v1/%61dmin/no-such-route', { origin: EVIL, body: {} });
+    expect(res.status).toBe(403);
+  });
+
+  it('never serves an uploaded file through an encoded /uploads path without the uploads sandbox CSP', async () => {
+    const storage = new LocalStorage(t.config.uploadDir, t.config.apiPublicUrl);
+    const { path } = await storage.put(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'), 'svg', 'image/svg+xml');
+    const res = await t.client.get(`/%75ploads/${path}`);
+    if (res.status === 200) expect(res.header('content-security-policy')).toContain('sandbox');
+    else expect(res.status).toBe(404);
+    await storage.delete(path);
+  });
+
+  it('a malformed escape is rejected, not routed', async () => {
+    const res = await t.client.request('POST', '/api/v1/%E0%A4%A/admin', { origin: EVIL, body: {} });
+    expect(res.status).toBeGreaterThanOrEqual(400);
+    expect(res.status).toBeLessThan(500);
+  });
+});
+
+describe('TRUST_PROXY: client IP behind a reverse proxy', () => {
+  // Login is limited to 5 per IP per 15 min; each attempt uses a new e-mail so only the IP rule can trip.
+  const attempt = (app: Awaited<ReturnType<typeof t.extraApp>>, xff: string, i: number) =>
+    app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      headers: { 'content-type': 'application/json', 'x-forwarded-for': xff },
+      payload: JSON.stringify({ email: `nobody${i}@example.com`, password: 'wrong-password' }),
+      remoteAddress: '10.0.0.2',
+    });
+
+  it('believes only the address the proxy appended, so a forged X-Forwarded-For cannot dodge per-IP limits', async () => {
+    const app = await t.extraApp({ TRUST_PROXY: 'true' });
+    const codes: number[] = [];
+    for (let i = 0; i < 6; i++) codes.push((await attempt(app, `198.51.100.${i + 1}, 203.0.113.7`, i)).statusCode);
+    expect(codes.slice(0, 5)).toEqual([401, 401, 401, 401, 401]);
+    expect(codes[5]).toBe(429);
+  });
+
+  it('a single forwarded address (one proxy) is still the client address', async () => {
+    const app = await t.extraApp({ TRUST_PROXY: 'true' });
+    for (let i = 0; i < 5; i++) expect((await attempt(app, `198.51.100.${i + 1}`, i)).statusCode).toBe(401);
+    expect((await attempt(app, '198.51.100.99', 9)).statusCode).toBe(401);
+  });
+});

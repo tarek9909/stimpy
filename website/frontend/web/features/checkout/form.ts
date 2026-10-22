@@ -17,6 +17,8 @@ export const LIMITS = {
   addressMin: 5,
   addressMax: 300,
   notesMax: 300,
+  /** Phone and WhatsApp: at most 40 characters after trimming (the API rejects longer input). */
+  phoneMax: 40,
 } as const;
 
 export const OTHER_AREA = 'other';
@@ -98,7 +100,8 @@ const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** 7 or 8 digits remain after removing separators and a leading +961 / 00961 / 961 / 0 (business-rules 2). */
 export function isLebanesePhone(input: string): boolean {
-  return normalizeLebanesePhone(input.trim()) !== null;
+  const v = input.trim();
+  return v.length <= LIMITS.phoneMax && normalizeLebanesePhone(v) !== null;
 }
 
 export function isEmailShape(input: string): boolean {
@@ -148,7 +151,8 @@ export function validateField(path: FieldPath, v: CheckoutValues, { areasAvailab
       return n < LIMITS.addressMin || n > LIMITS.addressMax ? FIELD_COPY[path] : null;
     }
     case 'delivery.notes':
-      return v.notes.length > LIMITS.notesMax ? FIELD_COPY[path] : null;
+      // The body carries the trimmed notes, and that is what the API measures.
+      return v.notes.trim().length > LIMITS.notesMax ? FIELD_COPY[path] : null;
   }
 }
 

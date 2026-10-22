@@ -648,7 +648,7 @@ Read adds: `state`, `unitsTotal`, `unitsSold`, `unitsRemaining`, `revenueCents`,
 | `GET /admin/finance/profit` | Query `from`, `to`, `page`, `pageSize`. `{ range, revenueCents, deliveryFeesCents, costOfGoodsCents, expensesCents, adSpendCents, profitCents, ordersCount, byOrder: Page<{ orderNumber, date, revenueCents, costCents, profitCents }>, planMargins: { pack35: Cents, pack45: Cents } }`. Revenue counts **delivered** orders in the range; summary totals cover the full range |
 | `GET /admin/finance/cash` | Query `page`, `pageSize`. `{ outstandingCents, groups: Page<{ deliveryNumber: string \| null, orders: { orderId, orderNumber, cashDueCents, settled }[], totalDueCents }> }` |
 | `/admin/expenses` | `GET` (query `from`, `to`, `category`, `page`, `pageSize`) returns `Page<Expense>` plus `totalCents` for the full filtered range; `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `category`, `amountCents`, `note`, `spentOn` (date) |
-| `/admin/ad-spend` | Same, with `channel` instead of `category`; `GET` returns `Page<AdSpend>` plus full-range `totalCents` |
+| `/admin/ad-spend` | `GET` (query `from`, `to`, `channel`, `page`, `pageSize`) returns `Page<AdSpend>` plus `totalCents` for the full filtered range; `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `channel`, `amountCents`, `note`, `spentOn` (date); the same rules as expenses, with `channel` instead of `category` |
 
 ### 5.10 Insights
 

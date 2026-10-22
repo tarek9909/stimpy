@@ -85,9 +85,15 @@ function looksLikeSvg(b: Buffer): boolean {
 /** SVGs are refused (not repaired) when they can run script or load anything from outside. Returns the reason or null. */
 export function svgProblem(b: Buffer): string | null {
   const s = svgText(b);
+  // The checks below read the bytes as UTF-8. A file that declares another encoding (e.g. ISO-2022-JP, whose escape
+  // sequences can hide "<script" from a byte scan but not from the browser) is refused instead of decoded.
+  const declared = /^\s*<\?xml[^>]*\bencoding\s*=\s*["']\s*([^"']*)["']/i.exec(s)?.[1]?.trim().toLowerCase();
+  if (declared && declared !== 'utf-8' && declared !== 'utf8' && declared !== 'us-ascii') return 'uses an unsupported text encoding';
+  if (/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(s)) return 'contains control characters';
+  if (/<\?xml-stylesheet/i.test(s) || /<\s*xsl:/i.test(s)) return 'contains a stylesheet transform';
   if (/<\s*script/i.test(s)) return 'contains a script';
   if (/<\s*foreignObject/i.test(s)) return 'contains foreignObject';
-  if (/\son[a-z]+\s*=/i.test(s)) return 'contains an event handler';
+  if (/[\s/]on[a-z]+\s*=/i.test(s)) return 'contains an event handler'; // "/" too: `<g/onload=...>` when inlined as HTML
   if (/javascript\s*:/i.test(s) || /vbscript\s*:/i.test(s)) return 'contains a script URL';
   if (/<!ENTITY/i.test(s) || /<!DOCTYPE[^>]*\[/i.test(s)) return 'declares entities';
   if (/<\s*(iframe|embed|object|audio|video|animate|set)\b/i.test(s)) return 'contains active content';

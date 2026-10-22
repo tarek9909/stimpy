@@ -193,14 +193,15 @@ describe('setup checklist', () => {
       ['size_chart', 'REVIEW', true, '/products?tab=size-chart'],
       ['hoodie_price', 'REVIEW', true, '/products?tab=hoodies'],
       ['packs_prices', 'REVIEW', true, '/products?tab=packs'],
-      ['delivery_fee', 'REVIEW', true, '/deliveries?tab=fees'],
+      ['delivery_fee', 'REVIEW', true, '/settings?tab=delivery'],
       ['policies', 'REVIEW', true, '/content?tab=policies'],
       ['email_texts', 'REVIEW', false, '/content?tab=emails'],
       ['first_stock', 'AUTO', true, '/stock'],
       ['builder_2d', 'AUTO', false, '/content?tab=builder'],
       ['builder_3d', 'AUTO', false, '/content?tab=builder'],
     ]);
-    expect(s.items.every((i) => i.status === 'TODO')).toBe(true);
+    // The settings defaults are now the real shop address (info@stimpylb.com), so contact_emails starts DONE.
+    expect(s.items.filter((i) => i.status !== 'TODO').map((i) => i.key)).toEqual(['contact_emails']);
     expect(s.items.every((i) => i.label.length > 3 && i.hint.length > 3)).toBe(true);
   });
 
@@ -209,7 +210,8 @@ describe('setup checklist', () => {
     await t.ctx.settings.update({ business: { whatsappNumber: '03 123 456' } });
     expect(status(await setupOf(client), 'business_whatsapp')).toBe('DONE');
 
-    // seeded defaults are @stimpy.local
+    // placeholder (@stimpy.local) addresses do not count
+    await t.ctx.settings.update({ email: { replyTo: 'owner@stimpy.local' } });
     await t.ctx.settings.update({ business: { supportEmail: 'hello@stimpy.shop' }, email: { senderAddress: 'orders@stimpy.shop' } });
     expect(status(await setupOf(client), 'contact_emails')).toBe('TODO'); // reply-to is still the placeholder
     await t.ctx.settings.update({ email: { replyTo: 'owner@stimpy.shop' } });

@@ -50,7 +50,7 @@ describe('GET /content (public)', () => {
     await c.post('/admin/reviews', { name: 'Hidden', text: 'nope', visible: false });
 
     const out = (await t.client.get('/content')).json<Content>();
-    expect(out.business).toEqual({ name: 'Stimpy', whatsappNumber: '+9613123456', supportEmail: 'hello@stimpy.local', instagramUrl: 'https://instagram.com/stimpy', timezone: 'Europe/Paris' });
+    expect(out.business).toEqual({ name: 'Stimpy', whatsappNumber: '+9613123456', supportEmail: 'info@stimpylb.com', instagramUrl: 'https://instagram.com/stimpy', timezone: 'Europe/Paris' });
     expect(out.announcement).toEqual({ text: 'Drop 002 is coming', linkUrl: '/drops' });
     expect(out.homepage).toEqual({ heroHeadline: 'Hello', heroSubheadline: 'World', heroVideoUrl: null, heroImageUrl: IMG, featuredDropSlug: null, featuredStimpieSlug: null, showDropSections: true });
     expect(out.policies).toEqual({ deliveryReturns: 'D\n\n**bold**', care: 'C', terms: 'T', privacy: 'P' });

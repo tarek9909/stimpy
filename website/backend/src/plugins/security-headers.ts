@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { groupOf, pathOf } from './route-group';
+import { decodedPathOf, requestGroup } from './route-group';
 
 /**
  * Helmet-style headers (helmet is not installed; these are the defaults that matter for a JSON API) plus the
@@ -9,8 +9,8 @@ import { groupOf, pathOf } from './route-group';
 export default fp(async (app) => {
   const secure = app.ctx.config.cookieSecure;
   app.addHook('onSend', async (req, reply, payload) => {
-    const path = pathOf(req.url);
-    const group = groupOf(req.url);
+    const path = decodedPathOf(req.url);
+    const group = requestGroup(req);
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'no-referrer');
     if (secure) reply.header('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');

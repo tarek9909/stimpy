@@ -311,6 +311,9 @@ describe('cash settlement per delivery number', () => {
       cashDueCents: 100,
       cashSettled: index < 100,
     }));
+    const groupBodies: unknown[] = [];
+    const orderBodies: unknown[] = [];
+    const order101 = { id: 101 };
     const stub = stubFetch({
       'GET /api/v1/admin/finance/cash': () => json({
         outstandingCents: 100,
@@ -323,14 +326,30 @@ describe('cash settlement per delivery number', () => {
         const start = (page - 1) * pageSize;
         return json({ items: delivered.slice(start, start + pageSize), page, pageSize, total: delivered.length });
       },
-      'POST /api/v1/admin/deliveries/D-88231/settle': () => json({ orderIds: delivered.map((row) => row.orderId) }),
+      'POST /api/v1/admin/deliveries/D-88231/settle': async (req) => {
+        groupBodies.push(await req.json());
+        // The server flips only the unsettled order (deliveries service `settleDelivery`).
+        return json({ orderIds: [101] });
+      },
+      'POST /api/v1/admin/orders/101/cash': async (req) => {
+        orderBodies.push(await req.json());
+        return json({ ...order101 });
+      },
     });
     restore = stub.restore;
     render(<TestApp routes={[{ path: '/', element: <CashTab /> }]} />);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Mark delivery settled' }));
     const dialog = await screen.findByRole('alertdialog');
-    expect(dialog).toHaveTextContent('Mark all 101 orders on D-88231 as settled? You received $101.00.');
+    // 100 orders were settled earlier: only the remaining one is marked, and only its cash is received
+    // (DECISIONS.md: a group's due amount is the sum of its UNSETTLED orders).
+    expect(dialog).toHaveTextContent('Mark 1 unsettled order on D-88231 as settled? You received $1.00.');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Mark settled' }));
+    await waitFor(() => expect(groupBodies).toEqual([{ settled: true }]));
+    // Undo reverts only the order this action changed, never the 100 settled before it.
+    fireEvent.click(await screen.findByRole('button', { name: 'Undo' }));
+    await waitFor(() => expect(orderBodies).toEqual([{ settled: false }]));
+    expect(groupBodies).toEqual([{ settled: true }]);
   });
 
   it('orders without a delivery number are settled one by one through /cash', async () => {

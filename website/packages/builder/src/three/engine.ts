@@ -76,6 +76,8 @@ export interface EngineArt {
   url: string;
   width: number | null;
   height: number | null;
+  /** Tried when `url` (a texture override) fails to load: the Stimpie artwork (builder.md test 7). */
+  fallbackUrl?: string | null;
 }
 
 export interface EngineModel {
@@ -163,6 +165,14 @@ function loadImage(url: string): Promise<HTMLImageElement> {
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`image failed: ${url}`));
     img.src = url;
+  });
+}
+
+/** The art image, falling back to `fallbackUrl` when the override cannot be loaded. */
+function loadArtImage(art: EngineArt): Promise<HTMLImageElement> {
+  return loadImage(art.url).catch((e: unknown) => {
+    if (art.fallbackUrl && art.fallbackUrl !== art.url) return loadImage(art.fallbackUrl);
+    throw e;
   });
 }
 
@@ -296,7 +306,7 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
   // 1. Model and first artwork in parallel. Nothing GPU-side exists yet, so an abort here leaks nothing.
   const [parts, firstImage] = await Promise.all([
     loadModel(model, signal, opts.onProgress),
-    opts.art ? loadImage(opts.art.url).catch(() => null) : Promise.resolve(null),
+    opts.art ? loadArtImage(opts.art).catch(() => null) : Promise.resolve(null),
   ]);
   if (signal.aborted) throw new EngineAborted();
 
@@ -463,7 +473,7 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
     if (hit) return hit;
     const running = inflight.get(art.id);
     if (running) return running;
-    const p = loadImage(art.url).then((img) => {
+    const p = loadArtImage(art).then((img) => {
       inflight.delete(art.id);
       if (disposed) throw new EngineAborted();
       const entry = makeTexture(art, img);
@@ -936,7 +946,10 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
   frameCount += 1;
 
   // ----- public API -----
-  const fabricTextures: Texture[] = [];
+  // One fabric texture at a time: a replaced one is disposed (dashboard edits would otherwise leak GPU memory), and only
+  // the latest request applies (a slow earlier image must not overwrite a newer choice or a reset to none).
+  let fabricTexture: Texture | null = null;
+  let fabricToken = 0;
   const handle: EngineHandle = {
     canvas,
     showArt,
@@ -953,12 +966,13 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
       request();
     },
     setFabricTexture(url) {
+      const token = ++fabricToken;
       void (async () => {
         let tex: Texture | null = null;
         if (url) {
           try {
             const img = await loadImage(url);
-            if (disposed) return;
+            if (disposed || token !== fabricToken) return;
             tex = new Texture(img);
             tex.colorSpace = SRGBColorSpace;
             tex.flipY = false;
@@ -966,8 +980,8 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
             tex.wrapT = RepeatWrapping;
             tex.anisotropy = anisotropyFor(tier, maxAniso);
             tex.needsUpdate = true;
-            fabricTextures.push(tex);
           } catch {
+            if (disposed || token !== fabricToken) return;
             tex = null;
           }
         }
@@ -975,6 +989,8 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
           m.map = tex;
           m.needsUpdate = true;
         }
+        if (fabricTexture && fabricTexture !== tex) fabricTexture.dispose();
+        fabricTexture = tex;
         request();
       })();
     },
@@ -1042,8 +1058,8 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
       lru.clear();
       inflight.clear();
       placeholder.dispose();
-      for (const t of fabricTextures) t.dispose();
-      fabricTextures.length = 0;
+      fabricTexture?.dispose();
+      fabricTexture = null;
       uniforms.uMapOld.value = null;
       uniforms.uMapNew.value = null;
       for (const l of lights) scene.remove(l);

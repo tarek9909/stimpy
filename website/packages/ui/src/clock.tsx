@@ -28,6 +28,9 @@ export function useServerClock(): ServerClock {
   return useContext(ServerClockContext);
 }
 
+/** Largest delay `setTimeout` accepts (about 24.8 days); longer waits simply re-arm. */
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 export interface UseCountdownOptions {
   /** Injected clock for tests; defaults to `Date.now`. */
   now?: () => number;
@@ -74,7 +77,13 @@ export function useCountdown(
       if (cancelled) return;
       const remaining = computeRemainingMs(targetMs, offset, nowRef.current());
       setRemainingMs(remaining);
-      if (remaining <= 0 || paused) return;
+      if (remaining <= 0) return;
+      if (paused) {
+        // Off screen: no per-second ticks, but still flip to `done` when the target passes so
+        // `onComplete` fires (and the parent refetches) even if the countdown is never scrolled back.
+        timer = setTimeout(tick, Math.min(remaining + 1, MAX_TIMEOUT_MS));
+        return;
+      }
       // Wake just after the displayed second changes (ceil-based display): +1 ms so a timer that
       // fires on the boundary never leaves the previous second on screen.
       const untilNextSecond = remaining % 1000 || 1000;

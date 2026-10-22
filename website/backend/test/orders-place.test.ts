@@ -437,6 +437,19 @@ describe('idempotency', () => {
     await assertStockInvariants(t.prisma);
   });
 
+  it('concurrent identical website requests without a key create one order for a RETURNING customer too', async () => {
+    const w = await buildWorld(t.prisma);
+    // an earlier, different order makes the customer row exist before the burst
+    await placeOrder(t.ctx, placeInput(w, [hoodieItem(w, 1, 'cream', 's')], { i: 77 }));
+    const input = placeInput(w, [hoodieItem(w)], { i: 77 });
+    const results = await Promise.all(Array.from({ length: 10 }, () => placeOrder(t.ctx, input)));
+    expect(new Set(results.map((r) => r.orderId)).size).toBe(1);
+    expect(results.filter((r) => r.created)).toHaveLength(1);
+    expect(await t.prisma.order.count()).toBe(2);
+    expect((await variantOf(t.prisma, w)).reserved).toBe(1);
+    await assertStockInvariants(t.prisma);
+  });
+
   it('...but not after 60 s, and not for manual orders', async () => {
     const w = await buildWorld(t.prisma);
     const base = freezeTime('2026-10-14T10:00:00Z');

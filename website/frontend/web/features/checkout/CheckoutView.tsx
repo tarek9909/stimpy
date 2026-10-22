@@ -183,6 +183,11 @@ export function CheckoutView() {
   /* -------------------------------------------------------- cart validation (mount, qty, area) */
 
   const signature = cartLinesFingerprint(lines);
+  // "Place order for {total}" confirms one specific total: any cart change (quantity, removal, edit) invalidates it.
+  useEffect(() => {
+    setConfirmTotal(null);
+  }, [signature]);
+
   useEffect(() => {
     if (!hydrated || lines.length === 0 || redirecting || feesState.status === 'loading') return;
     let cancelled = false;
@@ -628,6 +633,7 @@ export function CheckoutView() {
                 type="tel"
                 inputMode="tel"
                 autoComplete="tel"
+                maxLength={LIMITS.phoneMax}
                 placeholder="03 123 456"
                 value={values.phone}
                 readOnly={readOnly}
@@ -671,6 +677,7 @@ export function CheckoutView() {
                   type="tel"
                   inputMode="tel"
                   autoComplete="tel"
+                  maxLength={LIMITS.phoneMax}
                   value={values.whatsapp}
                   readOnly={readOnly}
                   onChange={(e) => setField('whatsapp', e.target.value, ['customer.whatsapp'])}

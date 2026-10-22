@@ -67,6 +67,26 @@ export function textureUrlFor(stimpie: BuilderStimpie, overrides: BuilderConfigD
   return overrides.find((t) => t.stimpieId === stimpie.id)?.textureUrl ?? stimpie.artworkUrl;
 }
 
+/**
+ * What the 3D engine needs for one Stimpie. The cache id includes the override URL so a texture replaced in the
+ * dashboard is reloaded instead of reusing the cached one; `fallbackUrl` is the artwork, used when an override
+ * fails to load (builder.md test 7).
+ */
+export function engineArtFor(
+  stimpie: BuilderStimpie,
+  overrides: BuilderConfigData['stimpieTextures'],
+): { id: number | string; url: string; fallbackUrl: string | null; width: number | null; height: number | null } {
+  const url = textureUrlFor(stimpie, overrides);
+  const overridden = url !== stimpie.artworkUrl;
+  return {
+    id: overridden ? `${stimpie.id}|${url}` : stimpie.id,
+    url,
+    fallbackUrl: overridden ? stimpie.artworkUrl : null,
+    width: stimpie.artworkWidth,
+    height: stimpie.artworkHeight,
+  };
+}
+
 export type StimpieTag = 'Core' | 'Limited' | 'Last few' | 'Sold out' | 'Coming soon' | 'Ended';
 
 /** Card tag from `type`/`status` (builder.md 10.1). */

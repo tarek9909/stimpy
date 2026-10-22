@@ -1,5 +1,8 @@
 import { CART_MAX_QTY, CART_MIN_QTY, type CartItem, type CartLine } from './types';
 
+/** Contract limit: `stimpieIds` holds 1 to 5 ids. */
+const PACK_MAX_STIMPIES = 5;
+
 /** Clamp to the contract range 1..10. */
 export function clampQty(n: number): number {
   if (!Number.isFinite(n)) return CART_MIN_QTY;
@@ -75,6 +78,7 @@ export function isCartItem(value: unknown): value is CartItem {
         int(v.sizeId) &&
         Array.isArray(v.stimpieIds) &&
         v.stimpieIds.length > 0 &&
+        v.stimpieIds.length <= PACK_MAX_STIMPIES &&
         v.stimpieIds.every(int)
       );
     case 'hoodie':
@@ -83,5 +87,20 @@ export function isCartItem(value: unknown): value is CartItem {
       return int(v.stimpieId);
     default:
       return false;
+  }
+}
+
+/**
+ * Only the contract keys of a stored item. `POST /cart/validate` and `POST /orders` use strict schemas, so one stray
+ * key left in `stimpy.cart` (an older build, a hand edit) would otherwise fail every check and every order.
+ */
+export function contractItem(item: CartItem): CartItem {
+  switch (item.kind) {
+    case 'pack':
+      return { kind: 'pack', packId: item.packId, hoodieId: item.hoodieId, colorId: item.colorId, sizeId: item.sizeId, stimpieIds: [...item.stimpieIds], qty: item.qty };
+    case 'hoodie':
+      return { kind: 'hoodie', hoodieId: item.hoodieId, colorId: item.colorId, sizeId: item.sizeId, qty: item.qty };
+    case 'stimpie':
+      return { kind: 'stimpie', stimpieId: item.stimpieId, qty: item.qty };
   }
 }

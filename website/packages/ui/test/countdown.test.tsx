@@ -154,6 +154,14 @@ describe('useCountdown and <Countdown>', () => {
     expect(result.current.text).toBe('01:00');
   });
 
+  it('still reaches done while paused (off screen) so onComplete can fire', () => {
+    const { result } = renderHook(() => useCountdown('2026-10-14T20:01:00.000Z', 0, { paused: true }));
+    act(() => {
+      vi.advanceTimersByTime(61 * S);
+    });
+    expect(result.current.done).toBe(true);
+  });
+
   it('re-syncs when the tab becomes visible again', () => {
     const { result } = renderHook(() => useCountdown('2026-10-14T20:01:00.000Z', 0));
     vi.setSystemTime(NOW + 30 * S); // a throttled background tab missed its ticks

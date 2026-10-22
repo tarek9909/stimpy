@@ -208,7 +208,7 @@ function PoliciesBody({ policies, about, how }: { policies: PoliciesBlock; about
       <p className="text-body-sm text-fg-muted">
         How to measure is edited with the size chart: <TextLink href="/products?tab=size-chart">Products &rarr; Size chart</TextLink>.
       </p>
-      <PolicySection field="deliveryReturns" title="Delivery" data={policies} report={report} />
+      <PolicySection field="deliveryReturns" title="Delivery &amp; returns" data={policies} report={report} />
       <PolicySection field="care" title="Care" data={policies} report={report} />
       <PolicySection field="terms" title="Terms" data={policies} report={report} />
       <PolicySection field="privacy" title="Privacy" data={policies} report={report} />

@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import type { FastifyRequest } from 'fastify';
 import { RATE_RULES, rateLimiter, type RateRule } from '../lib/rate-limiter';
-import { groupOf } from './route-group';
+import { requestGroup } from './route-group';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -23,7 +23,7 @@ export default fp(async (app) => {
   });
 
   app.addHook('onRequest', async (req) => {
-    if (req.method !== 'GET' || groupOf(req.url) !== 'public') return;
+    if (req.method !== 'GET' || requestGroup(req) !== 'public') return;
     rateLimiter.enforce(RATE_RULES.publicRead, req.ip);
   });
 }, { name: 'rate-limit' });

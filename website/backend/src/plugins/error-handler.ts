@@ -4,7 +4,7 @@ import { hasZodFastifySchemaValidationErrors, isResponseSerializationError } fro
 import { Prisma } from '@prisma/client';
 import { AppError, ERROR_STATUS } from '../lib/errors';
 import { scrubText } from '../lib/mask';
-import { API_PREFIX, pathOf } from './route-group';
+import { API_PREFIX, decodedPathOf } from './route-group';
 
 type ErrorBody = {
   error: {
@@ -173,7 +173,7 @@ export default fp(async (app) => {
   });
 
   app.setNotFoundHandler((req, reply) => {
-    const path = pathOf(req.url);
+    const path = decodedPathOf(req.url);
     const allowed = new Set<string>();
     for (const p of patterns) if (p.re.test(path)) p.methods.forEach((m) => allowed.add(m));
     allowed.delete('HEAD');

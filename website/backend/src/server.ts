@@ -20,10 +20,10 @@ async function main(): Promise<void> {
   const pool = await warmDatabasePool(config.databaseUrl, () => app.ctx.prisma.$queryRaw`SELECT 1`);
   app.log.info(pool, 'database pool warmed before readiness');
 
-  let stopJobs: (() => void) | null = null;
+  let stopJobs: (() => Promise<void>) | null = null;
   const shutdown = async (signal: string): Promise<void> => {
     app.log.info({ signal }, 'shutting down');
-    stopJobs?.();
+    await stopJobs?.();
     await app.close();
     process.exit(0);
   };

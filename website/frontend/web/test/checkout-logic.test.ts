@@ -602,3 +602,16 @@ describe('checkout draft', () => {
     expect(loadDraft()).toBeNull();
   });
 });
+
+describe('checkout field limits match the API', () => {
+  it('rejects a phone longer than 40 characters after trimming (API max) and accepts a padded one', () => {
+    expect(isLebanesePhone(`03 123 456${' '.repeat(40)}`)).toBe(true);
+    expect(isLebanesePhone(`0${' '.repeat(35)}3 123 456`)).toBe(false);
+  });
+
+  it('measures notes after trimming, as the API does with the trimmed body', () => {
+    const v = { ...EMPTY_VALUES, notes: `${'a'.repeat(300)}  ` };
+    expect(validateField('delivery.notes', v, { areasAvailable: true })).toBeNull();
+    expect(validateField('delivery.notes', { ...v, notes: 'a'.repeat(301) }, { areasAvailable: true })).not.toBeNull();
+  });
+});

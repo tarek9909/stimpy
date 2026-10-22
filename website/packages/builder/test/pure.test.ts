@@ -24,6 +24,7 @@ import {
   stimpieTag,
   tintFor,
   textureUrlFor,
+  engineArtFor,
   usable2D,
   zipFrame,
   zipKeyframes,
@@ -59,6 +60,13 @@ describe('join: usable colours (builder.md 2.2)', () => {
     expect(tintFor(joined[1]!)).toBe('#FFF4E6');
     expect(textureUrlFor(stimpie(2), d.config.stimpieTextures)).toBe('http://api.test/uploads/tex-2.webp');
     expect(textureUrlFor(stimpie(1), d.config.stimpieTextures)).toBe('http://api.test/uploads/art-1.webp');
+  });
+  it('3D art: an override keys the cache by URL and falls back to the artwork; no override keeps the plain id', () => {
+    const over = engineArtFor(stimpie(2), d.config.stimpieTextures);
+    expect(over).toMatchObject({ id: '2|http://api.test/uploads/tex-2.webp', url: 'http://api.test/uploads/tex-2.webp', fallbackUrl: stimpie(2).artworkUrl });
+    const replaced = engineArtFor(stimpie(2), [{ stimpieId: 2, textureUrl: 'http://api.test/uploads/tex-2b.webp' }] as typeof d.config.stimpieTextures);
+    expect(replaced.id).not.toBe(over.id);
+    expect(engineArtFor(stimpie(1), d.config.stimpieTextures)).toMatchObject({ id: 1, url: 'http://api.test/uploads/art-1.webp', fallbackUrl: null });
   });
   it('tags and block reasons', () => {
     expect(stimpieTag(stimpie(1))).toBe('Core');

@@ -11,6 +11,7 @@ import { likeEscape } from '../../lib/like';
 import { normalizePhone } from '../../lib/phone';
 import { isUniqueViolation } from '../../lib/db';
 import { orderSummaryArgs, toOrderSummary, type AdminOrderSummaryDto } from '../../services/order-summary';
+import { ERASED_EMAIL_SUFFIX } from '../../services/email-queue';
 import { refreshCampaignCounts } from './campaigns-email';
 
 /**
@@ -149,7 +150,7 @@ type CustomerListDbRow = {
 };
 
 /** Compile the calculated customer filters to SQL so list pagination and counts stay bounded by the requested page. */
-function customerSqlWhere(f: CustomerFilters): Prisma.Sql {
+function customerSqlWhere(f: CustomerFilters, timezone: string): Prisma.Sql {
   const conditions: Prisma.Sql[] = [];
   if (f.ids?.length) conditions.push(Prisma.sql`c.id IN (${Prisma.join(f.ids)})`);
   if (f.q?.trim()) {
@@ -179,8 +180,9 @@ function customerSqlWhere(f: CustomerFilters): Prisma.Sql {
   if (f.ordersMax !== undefined) conditions.push(Prisma.sql`${ordersCount} <= ${f.ordersMax}`);
   if (f.spentMinCents !== undefined) conditions.push(Prisma.sql`${spent} >= ${f.spentMinCents}`);
   if (f.spentMaxCents !== undefined) conditions.push(Prisma.sql`${spent} <= ${f.spentMaxCents}`);
-  if (f.lastOrderBefore) conditions.push(Prisma.sql`(${lastOrder} IS NULL OR ${lastOrder} < ${new Date(`${f.lastOrderBefore}T00:00:00.000Z`)})`);
-  if (f.lastOrderAfter) conditions.push(Prisma.sql`${lastOrder} > ${new Date(`${f.lastOrderAfter}T23:59:59.999Z`)}`);
+  // Calendar days are business-timezone days (the same rule as campaign segments and every other date filter).
+  if (f.lastOrderBefore) conditions.push(Prisma.sql`(${lastOrder} IS NULL OR ${lastOrder} < ${dayRangeInTz(f.lastOrderBefore, timezone).start})`);
+  if (f.lastOrderAfter) conditions.push(Prisma.sql`${lastOrder} >= ${dayRangeInTz(f.lastOrderAfter, timezone).end}`);
   if (f.hasEmail !== undefined) conditions.push(f.hasEmail ? Prisma.sql`c.email IS NOT NULL AND c.email <> ''` : Prisma.sql`(c.email IS NULL OR c.email = '')`);
   if (f.returned !== undefined) conditions.push(f.returned ? Prisma.sql`${returned} > 0` : Prisma.sql`${returned} = 0`);
   if (f.optedOut !== undefined) conditions.push(f.optedOut ? Prisma.sql`c.marketing_opt_out_at IS NOT NULL` : Prisma.sql`c.marketing_opt_out_at IS NULL`);
@@ -190,7 +192,8 @@ function customerSqlWhere(f: CustomerFilters): Prisma.Sql {
 }
 
 async function listCustomersSql(ctx: AppContext, q: CustomerListQuery): Promise<Page<CustomerListRow>> {
-  const where = customerSqlWhere(q);
+  const timezone = q.lastOrderBefore || q.lastOrderAfter ? (await ctx.settings.get('business')).timezone : 'UTC';
+  const where = customerSqlWhere(q, timezone);
   const sort = parseSort(q.sort, CUSTOMER_SORT_FIELDS, { field: 'lastOrderAt', dir: 'desc' });
   const direction = sort.dir === 'asc' ? Prisma.sql`ASC` : Prisma.sql`DESC`;
   const ordersCount = Prisma.sql`(SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id AND o.status <> 'CANCELLED')`;
@@ -310,14 +313,17 @@ export async function listCustomerDuplicates(ctx: AppContext, q: PageQuery): Pro
       SELECT COUNT(*) AS total FROM (
         SELECT match_type, match_value FROM candidates GROUP BY match_type, match_value HAVING COUNT(*) > 1
       ) AS matches`),
-    ctx.prisma.$queryRaw<{ match_type: 'EMAIL' | 'PHONE'; match_value: string; ids: string }[]>(Prisma.sql`${DUPLICATE_CTES}
-      SELECT match_type, match_value, GROUP_CONCAT(id ORDER BY id) AS ids
+    ctx.prisma.$queryRaw<{ match_type: 'EMAIL' | 'PHONE'; match_value: string; ids: string; n: number | bigint }[]>(Prisma.sql`${DUPLICATE_CTES}
+      SELECT match_type, match_value, COUNT(*) AS n, GROUP_CONCAT(id ORDER BY id) AS ids
       FROM candidates GROUP BY match_type, match_value HAVING COUNT(*) > 1
       ORDER BY match_type ASC, match_value ASC LIMIT ${take} OFFSET ${skip}`),
   ]);
   const items: CustomerDuplicateGroup[] = [];
   for (const group of groups) {
-    const ids = group.ids.split(',').map(Number).filter(Number.isInteger);
+    let ids = group.ids.split(',').map(Number).filter(Number.isInteger);
+    // GROUP_CONCAT stops at group_concat_max_len (1024 bytes by default): a cut-off last id ("…,12" of 1234) would name the
+    // wrong customer, so a truncated list drops its last entry.
+    if (ids.length < Number(group.n)) ids = ids.slice(0, -1);
     if (!ids.length) continue;
     const [customers, stats] = await Promise.all([
       ctx.prisma.customer.findMany({ where: { id: { in: ids } }, include: { area: { select: { name: true } } } }),
@@ -394,12 +400,18 @@ export async function eraseCustomerPersonalData(ctx: AppContext, id: number): Pr
     if (contacts.length) await tx.subscriber.deleteMany({ where: { contact: { in: contacts } } });
     const emailLogs = await tx.emailLog.findMany({
       where: { OR: [...(orderIds.length ? [{ orderId: { in: orderIds } }] : []), ...(emails.length ? [{ toEmail: { in: emails } }] : [])] },
-      select: { id: true },
+      select: { id: true, status: true },
     });
     for (const emailLog of emailLogs) {
+      // Only unsent mail is stopped. Delivered history stays SENT and old failures stay FAILED: rewriting every row to FAILED
+      // made erased customers' past e-mails show up as "could not be sent" on the overview (and be retryable to a dead address).
+      const stop = emailLog.status === 'PENDING';
       await tx.emailLog.update({
         where: { id: emailLog.id },
-        data: { toEmail: `erased-${id}-${emailLog.id}@privacy.invalid`, subject: '[personal data erased]', bodyText: '[personal data erased]', bodyHtml: '[personal data erased]', error: null, status: 'FAILED' },
+        data: {
+          toEmail: `erased-${id}-${emailLog.id}${ERASED_EMAIL_SUFFIX}`, subject: '[personal data erased]', bodyText: '[personal data erased]', bodyHtml: '[personal data erased]',
+          ...(stop ? { status: 'FAILED' as const, error: 'Customer personal data was erased.' } : { error: null }),
+        },
       });
     }
     await tx.customer.update({
@@ -437,7 +449,7 @@ export async function updateCustomer(ctx: AppContext, id: number, patch: Custome
   if (patch.name !== undefined) data.name = patch.name;
   if (patch.email !== undefined) data.email = patch.email;
   if (patch.notes !== undefined) data.notes = patch.notes;
-  if (patch.marketingOptOut !== undefined) data.marketingOptOutAt = patch.marketingOptOut ? new Date() : null;
+  if (patch.marketingOptOut !== undefined) data.marketingOptOutAt = patch.marketingOptOut ? now() : null;
   if (patch.emailConsent !== undefined) data.emailConsent = patch.emailConsent;
   if (patch.whatsappConsent !== undefined) data.whatsappConsent = patch.whatsappConsent;
   if (patch.emailConsent !== undefined || patch.whatsappConsent !== undefined) data.consentUpdatedAt = now();
@@ -487,6 +499,10 @@ export async function mergeCustomer(ctx: AppContext, survivorId: number, duplica
     const consentUpdatedAt = [survivor.consentUpdatedAt, duplicate.consentUpdatedAt].filter((value): value is Date => value !== null).sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
     const unsubscribedAt = [survivor.unsubscribedAt, duplicate.unsubscribedAt].filter((value): value is Date => value !== null).sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
     const marketingOptOutAt = [survivor.marketingOptOutAt, duplicate.marketingOptOutAt].filter((value): value is Date => value !== null).sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+    // `unsubscribe_token` is UNIQUE: release it on the duplicate before the survivor inherits it (the duplicate is deleted below).
+    if (!survivor.unsubscribeToken && duplicate.unsubscribeToken) {
+      await tx.customer.update({ where: { id: duplicateId }, data: { unsubscribeToken: null } });
+    }
     await tx.customer.update({
       where: { id: survivorId },
       data: {

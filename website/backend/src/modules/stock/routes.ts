@@ -46,7 +46,8 @@ const stimpiesResponse = pageSchema(stockStimpieSchema);
 const adjustBody = z.strictObject({
   itemType,
   itemId,
-  delta: z.number().int(),
+  // bounded like `/stock/set` so `quantity + delta` always fits the INT column (a huge delta was a 500)
+  delta: z.number().int().min(-1_000_000).max(1_000_000),
   reason: z.enum(['RESTOCK', 'CORRECTION', 'DAMAGED']).default('CORRECTION').optional(),
   note: z.string().max(1000),
 });

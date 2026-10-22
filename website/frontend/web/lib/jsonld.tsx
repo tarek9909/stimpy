@@ -8,7 +8,8 @@ import { absoluteUrl, SITE_NAME } from './seo';
 type Json = Record<string, unknown>;
 
 export function JsonLd({ data }: { data: Json | Json[] }) {
-  const text = JSON.stringify(data).replace(/</g, '\u003c');
+  // The six-character JSON escape \u003c (in JS source that needs a doubled backslash; a single one is just `<`).
+  const text = JSON.stringify(data).replace(/</g, '\\u003c');
   return <script type="application/ld+json">{text}</script>;
 }
 

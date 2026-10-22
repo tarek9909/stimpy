@@ -92,3 +92,14 @@ describe('config validation (backend README section 6)', () => {
     }
   });
 });
+
+describe('TRUST_PROXY', () => {
+  it('is a hop count: false/0 off, true/1 one proxy, n proxies; anything else is refused', () => {
+    expect(parseConfig(base).trustProxy).toBe(0);
+    expect(parseConfig({ ...base, TRUST_PROXY: 'false' }).trustProxy).toBe(0);
+    expect(parseConfig({ ...base, TRUST_PROXY: 'true' }).trustProxy).toBe(1);
+    expect(parseConfig({ ...base, TRUST_PROXY: '1' }).trustProxy).toBe(1);
+    expect(parseConfig({ ...base, TRUST_PROXY: '2' }).trustProxy).toBe(2);
+    expect(() => parseConfig({ ...base, TRUST_PROXY: 'yes' })).toThrow(ConfigError);
+  });
+});

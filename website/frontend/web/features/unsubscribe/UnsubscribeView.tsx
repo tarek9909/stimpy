@@ -23,7 +23,8 @@ export function UnsubscribeView({ token }: { token: string }) {
       });
       setState(data?.valid ? 'ready' : 'invalid');
     } catch (error) {
-      setState(isApiError(error) && error.code === 'NOT_FOUND' ? 'invalid' : 'unavailable');
+      // A malformed token is refused by the route schema (400): that link is invalid, not a temporary outage.
+      setState(isApiError(error) && (error.code === 'NOT_FOUND' || error.code === 'VALIDATION_ERROR') ? 'invalid' : 'unavailable');
     }
   }, [token]);
 
@@ -32,13 +33,14 @@ export function UnsubscribeView({ token }: { token: string }) {
   }, [validate]);
 
   const confirm = async () => {
-    if (state !== 'ready' || !token) return;
+    // 'confirm_error' keeps the button so the visitor can retry the confirmation.
+    if ((state !== 'ready' && state !== 'confirm_error') || !token) return;
     setState('confirming');
     try {
       await browserApi().POST('/api/v1/unsubscribe/{token}/confirm', { params: { path: { token } } });
       setState('confirmed');
     } catch (error) {
-      setState(isApiError(error) && error.code === 'NOT_FOUND' ? 'invalid' : 'confirm_error');
+      setState(isApiError(error) && (error.code === 'NOT_FOUND' || error.code === 'VALIDATION_ERROR') ? 'invalid' : 'confirm_error');
     }
   };
 

@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import { AppError } from '../lib/errors';
-import { groupOf } from './route-group';
+import { requestGroup } from './route-group';
 
 /**
  * CSRF defence (security-and-testing 2.2): every non-GET request to /auth or /admin that carries an Origin header must
@@ -11,7 +11,7 @@ export default fp(async (app) => {
   const adminOrigins = new Set(app.ctx.config.adminUrls);
   app.addHook('onRequest', async (req) => {
     if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return;
-    if (groupOf(req.url) !== 'admin') return;
+    if (requestGroup(req) !== 'admin') return;
     const origin = req.headers.origin;
     if (origin !== undefined && !adminOrigins.has(origin)) {
       throw AppError.forbidden('This request came from an address that is not allowed.');

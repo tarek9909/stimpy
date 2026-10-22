@@ -7,6 +7,8 @@ import { useNotifyError } from '../../api/errors';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FilterBar } from '../../components/FilterBar';
 import { PageHeader } from '../../components/PageHeader';
+import { useFormatters } from '../../lib/format';
+import { isSafeWhatsAppUrl } from '../../lib/links';
 import { fetchAllPages } from '../../lib/pagination';
 import { useAreas } from '../../lib/refdata';
 import { useAllDrops } from '../products/api';
@@ -81,6 +83,8 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
   const [campaignPage, setCampaignPage] = useState(1);
   const [recipientPage, setRecipientPage] = useState(1);
   const [confirmDraft, setConfirmDraft] = useState(false);
+  const [segmentToDelete, setSegmentToDelete] = useState<Segment | null>(null);
+  const f = useFormatters();
 
   const segments = useQuery({ queryKey: ['crm-segments', segmentPage], queryFn: () => unwrap(api.GET('/api/v1/admin/segments', { params: { query: { page: segmentPage, pageSize: 50 } } })) });
   const allSegments = useQuery({
@@ -115,16 +119,15 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
     onSuccess: (segment) => { void qc.invalidateQueries({ queryKey: ['crm-segments'] }); setSelectedSegmentId(segment.id); setSegmentName(segment.name); toast.success('Segment saved.'); },
     onError: (error) => notify(error, { fallback: 'Could not save the segment.' }),
   });
-  const deleteSegment = useMutation({ mutationFn: (id: number) => unwrap(api.DELETE('/api/v1/admin/segments/{id}', { params: { path: { id } } })), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['crm-segments'] }); setSelectedSegmentId(undefined); toast.success('Segment deleted.'); }, onError: (error) => notify(error, { fallback: 'Could not delete the segment.' }) });
+  const deleteSegment = useMutation({ mutationFn: (id: number) => unwrap(api.DELETE('/api/v1/admin/segments/{id}', { params: { path: { id } } })), onSuccess: (_, id) => { void qc.invalidateQueries({ queryKey: ['crm-segments'] }); if (id === selectedSegmentId) { setSelectedSegmentId(undefined); setSegmentName(''); } toast.success('Segment deleted.'); } });
   const createDraft = useMutation({
     mutationFn: () => unwrap(api.POST('/api/v1/admin/campaigns', { body: { target, channel, templateKey } })),
-    onSuccess: (campaign) => { setSelectedCampaignId(campaign.id); void qc.invalidateQueries({ queryKey: ['crm-campaigns'] }); toast.success('Campaign draft created. Review it and confirm when ready.'); },
+    onSuccess: (campaign) => { setSelectedCampaignId(campaign.id); setRecipientPage(1); void qc.invalidateQueries({ queryKey: ['crm-campaigns'] }); toast.success('Campaign draft created. Review it and confirm when ready.'); },
     onError: (error) => notify(error, { fallback: 'Could not create the campaign draft.' }),
   });
   const confirmCampaign = useMutation({
     mutationFn: (id: number) => unwrap(api.POST('/api/v1/admin/campaigns/{id}/confirm', { params: { path: { id } } })),
     onSuccess: (campaign) => { setConfirmDraft(false); void qc.invalidateQueries({ queryKey: ['crm-campaigns'] }); void qc.invalidateQueries({ queryKey: ['crm-campaign', campaign.id] }); toast.success('Campaign confirmed.'); },
-    onError: (error) => notify(error, { fallback: 'Could not confirm the campaign. Preview the audience again.' }),
   });
   const markSent = useMutation({
     mutationFn: ({ campaignId, customerId }: { campaignId: number; customerId: number }) => unwrap(api.POST('/api/v1/admin/campaigns/{id}/recipients/{customerId}/sent', { params: { path: { id: campaignId, customerId } } })),
@@ -132,7 +135,7 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
     onError: (error) => notify(error, { fallback: 'This recipient is no longer eligible to receive a WhatsApp message.' }),
   });
 
-  const selectedDraft = selectedCampaignId === undefined ? undefined : campaigns.data?.items.find((campaign) => campaign.id === selectedCampaignId);
+  const selectedDraft = selectedCampaignId === undefined ? undefined : (detail.data?.id === selectedCampaignId ? detail.data : undefined) ?? campaigns.data?.items.find((campaign) => campaign.id === selectedCampaignId);
   const audience = preview.data;
   const templateOptions = (templates.data ?? []).map((template) => ({ value: template.key, label: template.name }));
   const selectedTemplate = templates.data?.find((template) => template.key === templateKey);
@@ -160,7 +163,7 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
           <section className="rounded-lg border border-base bg-surface-base p-4">
             <h2 className="mb-3 text-h5">Saved segments</h2>
             {segments.isPending ? <p className="text-body-sm text-fg-muted">Loading segments…</p> : segments.isError ? <p role="alert" className="text-body-sm text-fg-danger">Could not load saved segments.</p> : segments.data.items.length ? (
-              <ul className="divide-y divide-line">{segments.data.items.map((segment) => <li key={segment.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">{segment.name}</p><p className="text-xs text-fg-muted">Updated {new Date(segment.updatedAt).toLocaleDateString()}</p></div><div className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => { setSelectedSegmentId(segment.id); setSegmentName(segment.name); onFiltersChange(segment.filters); }}>Edit / use</Button><Button size="sm" variant="ghost" onClick={() => deleteSegment.mutate(segment.id)} loading={deleteSegment.isPending}>Delete</Button></div></li>)}</ul>
+              <ul className="divide-y divide-line">{segments.data.items.map((segment) => <li key={segment.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-medium">{segment.name}</p><p className="text-xs text-fg-muted">Updated {f.date(segment.updatedAt)}</p></div><div className="flex gap-2"><Button size="sm" variant="secondary" onClick={() => { setSelectedSegmentId(segment.id); setSegmentName(segment.name); onFiltersChange(segment.filters); }}>Edit / use</Button><Button size="sm" variant="ghost" onClick={() => setSegmentToDelete(segment)}>Delete</Button></div></li>)}</ul>
             ) : <p className="text-body-sm text-fg-muted">No saved segments yet.</p>}
             {segments.data && segments.data.total > segments.data.pageSize ? <div className="mt-3 flex items-center justify-between"><Button size="sm" variant="secondary" disabled={segmentPage <= 1} onClick={() => setSegmentPage((page) => page - 1)}>Previous</Button><span className="text-xs text-fg-muted">Page {segments.data.page} of {Math.ceil(segments.data.total / segments.data.pageSize)}</span><Button size="sm" variant="secondary" disabled={segments.data.page * segments.data.pageSize >= segments.data.total} onClick={() => setSegmentPage((page) => page + 1)}>Next</Button></div> : null}
           </section>
@@ -193,11 +196,20 @@ export function CrmCampaigns({ mode, filters, onFiltersChange }: { mode: Mode; f
             {campaigns.data && campaigns.data.total > campaigns.data.pageSize ? <div className="mt-3 flex items-center justify-between"><Button size="sm" variant="secondary" disabled={campaignPage <= 1} onClick={() => setCampaignPage((page) => page - 1)}>Previous</Button><span className="text-xs text-fg-muted">Page {campaigns.data.page} of {Math.ceil(campaigns.data.total / campaigns.data.pageSize)}</span><Button size="sm" variant="secondary" disabled={campaigns.data.page * campaigns.data.pageSize >= campaigns.data.total} onClick={() => setCampaignPage((page) => page + 1)}>Next</Button></div> : null}
           </section>
 
-          {detail.data ? <section className="rounded-lg border border-base bg-surface-base p-4"><div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-h5">Campaign #{detail.data.id} recipients</h2><p className="text-body-sm text-fg-muted">{detail.data.channel} · {detail.data.status}</p></div><Button variant="ghost" onClick={() => setSelectedCampaignId(undefined)}>Close details</Button></div><div className="overflow-x-auto"><table className="w-full text-left text-body-sm"><thead><tr className="border-b border-line"><th className="p-2">Customer</th><th className="p-2">Destination</th><th className="p-2">Status</th><th className="p-2">Action</th></tr></thead><tbody>{detail.data.recipients.items.map((recipient) => <tr key={recipient.id} className="border-b border-line"><td className="p-2"><a className="underline" href={`/customers/${recipient.customerId}`}>{recipient.customerName}</a></td><td className="p-2">{recipient.to ?? '—'}</td><td className="p-2">{recipient.status}{recipient.error ? <span className="ml-2 text-fg-danger">{recipient.error}</span> : null}</td><td className="p-2">{detail.data.channel === 'WHATSAPP' && recipient.status === 'READY' ? <span className="flex gap-2">{recipient.whatsappUrl ? <a className="rounded-md border border-line px-3 py-1 underline" href={recipient.whatsappUrl} target="_blank" rel="noopener noreferrer">Open chat</a> : null}<Button size="sm" variant="secondary" onClick={() => markSent.mutate({ campaignId: detail.data.id, customerId: recipient.customerId })} loading={markSent.isPending}>Mark sent</Button></span> : null}</td></tr>)}</tbody></table></div>{detail.data.recipients.total > detail.data.recipients.pageSize ? <div className="mt-3 flex items-center justify-between"><Button size="sm" variant="secondary" disabled={recipientPage <= 1} onClick={() => setRecipientPage((page) => page - 1)}>Previous</Button><span className="text-xs text-fg-muted">Page {detail.data.recipients.page} of {Math.ceil(detail.data.recipients.total / detail.data.recipients.pageSize)}</span><Button size="sm" variant="secondary" disabled={detail.data.recipients.page * detail.data.recipients.pageSize >= detail.data.recipients.total} onClick={() => setRecipientPage((page) => page + 1)}>Next</Button></div> : null}</section> : null}
+          {detail.data ? <section className="rounded-lg border border-base bg-surface-base p-4"><div className="mb-3 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-h5">Campaign #{detail.data.id} recipients</h2><p className="text-body-sm text-fg-muted">{detail.data.channel} · {detail.data.status}</p></div><Button variant="ghost" onClick={() => setSelectedCampaignId(undefined)}>Close details</Button></div><div className="overflow-x-auto"><table className="w-full text-left text-body-sm"><thead><tr className="border-b border-line"><th className="p-2">Customer</th><th className="p-2">Destination</th><th className="p-2">Status</th><th className="p-2">Action</th></tr></thead><tbody>{detail.data.recipients.items.map((recipient) => <tr key={recipient.id} className="border-b border-line"><td className="p-2"><a className="underline" href={`/customers/${recipient.customerId}`}>{recipient.customerName}</a></td><td className="p-2">{recipient.to ?? '—'}</td><td className="p-2">{recipient.status}{recipient.error ? <span className="ml-2 text-fg-danger">{recipient.error}</span> : null}</td><td className="p-2">{detail.data.channel === 'WHATSAPP' && recipient.status === 'READY' ? <span className="flex gap-2">{recipient.whatsappUrl && isSafeWhatsAppUrl(recipient.whatsappUrl) ? <a className="rounded-md border border-line px-3 py-1 underline" href={recipient.whatsappUrl} target="_blank" rel="noopener noreferrer">Open chat</a> : null}<Button size="sm" variant="secondary" onClick={() => markSent.mutate({ campaignId: detail.data.id, customerId: recipient.customerId })} loading={markSent.isPending}>Mark sent</Button></span> : null}</td></tr>)}</tbody></table></div>{detail.data.recipients.total > detail.data.recipients.pageSize ? <div className="mt-3 flex items-center justify-between"><Button size="sm" variant="secondary" disabled={recipientPage <= 1} onClick={() => setRecipientPage((page) => page - 1)}>Previous</Button><span className="text-xs text-fg-muted">Page {detail.data.recipients.page} of {Math.ceil(detail.data.recipients.total / detail.data.recipients.pageSize)}</span><Button size="sm" variant="secondary" disabled={detail.data.recipients.page * detail.data.recipients.pageSize >= detail.data.recipients.total} onClick={() => setRecipientPage((page) => page + 1)}>Next</Button></div> : null}</section> : null}
         </>
       )}
 
-      <ConfirmDialog open={confirmDraft} title={`Confirm campaign #${selectedCampaignId ?? ''}?`} description={channel === 'EMAIL' ? 'Eligible customers will receive an email through the queue. Consent is checked again by the worker before delivery.' : 'This creates one WhatsApp chat link per eligible customer. Messages are never sent automatically.'} confirmLabel="Confirm campaign" onClose={() => setConfirmDraft(false)} onConfirm={async () => { if (selectedCampaignId) await confirmCampaign.mutateAsync(selectedCampaignId); }} />
+      <ConfirmDialog open={confirmDraft} title={`Confirm campaign #${selectedDraft?.id ?? ''}?`} reportErrors={false} description={selectedDraft?.channel === 'EMAIL' ? 'Eligible customers will receive an email through the queue. Consent is checked again by the worker before delivery.' : 'This creates one WhatsApp chat link per eligible customer. Messages are never sent automatically.'} confirmLabel="Confirm campaign" onClose={() => setConfirmDraft(false)} onConfirm={async () => {
+        if (!selectedDraft) return;
+        try {
+          await confirmCampaign.mutateAsync(selectedDraft.id);
+        } catch (error) {
+          notify(error, { fallback: 'Could not confirm the campaign. Preview the audience again.' });
+          throw error;
+        }
+      }} />
+      <ConfirmDialog open={segmentToDelete !== null} title={`Delete segment "${segmentToDelete?.name ?? ''}"?`} description="The saved filters are removed. Campaigns already created from it are kept." confirmLabel="Delete segment" tone="destructive" notUndoable onClose={() => setSegmentToDelete(null)} onConfirm={async () => { if (segmentToDelete) await deleteSegment.mutateAsync(segmentToDelete.id); }} />
     </div>
   );
 }

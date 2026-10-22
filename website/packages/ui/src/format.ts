@@ -62,11 +62,15 @@ export function pluralize(n: number, singular: string, plural: string = `${singu
 export function formatPercent(ratio: number): string {
   if (!Number.isFinite(ratio)) return '—';
   const v = ratio * 100;
-  if (v > 0 && v < 10) {
-    const r = Math.round(v * 10) / 10;
-    return `${Number.isInteger(r) ? r : r.toFixed(1)}%`;
+  const sign = v < 0 ? '-' : '';
+  const a = Math.abs(v);
+  // Symmetric for negative changes: -0.045 is "-4.5%" (Math.round alone would give "-4%" vs "5%").
+  if (a > 0 && a < 10) {
+    const r = Math.round(a * 10) / 10;
+    return `${sign}${Number.isInteger(r) ? r : r.toFixed(1)}%`;
   }
-  return `${Math.round(v)}%`;
+  const r = Math.round(a);
+  return `${r === 0 ? '' : sign}${r}%`;
 }
 
 /* ------------------------------------------------------------ time zones */

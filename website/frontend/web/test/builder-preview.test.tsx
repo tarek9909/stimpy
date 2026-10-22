@@ -73,7 +73,8 @@ describe('customer 3D preview', () => {
     mocks.GET.mockResolvedValueOnce({ data: { ...config, model3d: null, effectiveMode: '2D' } });
     const view = setup();
     await view.findByText('2D preview');
-    expect(view.getByTestId('poster')).toBeInTheDocument();
+    // The 2D poster (campaign photo stage) stays visible.
+    expect(document.querySelector('.store-preview-poster')).toHaveStyle({ visibility: 'visible' });
     expect(view.queryByText('Loading 3D preview')).not.toBeInTheDocument();
     fireEvent.click(view.getByRole('button', { name: 'Retry 3D' }));
     await view.findByRole('img');
@@ -88,15 +89,16 @@ describe('customer 3D preview', () => {
     expect(signal.aborted).toBe(true);
   });
 
-  it('preserves both pack slots by disabling duplicates and keeps the full Builder on its current page', async () => {
+  it('lets a Stimpie used in another pack slot be picked (it replaces that slot) and keeps the full Builder on its current page', async () => {
     const onStimpieChange = vi.fn();
     const view = render(<BuilderPreviewDialog colors={colors} stimpies={[stimpie(), stimpie({ id: 7, name: 'AFTER DARK' })]} colorId={2} stimpieId={7}
       onColorChange={vi.fn()} onStimpieChange={onStimpieChange} onClose={vi.fn()} returnFocusRef={{ current: null }}
       disabledStimpieIds={new Set([4])} showBuilderLink={false} />);
     await view.findByRole('img', { name: '3D preview: Black Stimpy hoodie with AFTER DARK' });
-    expect(view.getByRole('button', { name: 'THE VOID' })).toBeDisabled();
-    fireEvent.click(view.getByRole('button', { name: 'THE VOID' }));
-    expect(onStimpieChange).not.toHaveBeenCalled();
+    const used = view.getByRole('button', { name: 'THE VOID' });
+    expect(used).toHaveAttribute('title', expect.stringContaining('already selected in another pack slot'));
+    fireEvent.click(used);
+    expect(onStimpieChange).toHaveBeenCalledWith(expect.objectContaining({ id: 4 }));
     expect(view.getByRole('button', { name: 'AFTER DARK' })).toBeEnabled();
     expect(view.queryByRole('link', { name: 'Customize & shop' })).not.toBeInTheDocument();
   });

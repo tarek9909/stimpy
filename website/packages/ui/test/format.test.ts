@@ -97,6 +97,8 @@ describe('small value formatters', () => {
     expect(formatPercent(0.04)).toBe('4%');
     expect(formatPercent(0)).toBe('0%');
     expect(formatPercent(1)).toBe('100%');
+    expect(formatPercent(-0.045)).toBe('-4.5%');
+    expect(formatPercent(-0.125)).toBe('-13%');
   });
 });
 

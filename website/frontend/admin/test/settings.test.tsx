@@ -113,7 +113,7 @@ describe('Settings page with Delivery fees tab', () => {
     });
   });
 
-  it('customer email tab only requires sender email and app password, using static host and port 587', async () => {
+  it('customer email tab saves the SMTP connection (HANDOFF "Configurable Email SMTP": host, port, username, password, TLS)', async () => {
     let savedPatch: unknown = null;
     renderSettings(['/settings?tab=customer-email'], {
       'PATCH /api/v1/admin/settings': async (req) => {
@@ -133,18 +133,15 @@ describe('Settings page with Delivery fees tab', () => {
       },
     });
 
-    // Check that simplified fields exist
     expect(await screen.findByLabelText(/Sender display name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Sender email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/App password/i)).toBeInTheDocument();
+    // Unconfigured SMTP starts from the Gmail STARTTLS defaults.
+    expect(screen.getByLabelText(/^SMTP server/i)).toHaveValue('smtp.gmail.com');
+    expect(screen.getByLabelText(/^SMTP port/i)).toHaveValue(587);
 
-    // Check that technical host and port fields are hidden
-    expect(screen.queryByLabelText(/^SMTP host/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/^SMTP port/i)).not.toBeInTheDocument();
-
-    // Change sender email and app password
     fireEvent.change(screen.getByLabelText(/Sender email/i), { target: { value: 'founder@gmail.com' } });
-    fireEvent.change(screen.getByLabelText(/App password/i), { target: { value: 'abcd-efgh-ijkl' } });
+    fireEvent.change(screen.getByLabelText(/^SMTP username/i), { target: { value: 'founder@gmail.com' } });
+    fireEvent.change(screen.getByLabelText(/^SMTP password/i), { target: { value: 'abcd-efgh-ijkl' } });
 
     fireEvent.click(screen.getByRole('button', { name: 'Save email settings' }));
 

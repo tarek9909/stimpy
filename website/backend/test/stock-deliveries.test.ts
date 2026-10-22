@@ -80,6 +80,8 @@ describe('admin stock', () => {
     expect((await post({ note: '   ' })).status).toBe(400);
     expect((await post({ delta: 0 })).json().error.fields).toHaveProperty('delta');
     expect((await post({ delta: 1.5 })).status).toBe(400);
+    // an out-of-range delta is a validation error, not a database overflow (500)
+    expect((await post({ reason: 'RESTOCK', delta: 3_000_000_000 })).json().error.fields).toHaveProperty('delta');
     expect((await post({ reason: 'RESTOCK', delta: -1 })).json().error.fields).toHaveProperty('delta');
     expect((await post({ reason: 'DAMAGED', delta: 1 })).json().error.fields).toHaveProperty('delta');
     expect((await post({ reason: 'ORDER_SOLD' })).status).toBe(400);

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, ExternalLink } from 'lucide-react';
 import { Banner, Button, Input, Modal, Skeleton, Textarea, useToast } from '@stimpy/ui';
 import { useNotifyError } from '../../api/errors';
+import { isSafeWhatsAppUrl } from '../../lib/links';
 import { useBulkEmail, useBulkPreview, useBulkWhatsapp, type BulkChannel, type BulkTarget } from './api';
 
 type Skipped = { noContact: number; noConsent: number; optedOut: number };
@@ -121,9 +122,11 @@ export function BulkMessageDialog({
                     <span className={`block truncate font-medium ${isDone ? 'text-fg-muted line-through' : ''}`}>{i.name}</span>
                     <span className="block text-body-sm tabular-nums text-fg-muted">{i.to}</span>
                   </span>
-                  <Button variant="secondary" size="sm" href={i.url} target="_blank" rel="noopener noreferrer" leftIcon={<ExternalLink size={16} aria-hidden="true" />} onClick={() => setDone((d) => new Set(d).add(i.customerId))}>
-                    Open chat
-                  </Button>
+                  {isSafeWhatsAppUrl(i.url) ? (
+                    <Button variant="secondary" size="sm" href={i.url} target="_blank" rel="noopener noreferrer" leftIcon={<ExternalLink size={16} aria-hidden="true" />} onClick={() => setDone((d) => new Set(d).add(i.customerId))}>
+                      Open chat
+                    </Button>
+                  ) : null}
                   <Button
                     variant={isDone ? 'primary' : 'ghost'}
                     size="sm"

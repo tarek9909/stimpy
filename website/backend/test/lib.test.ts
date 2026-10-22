@@ -8,6 +8,7 @@ import { maskEmail, maskPhone, scrubText } from '../src/lib/mask';
 import { dayRangeInTz, isValidTimezone, weekdayInTz, ymdInTz } from '../src/lib/dates';
 import { parseSort, toPage, toSkipTake, pageQuerySchema } from '../src/lib/http';
 import { RateLimiter, type RateRule } from '../src/lib/rate-limiter';
+import { rebaseUploadUrl, rebaseUploadUrlsInJson, uploadStoragePath } from '../src/lib/upload-url';
 import { freezeTime, advanceTime, unfreezeTime } from './helpers/clock';
 
 describe('phone normalisation (business-rules 2)', () => {
@@ -131,5 +132,52 @@ describe('rate limiter with the injectable clock', () => {
     advanceTime(31_000);
     expect(rl.consume(rule, 'a').allowed).toBe(true);
     unfreezeTime();
+  });
+});
+
+describe('upload URL rebasing', () => {
+  const API_BASE = 'https://api.stimpy.com';
+
+  it('rebases /uploads paths on this API, an old port of it, or a local/private dev host', () => {
+    expect(rebaseUploadUrl('/uploads/2026/10/a.webp', API_BASE)).toBe('https://api.stimpy.com/uploads/2026/10/a.webp');
+    expect(rebaseUploadUrl('http://api.stimpy.com:4000/uploads/2026/10/a.webp', API_BASE)).toBe('https://api.stimpy.com/uploads/2026/10/a.webp');
+    expect(rebaseUploadUrl('http://localhost:4000/uploads/2026/10/a.webp', API_BASE)).toBe('https://api.stimpy.com/uploads/2026/10/a.webp');
+    expect(rebaseUploadUrl('http://192.168.1.20:4000/uploads/a%20b.webp', `${API_BASE}/`)).toBe('https://api.stimpy.com/uploads/a%20b.webp');
+  });
+
+  it('leaves external URLs, free text and non-upload paths untouched', () => {
+    for (const v of [
+      'https://cdn.other.com/uploads/x.webp',
+      'http://8.8.8.8/uploads/x.webp',
+      'uploads/x.webp',
+      'See /uploads/x.webp for details',
+      '//evil.example/uploads/x.webp',
+      'https://api.stimpy.com/static/x.webp',
+      '/uploadsx/y.webp',
+      'ftp://localhost/uploads/x.webp',
+      'mailto:a@b.co',
+      '',
+    ]) expect(rebaseUploadUrl(v, API_BASE), v).toBe(v);
+  });
+
+  it('never rewrites traversal, query strings or fragments', () => {
+    for (const v of ['/uploads/../.env', '/uploads/%2e%2e/.env', '/uploads/a%2f..%2f.env', '/uploads/a.webp?x=1', '/uploads/a.webp#x', '/uploads/%E0%A4%A.webp']) {
+      expect(rebaseUploadUrl(v, API_BASE), v).toBe(v);
+    }
+  });
+
+  it('rewrites nested JSON values only when something changed', () => {
+    const payload = JSON.stringify({ a: 'http://localhost:4000/uploads/x.webp', b: ['https://cdn.other.com/uploads/y.webp', 'text'], c: 1 });
+    expect(JSON.parse(rebaseUploadUrlsInJson(payload, API_BASE))).toEqual({ a: 'https://api.stimpy.com/uploads/x.webp', b: ['https://cdn.other.com/uploads/y.webp', 'text'], c: 1 });
+    const untouched = JSON.stringify({ b: 'https://cdn.other.com/uploads/y.webp' });
+    expect(rebaseUploadUrlsInJson(untouched, API_BASE)).toBe(untouched);
+    expect(rebaseUploadUrlsInJson('not json', API_BASE)).toBe('not json');
+  });
+
+  it('uploadStoragePath extracts a safe relative path or null', () => {
+    expect(uploadStoragePath('https://old.host/uploads/2026/10/a.webp')).toBe('2026/10/a.webp');
+    expect(uploadStoragePath('/uploads/a%20b.webp')).toBe('a b.webp');
+    expect(uploadStoragePath('/uploads/a%2f..%2f.env')).toBeNull();
+    expect(uploadStoragePath('/static/a.webp')).toBeNull();
   });
 });

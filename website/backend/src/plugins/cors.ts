@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { groupOf } from './route-group';
+import { requestGroup } from './route-group';
 
 /**
  * CORS per the wiring matrix (wiring/README.md 5.3), implemented by hand because the rules differ per route group:
@@ -18,7 +18,7 @@ export default fp(async (app) => {
   const adminOrigins = new Set(adminUrls);
 
   app.addHook('onRequest', async (req, reply) => {
-    const group = groupOf(req.url);
+    const group = requestGroup(req);
     if (group === 'other') return;
     const origin = req.headers.origin;
     const isPreflight = req.method === 'OPTIONS' && typeof req.headers['access-control-request-method'] === 'string';

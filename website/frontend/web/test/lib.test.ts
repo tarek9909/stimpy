@@ -8,7 +8,8 @@ import { backoffDelay, inEarlyWindow, runHandoff } from '@/features/drops/handof
 import { measureClockOffset } from '@/lib/server-clock';
 import { feeText, estimateFor } from '@/lib/delivery';
 import { groupFaqs, parseHelpTab } from '@/lib/help';
-import { priceString } from '@/lib/jsonld';
+import { JsonLd, priceString } from '@/lib/jsonld';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { parseShopParams, shopHref, activeFilterCount } from '@/features/shop/params';
 import { pickCurrentDrop, secondStimpieExtraCents } from '@/features/home/logic';
 import { applyValidation, invalidItemIndices } from '@/features/cart/validation';
@@ -293,5 +294,16 @@ describe('cart validation mapping', () => {
 
   it('finds the line indices of items.N validation errors', () => {
     expect(invalidItemIndices({ 'items.2.stimpieIds.0': 'x', 'items.0.qty': 'y', 'customer.name': 'z' })).toEqual([0, 2]);
+  });
+});
+
+describe('JSON-LD', () => {
+  it('escapes < as the JSON escape so CMS text cannot close the script element, and stays valid JSON', () => {
+    const html = renderToStaticMarkup(JsonLd({ data: { name: 'a</script><img src=x onerror=alert(1)>' } }));
+    expect(html).not.toContain('</script><img');
+    // Our own escape, not React's internal `<script` rewriting.
+    expect(html).toContain('\\u003c/script>\\u003cimg');
+    const json = html.replace(/^<script[^>]*>/, '').replace(/<\/script>$/, '');
+    expect(JSON.parse(json)).toEqual({ name: 'a</script><img src=x onerror=alert(1)>' });
   });
 });

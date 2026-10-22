@@ -36,7 +36,7 @@ export function DeliveredTab() {
   const query = useDeliveries({ tab: 'DELIVERED', q: p.q, page: p.page, pageSize: p.pageSize });
   const settleGroup = useSettleDelivery();
   const settleOrder = useSettleOrder();
-  const [confirm, setConfirm] = useState<{ deliveryNumber: string; totalOrders: number; receivedCents: number } | null>(null);
+  const [confirm, setConfirm] = useState<{ deliveryNumber: string; totalOrders: number; receivedCents: number; wholeGroup: boolean } | null>(null);
   const [preparingDelivery, setPreparingDelivery] = useState<string | null>(null);
 
   const all = query.data?.items;
@@ -53,11 +53,15 @@ export function DeliveredTab() {
   }, [rows]);
 
   /** Settle (or unsettle) with an Undo toast calling the inverse. */
-  const settle = async (deliveryNumber: string, settled: boolean) => {
-    await settleGroup.mutateAsync({ deliveryNumber, settled });
+  /** `wholeGroup` false: some orders were already settled, so Undo reverts only the orders this action changed. */
+  const settle = async (deliveryNumber: string, settled: boolean, wholeGroup = true) => {
+    const res = await settleGroup.mutateAsync({ deliveryNumber, settled });
+    const undo = wholeGroup
+      ? () => settleGroup.mutateAsync({ deliveryNumber, settled: !settled })
+      : () => Promise.all(res.orderIds.map((id) => settleOrder.mutateAsync({ id, settled: !settled })));
     toast.success(settled ? `Delivery ${deliveryNumber} marked settled.` : `Delivery ${deliveryNumber} is no longer settled.`, {
       durationMs: 6000,
-      action: { label: 'Undo', onClick: () => settleGroup.mutateAsync({ deliveryNumber, settled: !settled }).catch((e) => notify(e)) },
+      action: { label: 'Undo', onClick: () => undo().catch((e) => notify(e)) },
     });
   };
   const settleOne = async (r: DeliveryRow, settled: boolean) => {
@@ -83,6 +87,7 @@ export function DeliveredTab() {
         deliveryNumber,
         totalOrders: unsettledOrders.length,
         receivedCents: unsettledOrders.reduce((sum, order) => sum + order.cashDueCents, 0),
+        wholeGroup: unsettledOrders.length === orders.length,
       });
     } catch (e) {
       notify(e);
@@ -172,13 +177,13 @@ export function DeliveredTab() {
         open={confirm !== null}
         onClose={() => setConfirm(null)}
         title="Mark delivery settled?"
-        description={confirm ? groupSettlementConfirmation(confirm.deliveryNumber, confirm.totalOrders, f.money(confirm.receivedCents)) : null}
+        description={confirm ? groupSettlementConfirmation(confirm.deliveryNumber, confirm.totalOrders, f.money(confirm.receivedCents), confirm.wholeGroup) : null}
         confirmLabel="Mark settled"
         reportErrors={false}
         onConfirm={async () => {
           if (!confirm) return;
           try {
-            await settle(confirm.deliveryNumber, true);
+            await settle(confirm.deliveryNumber, true, confirm.wholeGroup);
           } catch (e) {
             notify(e);
             throw e;

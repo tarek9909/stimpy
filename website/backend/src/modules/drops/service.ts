@@ -124,10 +124,12 @@ export async function subscribe(ctx: AppContext, dropId: number, input: { contac
       if (!exists) await tx.subscriber.create({ data: { dropId, contact, type: input.type, customerId: customer?.id ?? null } });
       else if (customer) await tx.subscriber.updateMany({ where: { id: exists.id, customerId: null }, data: { customerId: customer.id } });
       if (customer) {
-        await tx.customer.update({
-          where: { id: customer.id },
+        // This endpoint is anonymous: anyone can type someone else's e-mail or number. It may record consent for a
+        // customer who never refused, but it must never undo an explicit unsubscribe or marketing opt-out.
+        await tx.customer.updateMany({
+          where: { id: customer.id, marketingOptOutAt: null, ...(input.type === 'EMAIL' ? { unsubscribedAt: null } : {}) },
           data: {
-            ...(input.type === 'EMAIL' ? { emailConsent: true, unsubscribedAt: null } : { whatsappConsent: true }),
+            ...(input.type === 'EMAIL' ? { emailConsent: true } : { whatsappConsent: true }),
             consentUpdatedAt: now(),
           },
         });
@@ -320,7 +322,7 @@ export async function createDrop(ctx: AppContext, input: z.infer<typeof dropCrea
  *  - a drop that has already started cannot be moved to a later start (orders may exist);
  *  - relaunch: when a drop that was ended early (`endedAt`) gets a new `startsAt` / `endsAt` whose window is not over
  *    (no end, or an end in the future), `endedAt` is cleared and the drop is live (or upcoming) again;
- *  - `stimpieIds` is the full list: listed Stimpies join, Stimpies no longer listed leave (dropId = null).
+ *  - `stimpieIds` is the full list: listed Stimpies join, Stimpies no longer listed leave (dropId = null) and are hidden.
  */
 export async function updateDrop(ctx: AppContext, id: number, input: z.infer<typeof dropUpdateBody>): Promise<AdminDropDto> {
   const at = now();
@@ -349,7 +351,9 @@ export async function updateDrop(ctx: AppContext, id: number, input: z.infer<typ
 
       if (input.stimpieIds) {
         await assertAssignable(tx, input.stimpieIds, id);
-        await tx.stimpie.updateMany({ where: { dropId: id, id: { notIn: input.stimpieIds } }, data: { dropId: null } });
+        // A LIMITED Stimpie without a drop has no launch window and is buyable at once, so a Stimpie taken out of an
+        // upcoming (or ended) drop is hidden, exactly like deleteDrop does. The founder re-shows it deliberately.
+        await tx.stimpie.updateMany({ where: { dropId: id, id: { notIn: input.stimpieIds } }, data: { dropId: null, active: false } });
         if (input.stimpieIds.length) await tx.stimpie.updateMany({ where: { id: { in: input.stimpieIds } }, data: { dropId: id } });
       }
       await tx.drop.update({

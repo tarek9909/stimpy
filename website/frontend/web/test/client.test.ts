@@ -25,4 +25,11 @@ describe('api client wrapper (node environment: real Request/AbortSignal)', () =
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it('does not send a request whose caller signal is already aborted', async () => {
+    const fetchMock = vi.fn((r: Request) => (r.signal.aborted ? Promise.reject(new DOMException('aborted', 'AbortError')) : Promise.resolve(resp(200, { ok: true }))));
+    const client = createPublicClient({ baseUrl: 'http://x', fetch: fetchMock });
+    const controller = new AbortController();
+    controller.abort();
+    await expect(client.GET('/api/v1/health', { signal: controller.signal })).rejects.toMatchObject({ name: 'AbortError' });
+  });
 });

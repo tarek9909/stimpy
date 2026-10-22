@@ -144,7 +144,9 @@ export function BuilderCanvas3D(props: BuilderCanvas3DProps) {
         return;
       }
       engineRef.current = engine;
-      if (p.fabricTextureUrl) engine.setFabricTexture(p.fabricTextureUrl);
+      // Read the latest props: the fabric may have changed while the model was downloading.
+      const fabric = propsRef.current.fabricTextureUrl;
+      if (fabric) engine.setFabricTexture(fabric);
       setReady(true);
       requestAnimationFrame(() => {
         if (!cancelled) propsRef.current.onReady?.();
@@ -188,7 +190,7 @@ export function BuilderCanvas3D(props: BuilderCanvas3DProps) {
     if (!engineRef.current || appliedCam.current === camKey) return;
     appliedCam.current = camKey;
     engineRef.current.setCameraConfig({ position: toVec3(model.camera.position), target: toVec3(model.camera.target), fov: model.camera.fov }, false);
-  }, [camKey, model.camera]);
+  }, [camKey, model.camera, ready]);
 
   useEffect(() => {
     engineRef.current?.setReducedMotion(props.reducedMotion);

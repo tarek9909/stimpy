@@ -39,6 +39,11 @@ dist/
 # The shoot briefs (out/**/README.md) stay tracked, and so does stimpy-video/out/stimpies:
 # the website seed (website/backend/prisma/seed.ts) reads the card art from there.
 *.mp4
+*.mov
+*.webm
+*.mkv
+*.avi
+*.m4v
 content/stimpy-motion/out/**
 !content/stimpy-motion/out/**/
 !content/stimpy-motion/out/**/README.md

@@ -42,4 +42,21 @@ describe('public email unsubscribe confirmation', () => {
     expect(get).not.toHaveBeenCalled();
     expect(post).not.toHaveBeenCalled();
   });
+  it('lets the visitor retry the confirmation after a failed unsubscribe', async () => {
+    get.mockResolvedValueOnce({ data: { valid: true } });
+    post.mockRejectedValueOnce(new ApiError({ status: 0, code: 'NETWORK', message: 'offline' }));
+    post.mockResolvedValueOnce({ response: { status: 204 } });
+    render(<UnsubscribeView token="opaque-token" />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Unsubscribe from emails' }));
+    expect(await screen.findByText("We couldn't update your email preferences. Please try again.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Unsubscribe from emails' }));
+    await waitFor(() => expect(screen.getByText('You have been unsubscribed from email updates.')).toBeInTheDocument());
+    expect(post).toHaveBeenCalledTimes(2);
+  });
+
+  it('treats a malformed token refused by the API (400) as an invalid link, not an outage', async () => {
+    get.mockRejectedValueOnce(new ApiError({ status: 400, code: 'VALIDATION_ERROR', message: 'bad', fields: { token: 'Invalid' } }));
+    render(<UnsubscribeView token="not-hex" />);
+    expect(await screen.findByText('This email link is invalid or has expired. You can close this page.')).toBeInTheDocument();
+  });
 });

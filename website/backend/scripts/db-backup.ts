@@ -23,6 +23,11 @@ export function dbParts(databaseUrl: string): { host: string; port: string; user
   return { host: u.hostname, port: u.port || '3306', user: decodeURIComponent(u.username), password: decodeURIComponent(u.password), db: u.pathname.replace(/^\//, '') };
 }
 
+/** Connection arguments for mysql/mysqldump. The password goes through MYSQL_PWD, never argv (visible in `ps`). */
+export function mysqlInvocation(p: ReturnType<typeof dbParts>): { args: string[]; env: NodeJS.ProcessEnv } {
+  return { args: [`-h${p.host}`, `-P${p.port}`, `-u${p.user}`], env: { ...process.env, MYSQL_PWD: p.password } };
+}
+
 const isMain = process.argv[1]?.endsWith('db-backup.ts');
 if (isMain) {
   const config = loadConfigOrExit();
@@ -31,8 +36,9 @@ if (isMain) {
   mkdirSync(dir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const file = join(dir, `${p.db}-${stamp}.sql`);
-  const res = spawnSync(findMysqlTool('mysqldump'), [`-h${p.host}`, `-P${p.port}`, `-u${p.user}`, `--password=${p.password}`, '--single-transaction', '--routines', '--default-character-set=utf8mb4', p.db], {
-    encoding: 'buffer', maxBuffer: 1024 * 1024 * 512,
+  const conn = mysqlInvocation(p);
+  const res = spawnSync(findMysqlTool('mysqldump'), [...conn.args, '--single-transaction', '--routines', '--default-character-set=utf8mb4', p.db], {
+    encoding: 'buffer', maxBuffer: 1024 * 1024 * 512, env: conn.env,
   });
   if (res.status !== 0) {
     console.error(res.stderr.toString() || 'mysqldump failed');

@@ -1,3 +1,5 @@
+import { getBusinessTimeZone, ymdInZone } from './time';
+
 /**
  * Browser downloads of API-generated files (CSV exports, auth-and-sessions 6.2). The blob is saved
  * under the server's `Content-Disposition` name when it is safe, else under `fallback`.
@@ -24,6 +26,7 @@ export function saveBlob(blob: Blob, filename: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-export function todayStamp(date: Date = new Date()): string {
-  return date.toISOString().slice(0, 10);
+/** `YYYY-MM-DD` in the business time zone (a UTC date names the file after "yesterday" just after midnight in Beirut). */
+export function todayStamp(date: Date = new Date(), timeZone: string = getBusinessTimeZone()): string {
+  return ymdInZone(date, timeZone);
 }

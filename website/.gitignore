@@ -2,6 +2,7 @@ node_modules/
 .infra/
 .next/
 dist/
+dist-*/
 .vite/
 coverage/
 *.log

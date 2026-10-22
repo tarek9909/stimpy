@@ -285,6 +285,13 @@ export async function placeOrder(ctx: AppContext, input: PlaceOrderInput): Promi
   let attempt = 0;
   for (;;) {
     try {
+      // Known customer (checked outside the transaction, so no read snapshot is opened yet): the first statement of the
+      // transaction locks that customer row. Under REPEATABLE READ the snapshot is taken at the first PLAIN read, so it
+      // must come after this lock; otherwise a concurrent identical request that held the lock commits its order
+      // after our snapshot, the replay check below cannot see it and a duplicate order is placed. (A new customer is
+      // serialised by the unique key on `customers.phone` instead; a locking read on a missing row would take a gap
+      // lock and make unrelated first-time buyers deadlock each other.)
+      const customerExists = (await ctx.prisma.customer.count({ where: { phone: norm.phone } })) > 0;
       const queuedAt = performance.now();
       const out = await orderTxGate.run(() => {
         mark('semaphore_wait', queuedAt);
@@ -292,6 +299,7 @@ export async function placeOrder(ctx: AppContext, input: PlaceOrderInput): Promi
         return ctx.prisma.$transaction(
         async (tx) => {
           phase = performance.now();
+          if (customerExists) await tx.$queryRaw`SELECT id FROM customers WHERE phone = ${norm.phone} FOR UPDATE`;
           const customer = await upsertCustomer(tx, norm, input.delivery.areaId, input.firstTouch ?? null, source);
           mark('customer_upsert', phase);
           // Serialize same-phone submissions on the customer row before taking the global number lock. A concurrent

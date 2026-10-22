@@ -21,6 +21,7 @@ type AudienceRow = { id: number; name: string; email: string | null; whatsapp: s
 type AudienceSummary = { matched: number; eligible: number; skipped: { noContact: number; noConsent: number; optedOut: number }; selected: AudienceRow[] };
 type CampaignSummary = { id: number; segmentId: number | null; segmentName: string | null; channel: CampaignChannel; templateKey: string; status: 'DRAFT' | 'QUEUED' | 'READY' | 'COMPLETED' | 'PARTIAL' | 'FAILED'; createdBy: string; sentCount: number; skippedCount: number; failedCount: number; createdAt: string; confirmedAt: string | null; completedAt: string | null };
 const AUDIENCE_BATCH = 300;
+const CONFIRM_TX_TIMEOUT_MS = 5 * 60_000;
 
 /** Build only relational/column filters here; aggregate filters are evaluated from bounded groupBy batches below. */
 function baseWhere(filters: CrmCampaignFilters): PrismaTypes.CustomerWhereInput {
@@ -237,7 +238,9 @@ export async function confirmCampaign(ctx: AppContext, id: number) {
     const skippedCount = Math.max(0, audience.matched - picked.length);
     const status = channel === 'EMAIL' ? 'QUEUED' : 'READY';
     await tx.campaignSend.update({ where: { id }, data: { status, confirmedAt: now(), skippedCount } });
-  });
+    // Several queries per recipient (up to the 5,000 cap) run in this one transaction; Prisma's 5 s default would abort
+    // (and roll back) any real-sized campaign with P2028.
+  }, { maxWait: 10_000, timeout: CONFIRM_TX_TIMEOUT_MS });
   await refreshCampaignCounts(ctx.prisma, id);
   return getCampaign(ctx, id, { page: 1, pageSize: 25 });
 }

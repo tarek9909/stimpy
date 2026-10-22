@@ -4,8 +4,8 @@
  * 30 days are discarded. All storage access is wrapped (in-app browsers, private mode, full quota).
  */
 import { readStored, removeStored, storageAvailable, writeStored } from '@/lib/storage';
-import { isCartItem } from './helpers';
-import type { CartLine } from './types';
+import { contractItem, isCartItem } from './helpers';
+import { CART_MAX_LINES, type CartLine } from './types';
 
 export const CART_STORAGE_KEY = 'stimpy.cart';
 export const CART_SCHEMA_VERSION = 1;
@@ -41,7 +41,7 @@ function reviveLine(value: unknown): CartLine | null {
   const state = check && isString(check.state) && CHECK_STATES.has(check.state) ? check.state : 'OK';
   return {
     lineId: v.lineId,
-    item: v.item,
+    item: contractItem(v.item),
     ui: {
       title: ui.title,
       imageUrl: isString(ui.imageUrl) ? ui.imageUrl : null,
@@ -90,7 +90,8 @@ export function loadCart(now: Date = new Date()): LoadedCart {
     removeStored('local', CART_STORAGE_KEY);
     return { lines: [], purgedOld: stored.lines.length > 0, reset: false };
   }
-  const lines = stored.lines.map(reviveLine).filter((l): l is CartLine => l !== null);
+  // At most 20 lines (contract): anything past that could never be validated or ordered.
+  const lines = stored.lines.map(reviveLine).filter((l): l is CartLine => l !== null).slice(0, CART_MAX_LINES);
   return { lines, purgedOld: false, reset: lines.length !== stored.lines.length };
 }
 
