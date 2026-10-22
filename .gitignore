@@ -35,6 +35,20 @@ dist/
 .tmp-*/
 **/.tmp-*/
 
+# Rendered outputs: reproducible with the render commands in each project's README.
+# The shoot briefs (out/**/README.md) stay tracked, and so does stimpy-video/out/stimpies:
+# the website seed (website/backend/prisma/seed.ts) reads the card art from there.
+*.mp4
+content/stimpy-motion/out/**
+!content/stimpy-motion/out/**/
+!content/stimpy-motion/out/**/README.md
+content/stimpy-video/out/*
+!content/stimpy-video/out/stimpies/
+content/second_video/stimpy/out/
+
+# The drop's print pack: the same PNGs are unzipped in content/drop-001
+content/drop-001/*.zip
+
 # Excluded large files (>100MB per GitHub limit)
 stimpy-motion.zip
 stimpy-video/out/stimpy_master.mp4
