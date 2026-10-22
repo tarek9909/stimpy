@@ -86,7 +86,7 @@ export function snap(S: Stage, t: number) {
     mono(f, z < 1 ? `ZIPPING ON — ${String(Math.floor(z * 100)).padStart(3, '0')}%` : 'ZIPPED ON.', SAFE.left, SAFE.top + 20, { size: 20, weight: 700, color: '#7C89FF' });
     f.fillStyle = 'rgba(237,232,222,0.25)'; f.fillRect(SAFE.left, SAFE.top + 36, 320, 6);
     f.fillStyle = '#5A6BFF'; f.fillRect(SAFE.left, SAFE.top + 36, 320 * ease.inOutCubic(z), 6);
-    mono(f, 'Nº003 — ORBIT', SAFE.right, SAFE.top + 20, { size: 20, align: 'right', alpha: seg(age, 0.3, 0.5) });
+    mono(f, S.designs[2]!.name, SAFE.right, SAFE.top + 20, { size: 20, align: 'right', alpha: seg(age, 0.3, 0.5) });
     display(f, 'ONE HOODIE.', W / 2, SAFE.bottom - 10, { size: 70, alpha: seg(age, 1.0, 1.3) });
   }
   S.post.flash = hit ? 0.75 * pulse(age, 10) : 0;

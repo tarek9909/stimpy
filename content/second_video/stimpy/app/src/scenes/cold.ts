@@ -51,7 +51,7 @@ export function cold(S: Stage, t: number) {
     display(f, WORDS[w]!, SAFE.left - 6, 440 + w * 132, { size: 150, color: ink, align: 'left', track: -0.04 });
     f.restore();
   }
-  mono(f, `Nº${d.no} — ${d.name}`, SAFE.left, SAFE.top + 20, { color: ink, size: 20 });
+  mono(f, d.name, SAFE.left, SAFE.top + 20, { color: ink, size: 20 });
   mono(f, `${String(i + 1).padStart(2, '0')} / 08`, SAFE.right, SAFE.top + 20, { color: ink, size: 20, align: 'right' });
 
   S.post.flash = (i === 0 ? 0.6 : 0.18) * pulse(age, 22);

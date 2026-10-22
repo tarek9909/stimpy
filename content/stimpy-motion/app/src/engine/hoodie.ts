@@ -452,6 +452,24 @@ function drawHoodFront(c: Ctx, T: Tones, lining: string) {
   c.restore();
 }
 
+// an offscreen layer at the current device resolution, reused frame to frame
+let layer: HTMLCanvasElement | null = null;
+function onLayer(c: Ctx, w: number, h: number, paint: (k: Ctx) => void) {
+  const m = c.getTransform();
+  const s = Math.min(4, Math.max(Math.hypot(m.a, m.b), Math.hypot(m.c, m.d)));
+  const pw = Math.max(1, Math.ceil(w * s)), ph = Math.max(1, Math.ceil(h * s));
+  if (!layer) layer = document.createElement('canvas');
+  if (layer.width < pw || layer.height < ph) { layer.width = Math.max(layer.width, pw); layer.height = Math.max(layer.height, ph); }
+  const k = layer.getContext('2d')!;
+  k.setTransform(1, 0, 0, 1, 0, 0);
+  k.globalCompositeOperation = 'source-over';
+  k.globalAlpha = 1;
+  k.clearRect(0, 0, pw, ph);
+  k.setTransform(s, 0, 0, s, 0, 0);
+  paint(k);
+  c.drawImage(layer, 0, 0, pw, ph, 0, 0, w, h);
+}
+
 /** The Stimpie panel on the dock (called inside the hoodie transform). */
 export function drawPanel(c: Ctx, o: PanelOpts, T: Tones = tones(C.black)) {
   const { w, h, r } = DOCK;
@@ -473,39 +491,41 @@ export function drawPanel(c: Ctx, o: PanelOpts, T: Tones = tones(C.black)) {
   if (o.rot) c.rotate(o.rot);
   const sc = (o.scale ?? 1) * (1 + lift * 0.18);
   c.scale(sc, sc);
-  // body
+  // body: just the picture. It is painted on its own layer so the silhouette and the cotton shading only
+  // touch the print, never the fabric around it.
   c.save();
   c.beginPath();
   c.roundRect(-w / 2, -h / 2, w, h, r);
   c.clip();
   c.translate(-w / 2, -h / 2);
-  c.fillStyle = C.cream;
-  c.fillRect(0, 0, w, h);
-  if (o.art) {
-    if (o.wipe !== undefined && o.wipeTo) {
-      const a = o.art, b = o.wipeTo;
-      zipWipe(c, o.wipe, (k) => a(k, w, h), (k) => b(k, w, h), { W: w, H: h, dir: 'down', scale: 0.32, spread: 0.26, res: 2.2, teeth: C.white, tape: C.black });
-    } else o.art(c, w, h);
-  }
-  if (o.silhouette) {
-    c.globalAlpha = clamp(o.silhouette);
-    c.fillStyle = o.silhouetteColor ?? C.black;
-    c.fillRect(0, 0, w, h);
-    c.globalAlpha = 1;
-  }
-  if (o.overlay) o.overlay(c, w, h);
-  // printed cotton: soft edge falloff + stitch line
-  const g = c.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, 'rgba(255,255,255,0.06)');
-  g.addColorStop(0.5, 'rgba(0,0,0,0)');
-  g.addColorStop(1, 'rgba(0,0,0,0.12)');
-  c.fillStyle = g;
-  c.fillRect(0, 0, w, h);
+  onLayer(c, w, h, (k) => {
+    if (o.art) {
+      if (o.wipe !== undefined && o.wipeTo) {
+        const a = o.art, b = o.wipeTo;
+        zipWipe(k, o.wipe, (q) => a(q, w, h), (q) => b(q, w, h), { W: w, H: h, dir: 'down', scale: 0.32, spread: 0.26, res: 2.2, teeth: C.white, tape: C.black });
+      } else o.art(k, w, h);
+    }
+    k.globalCompositeOperation = 'source-atop';
+    if (o.silhouette) {
+      k.globalAlpha = clamp(o.silhouette);
+      k.fillStyle = o.silhouetteColor ?? C.black;
+      k.fillRect(0, 0, w, h);
+      k.globalAlpha = 1;
+    }
+    if (o.overlay) o.overlay(k, w, h);
+    // printed cotton: soft falloff
+    const g = k.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, 'rgba(255,255,255,0.06)');
+    g.addColorStop(0.5, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.12)');
+    k.fillStyle = g;
+    k.fillRect(0, 0, w, h);
+  });
   c.restore();
   if (o.printed) { c.restore(); return; }
-  // zip around the edge
+  // the zip around the edge only shows while it is zipping on; once attached it is just the picture
   const teeth = o.teeth ?? (T.dark ? '#3a3a3a' : '#bdb6ab');
-  closedTeeth(c, TRACK, 0, zip * TRACK.len, { pitch: 7, size: 6, color: teeth, tape: T.base, tapeW: 9 });
+  if (zip < 1 || o.parked) closedTeeth(c, TRACK, 0, zip * TRACK.len, { pitch: 7, size: 6, color: teeth, tape: T.base, tapeW: 9 });
   if (zip > 0 && (zip < 1 || o.parked)) {
     const p = TRACK.at(zip * TRACK.len);
     drawPull(c, p.x, p.y, Math.atan2(p.ty, p.tx), 17, { tab: C.coral, body: '#2b2b2b', mark: false, shadow: 1 }, zip < 1 ? Math.sin(zip * 60) * 0.25 : 0);

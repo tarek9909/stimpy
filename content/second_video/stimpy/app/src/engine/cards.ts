@@ -39,7 +39,11 @@ void main(){
   float facing = dot(n, V);
   vec3 col;
   if (gl_FrontFacing) {
-    col = texture2D(uFront, vUv).rgb;
+    // the face is just the picture
+    vec4 face = texture2D(uFront, vUv);
+    a *= face.a;
+    if (a <= 0.0) discard;
+    col = face.rgb;
     // foil: strongest on the border, a whisper over the art
     vec2 inner = abs(vP - vec2(0.0, 18.0)) - vec2(108.0, 131.0);
     float border = step(0.0, max(inner.x, inner.y));

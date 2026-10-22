@@ -59,7 +59,7 @@ export function identities(S: Stage, t: number) {
   const f = S.fgc();
   const ink = d.pal.ink;
   mono(f, `IDENTITY ${String(k + 1).padStart(2, '0')}`, SAFE.left, SAFE.top + 20, { color: ink, size: 20, weight: 700 });
-  mono(f, `Nº${d.no} — ${d.name}`, SAFE.right, SAFE.top + 20, { color: ink, size: 20, align: 'right', alpha: clamp(age / 0.1) });
+  mono(f, d.name, SAFE.right, SAFE.top + 20, { color: ink, size: 20, align: 'right', alpha: clamp(age / 0.1) });
   // progress ticks
   for (let i = 0; i < ORDER.length; i++) {
     f.fillStyle = ink;

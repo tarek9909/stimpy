@@ -62,7 +62,7 @@ export class Stage {
       this.artCanvas.push(a);
       this.art.push(tex(a));
       this.artAlt.push(tex(b));
-      fronts.push(tex(renderCard(d, 0, a)), tex(renderCard(d, 1, b)));
+      fronts.push(tex(renderCard(a)), tex(renderCard(b)));
     }
     fronts.splice(11, 1, tex(renderCardBlank())); // 11 designs + the empty 'yours' slot
     this.mineCanvas = renderDesign(MINE, 0);

@@ -98,7 +98,6 @@ export function yours(S: Stage, t: number) {
   f.fillStyle = 'rgba(14,14,16,0.1)'; f.fillRect(WIN.x + 40, by, WIN.w - 80, 8);
   f.fillStyle = BLUE; f.fillRect(WIN.x + 40, by, (WIN.w - 80) * pr, 8);
   mono(f, t < EV.print[0]! ? (dropped ? 'READY TO PRINT' : 'WAITING FOR ART…') : pr < 1 ? `PRINTING ON COTTON — ${String(Math.floor(pr * 100)).padStart(3, '0')}%` : 'DONE — ZIPPING ON', WIN.x + 40, by - 18, { size: 16, color: INK, weight: 700 });
-  mono(f, 'Nº ∞', WIN.x + WIN.w - 40, by - 18, { size: 16, color: INK, align: 'right' });
   f.restore();
 
   // the drag: a file card and the cursor
@@ -153,7 +152,7 @@ function worldPart(S: Stage, t: number, age: number) {
   S.light.uAmb.value.setRGB(0.36, 0.34, 0.33);
   S.light.uRim.value.setRGB(0.3, 0.1, 0.08);
   const f = S.fgc();
-  mono(f, 'Nº ∞ — MADE BY YOU', SAFE.left, SAFE.top + 20, { color: INK, size: 20, weight: 700 });
+  mono(f, 'MADE BY YOU', SAFE.left, SAFE.top + 20, { color: INK, size: 20, weight: 700 });
   mono(f, 'ZIPPED ON.', SAFE.right, SAFE.top + 20, { color: BLUE, size: 20, weight: 700, align: 'right', alpha: seg(age, 0.45, 0.6) });
   S.post.flash = 0.5 * pulse(age, 10);
   S.post.flashColor.set('#FFFFFF');

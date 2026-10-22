@@ -45,7 +45,7 @@ export const WORLDS: Record<string, World> = {
     // ticker
     const ty = H * 0.87;
     c.fillStyle = '#FF3B1F'; c.fillRect(0, ty, W, 56);
-    const tick = 'STATIC — SIGNAL LOST — Nº001 — ';
+    const tick = 'SABOTAGE — SIGNAL LOST — ';
     c.save();
     c.beginPath(); c.rect(0, ty, W, 56); c.clip();
     const off = -((t * 260) % 1100);

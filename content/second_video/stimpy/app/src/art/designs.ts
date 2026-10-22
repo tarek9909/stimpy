@@ -146,12 +146,11 @@ export function loadStimpies(): Promise<void> {
 }
 
 type Side = { file: string; back: string; name?: string; cover?: boolean };
+/** Just the picture: the whole print, as large as the panel allows, on a transparent panel. */
 function print(c: Ctx, s: Side) {
-  c.fillStyle = s.back; c.fillRect(0, 0, PW_, PH_);
   const img = IMAGES.get(s.file);
   if (!img) return;
-  const pad = s.cover ? 0 : 14;
-  const k = s.cover ? Math.max(PW_ / img.width, PH_ / img.height) : Math.min((PW_ - pad * 2) / img.width, (PH_ - pad * 2) / img.height);
+  const k = Math.min(PW_ / img.width, PH_ / img.height);
   const w = img.width * k, h = img.height * k;
   c.imageSmoothingQuality = 'high';
   c.drawImage(img, (PW_ - w) / 2, (PH_ - h) / 2, w, h);
@@ -273,16 +272,11 @@ export function renderDesign(d: Design, v = 0, scale = 3) {
   return cv;
 }
 
-/** A collectible card face: the panel art framed with its number and name. 240 × 336 units. */
-export function renderCard(d: Design, v: number, art: HTMLCanvasElement, scale = 3) {
+/** A collectible card face: just the panel's picture, no frame or number. 240 × 336 units. */
+export function renderCard(art: HTMLCanvasElement, scale = 3) {
   const { cv, c } = makeCanvas(240, 336, scale);
-  const frame = v ? INK : BONE, ink = v ? BONE : INK;
-  c.fillStyle = frame; c.fillRect(0, 0, 240, 336);
-  c.drawImage(art, 12, 12 + 12 - 12, 216, 262);
-  text(c, `Nº ${d.no}${v ? '·B' : ''}`, 14, 300, { size: 10, family: 'Plex', weight: 700, color: ink, track: 0.08 });
-  text(c, (v && d.altName) || d.name, 14, 320, { size: 15, family: 'ArchivoX', weight: 900, color: ink, track: -0.01 });
-  text(c, 'DROP 01', 226, 300, { size: 8, family: 'Plex', weight: 500, color: ink, align: 'right', track: 0.14 });
-  text(c, v ? 'ALT' : 'CORE', 226, 320, { size: 8, family: 'Plex', weight: 500, color: '#2B3DFF', align: 'right', track: 0.14 });
+  const k = Math.min(240 / PW_, 336 / PH_), w = PW_ * k, h = PH_ * k;
+  c.drawImage(art, (240 - w) / 2, (336 - h) / 2, w, h);
   return cv;
 }
 
@@ -307,7 +301,6 @@ export function renderCardBlank(scale = 3) {
   c.beginPath(); c.moveTo(120, 118); c.lineTo(120, 174); c.moveTo(92, 146); c.lineTo(148, 146); c.stroke();
   text(c, 'YOUR DESIGN', 120, 214, { size: 14, family: 'ArchivoX', weight: 900, color: BLUE, align: 'center' });
   text(c, 'HERE', 120, 234, { size: 14, family: 'ArchivoX', weight: 900, color: BLUE, align: 'center' });
-  text(c, 'Nº ∞', 14, 300, { size: 10, family: 'Plex', weight: 700, color: INK, track: 0.08 });
   text(c, 'YOURS', 14, 320, { size: 15, family: 'ArchivoX', weight: 900, color: INK });
   text(c, 'CUSTOM', 226, 320, { size: 8, family: 'Plex', weight: 500, color: BLUE, align: 'right', track: 0.14 });
   return cv;

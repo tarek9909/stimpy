@@ -1,8 +1,7 @@
-// The Stimpies: the drop 001 prints as back panels. Each is signed with the small split S in a corner
-// (brand: "each one carries the small split-S icon in a corner").
+// The Stimpies: the drop 001 prints as back panels, each just its picture.
 // Panel units: 300 × 364. `t` animates the design (seconds); static uses draw a cached t = 0 render.
 import { C } from '../engine/brand';
-import { drawIcon, LOGO } from '../engine/logo';
+import { drawIcon } from '../engine/logo';
 import { makeCanvas, text, type Ctx } from '../engine/draw';
 import type { Art } from '../engine/hoodie';
 
@@ -20,11 +19,6 @@ export interface Design {
   draw: (c: Ctx, w: number, h: number, t: number) => void;
 }
 
-type Sig = 'dark' | 'light' | 'coral';
-function sign(c: Ctx, w: number, h: number, kind: Sig) {
-  const col = kind === 'dark' ? LOGO.onBlack : kind === 'coral' ? LOGO.main : LOGO.onWhite;
-  drawIcon(c, w - 26, h - 26, 20, col, { strokeScale: 1.7 });
-}
 
 // ---------------------------------------------------------------- the drop 001 prints
 // Every Stimpie in the rotation is a finished print (public/stimpies, exported from content/drop-001).
@@ -50,39 +44,34 @@ export function loadStimpies(): Promise<void> {
   })).then(() => undefined);
 }
 
-interface Print { file: string; back: string; fit?: 'contain' | 'cover'; sig: Sig }
-/** A print on its backing colour. contain keeps the whole print with a margin; cover fills the panel.
- *  The print breathes very slightly with t so live uses still feel alive. */
+interface Print { file: string }
+/** Just the picture: the whole print, as large as the panel allows, on a transparent panel.
+ *  It breathes very slightly with t so live uses still feel alive. */
 function print(p: Print): Design['draw'] {
   return (c, w, h, t) => {
-    c.fillStyle = p.back; c.fillRect(0, 0, w, h);
     const img = IMAGES.get(p.file);
-    if (img) {
-      const pad = p.fit === 'cover' ? 0 : 16;
-      const k = (p.fit === 'cover' ? Math.max(w / img.width, h / img.height) : Math.min((w - pad * 2) / img.width, (h - pad * 2 - 18) / img.height))
-        * (1 + 0.012 * Math.sin(t * 1.6));
-      const iw = img.width * k, ih = img.height * k;
-      c.imageSmoothingQuality = 'high';
-      c.drawImage(img, (w - iw) / 2, (h - 18 - ih) / 2 + (p.fit === 'cover' ? 9 : 0), iw, ih);
-    }
-    sign(c, w, h, p.sig);
+    if (!img) return;
+    const k = Math.min(w / img.width, h / img.height) * (1 - 0.012 + 0.012 * Math.sin(t * 1.6));
+    const iw = img.width * k, ih = img.height * k;
+    c.imageSmoothingQuality = 'high';
+    c.drawImage(img, (w - iw) / 2, (h - ih) / 2, iw, ih);
   };
 }
 const design = (id: string, name: string, word: string, world: string, ink: string, glow: string[], p: Print): Design =>
   ({ id, name, word, world, ink, glow, draw: print(p) });
 
-const FLAME = design('flame', 'SCRUFFY CAT', 'LOUD', C.coral, C.black, [C.coral, C.butter], { file: ART.scruffy, back: C.black, sig: 'dark' });
-const BLOOM = design('bloom', 'MANGA GIRL', 'SOFT', C.lilac, C.black, [C.lilac, C.butter], { file: ART.manga, back: C.lilac, sig: 'light' });
-const STATIC = design('static', 'SABOTAGE', 'CHAOS', C.white, C.black, [C.white, C.coral], { file: ART.sabotage, back: C.black, sig: 'dark' });
-const WAVE = design('wave', 'SPLIT TONE', 'CALM', C.sky, C.black, [C.sky, C.blue], { file: ART.split, back: C.black, sig: 'dark' });
-const NIGHT = design('night', 'NEON SPECTRUM', 'NIGHT', C.blue, C.white, [C.blue, C.butter], { file: ART.neon, back: C.black, fit: 'cover', sig: 'dark' });
-const SUN = design('sun', 'MANEKI TIGER', 'DAY', C.butter, C.black, [C.butter, C.coral], { file: ART.maneki, back: C.cream, sig: 'light' });
-const TAG = design('tag', 'HALF EVIL', 'STREET', C.cream, C.black, [C.coral, C.cream], { file: ART.halfEvil, back: C.black, sig: 'dark' });
-const ORBIT = design('orbit', 'NEON SPECTRUM', 'DREAM', C.black, C.white, [C.sky, C.lilac], { file: ART.neon, back: C.black, fit: 'cover', sig: 'dark' });
-const HALFTONE = design('halftone', 'IRRITATED CAT', 'POP', C.coral, C.black, [C.coral, C.butter], { file: ART.irritated, back: C.black, sig: 'coral' });
-const CHECKER = design('checker', 'SCRUFFY CAT', 'FAST', C.butter, C.black, [C.butter, C.black], { file: ART.scruffy, back: C.butter, sig: 'light' });
-const EYE = design('eye', 'SPLIT TONE', 'QUIET', C.cream, C.black, [C.lilac, C.blue], { file: ART.split, back: C.cream, sig: 'light' });
-const PIXEL = design('pixel', 'MANGA GIRL', 'PLAY', C.lilac, C.black, [C.lilac, C.coral], { file: ART.manga, back: C.black, sig: 'dark' });
+const FLAME = design('flame', 'SCRUFFY CAT', 'LOUD', C.coral, C.black, [C.coral, C.butter], { file: ART.scruffy });
+const BLOOM = design('bloom', 'MANGA GIRL', 'SOFT', C.lilac, C.black, [C.lilac, C.butter], { file: ART.manga });
+const STATIC = design('static', 'SABOTAGE', 'CHAOS', C.white, C.black, [C.white, C.coral], { file: ART.sabotage });
+const WAVE = design('wave', 'SPLIT TONE', 'CALM', C.sky, C.black, [C.sky, C.blue], { file: ART.split });
+const NIGHT = design('night', 'NEON SPECTRUM', 'NIGHT', C.blue, C.white, [C.blue, C.butter], { file: ART.neon });
+const SUN = design('sun', 'MANEKI TIGER', 'DAY', C.butter, C.black, [C.butter, C.coral], { file: ART.maneki });
+const TAG = design('tag', 'HALF EVIL', 'STREET', C.cream, C.black, [C.coral, C.cream], { file: ART.halfEvil });
+const ORBIT = design('orbit', 'NEON SPECTRUM', 'DREAM', C.black, C.white, [C.sky, C.lilac], { file: ART.neon });
+const HALFTONE = design('halftone', 'IRRITATED CAT', 'POP', C.coral, C.black, [C.coral, C.butter], { file: ART.irritated });
+const CHECKER = design('checker', 'SCRUFFY CAT', 'FAST', C.butter, C.black, [C.butter, C.black], { file: ART.scruffy });
+const EYE = design('eye', 'SPLIT TONE', 'QUIET', C.cream, C.black, [C.lilac, C.blue], { file: ART.split });
+const PIXEL = design('pixel', 'MANGA GIRL', 'PLAY', C.lilac, C.black, [C.lilac, C.coral], { file: ART.manga });
 
 // ---------------------------------------------------------------- SIGNATURE (the Split Screen's final back)
 // The brand mark as a Stimpie: one huge split S on black, echoed outward in outline rings of the drop

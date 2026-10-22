@@ -423,16 +423,18 @@ void main(){
   n = normalize(n);
   vec3 col;
   if (gl_FrontFacing) {
-    vec3 art = texture2D(uArt, vUv).rgb;
+    // just the picture: the panel is only visible where the print is
+    vec4 artT = texture2D(uArt, vUv);
+    alpha *= artT.a;
+    if (alpha <= 0.0) discard;
+    vec3 art = artT.rgb;
     float weave = 0.5 + 0.5 * sin(vP.x * 2.6) * sin(vP.y * 2.6);
     col = art * (0.93 + 0.07 * weave) * (0.96 + 0.08 * vnoise(vP * 0.2));
-    // edge stitching (dashed), on the line where the hidden zip runs
+    // the line where the hidden zip runs (for the zip-on light)
     vec2 ZBv = vec2(${ZB.x.toFixed(2)}, ${ZB.y.toFixed(2)});
     float zd = sdRR(vP, ZBv, ${ZB.r.toFixed(2)});
     float P = ${ZIP_PERIM.toFixed(2)};
     float zs = rrAlong(vP, ZBv, ${ZB.r.toFixed(2)});
-    float st = smoothstep(1.3, 0.3, abs(zd)) * step(0.42, fract(zs / 7.0));
-    col = mix(col, uThread, st * 0.9);
     // zipping on: a light runs round the edge leaving a glowing trail
     float rel = mod(zs - uZipStart + P, P);
     float closed = step(rel, uZip * P);
@@ -457,7 +459,7 @@ void main(){
 }`;
 
 const SHADOW_FS = /* glsl */ `
-uniform sampler2D uH;
+uniform sampler2D uH, uArt;
 uniform float uBlur, uOpacity;
 uniform vec2 uOff, uSize;
 varying vec2 vUv;
@@ -466,9 +468,14 @@ ${COMMON}
 void main(){
   // vP is hoodie-local; the shadow is clipped to the garment
   float cover = texture2D(uH, vP / 1000.0 + 0.5).a;
-  float sd = sdRR(vP - vec2(${DOCK.x.toFixed(1)}, ${DOCK.y.toFixed(1)}) - uOff, uSize * 0.5, ${DOCK.r.toFixed(1)});
+  vec2 q = vP - vec2(${DOCK.x.toFixed(1)}, ${DOCK.y.toFixed(1)}) - uOff;
+  float sd = sdRR(q, uSize * 0.5, ${DOCK.r.toFixed(1)});
   float a = 1.0 - smoothstep(-uBlur, uBlur, sd);
-  gl_FragColor = vec4(0.0, 0.0, 0.0, a * uOpacity * cover);
+  // the shadow takes the picture's shape (the panel is just the picture), softened by the blur
+  vec2 uv = q / uSize + 0.5, b = vec2(uBlur) / uSize;
+  float pic = 0.25 * (texture2D(uArt, uv + vec2(b.x, b.y)).a + texture2D(uArt, uv + vec2(-b.x, b.y)).a
+                    + texture2D(uArt, uv + vec2(b.x, -b.y)).a + texture2D(uArt, uv - b).a);
+  gl_FragColor = vec4(0.0, 0.0, 0.0, a * pic * uOpacity * cover);
 }`;
 
 const SHADOW_VS = /* glsl */ `
@@ -541,7 +548,7 @@ export class Panel {
     this.mesh.renderOrder = order + 1;
     this.smat = new THREE.ShaderMaterial({
       vertexShader: SHADOW_VS, fragmentShader: SHADOW_FS, transparent: true, depthWrite: false,
-      uniforms: { uH: { value: H }, uBlur: { value: 6 }, uOpacity: { value: 0.5 }, uOff: { value: new THREE.Vector2() }, uSize: { value: new THREE.Vector2(DOCK.w, DOCK.h) } },
+      uniforms: { uH: { value: H }, uArt: { value: null }, uBlur: { value: 6 }, uOpacity: { value: 0.5 }, uOff: { value: new THREE.Vector2() }, uSize: { value: new THREE.Vector2(DOCK.w, DOCK.h) } },
     });
     this.shadow = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), this.smat);
     this.shadow.position.z = 0.6;
@@ -581,6 +588,7 @@ export class Panel {
     this.smat.uniforms.uBlur!.value = 3 + lift * 0.22;
     this.smat.uniforms.uOpacity!.value = s.shadow * s.opacity * (1 - s.peel * 0.8) * (0.62 / (1 + lift * 0.004));
     this.smat.uniforms.uSize!.value.set(DOCK.w * s.scale, DOCK.h * s.scale);
+    this.smat.uniforms.uArt!.value = s.art;
   }
 }
 
