@@ -54,6 +54,12 @@ content/second_video/stimpy/out/
 # The drop's print pack: the same PNGs are unzipped in content/drop-001
 content/drop-001/*.zip
 
+# High-resolution artwork, kept out of git for size (~350 MB). The videos use the
+# WebP copies in each app's public/stimpies, which stay tracked. The website seed
+# reads the card PNGs from stimpy-video/out/stimpies, so copy them in by hand.
+content/drop-001/*.png
+content/stimpy-video/out/stimpies/*.png
+
 # Excluded large files (>100MB per GitHub limit)
 stimpy-motion.zip
 stimpy-video/out/stimpy_master.mp4
