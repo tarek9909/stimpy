@@ -26,10 +26,13 @@ export function storefrontBuilderConfig(config: BuilderConfig): BuilderConfig {
   };
 }
 
+// next.config.ts lets browsers keep the model for a year: the size in the URL makes a changed model a new download.
+const MODEL_BYTES = 961_908;
+
 /** The Builder's hoodie model. It lives in the website, not in the Builder config. */
-const STOREFRONT_MODEL: NonNullable<BuilderConfig['model3d']> = {
-  url: '/models/hoodie.glb',
-  sizeBytes: 2_721_180,
+export const STOREFRONT_MODEL: NonNullable<BuilderConfig['model3d']> = {
+  url: `/models/hoodie.glb?v=${MODEL_BYTES}`,
+  sizeBytes: MODEL_BYTES,
   backPanelMesh: 'back_panel',
   // The print measures 30 x 40 cm; the engine fits any artwork inside this shape.
   panelAspect: 0.75,

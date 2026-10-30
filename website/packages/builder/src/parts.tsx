@@ -120,7 +120,12 @@ export interface CarouselProps {
   /** Load card images eagerly (page, above the fold) or lazily (teaser). */
   eagerCount?: number;
   label?: string;
+  /** Host hook: a smaller copy of an image for the given display width. */
+  imageUrl?: (url: string, width: number) => string;
 }
+
+/** Cards show at about 160 px: this stays sharp on a 2x screen. */
+const CARD_IMAGE_WIDTH = 384;
 
 /** Horizontal scroll-snap listbox with one tab stop (roving tabindex). */
 export function StimpieCarousel({
@@ -135,6 +140,7 @@ export function StimpieCarousel({
   reducedMotion,
   eagerCount = 4,
   label = 'Stimpies',
+  imageUrl,
 }: CarouselProps) {
   const refs = useRef(new Map<number, HTMLElement>());
   const [focusId, setFocusId] = useState<number | null>(previewId ?? stimpies[0]?.id ?? null);
@@ -239,7 +245,7 @@ export function StimpieCarousel({
           >
             <div className="relative overflow-hidden rounded-md bg-cream" style={{ aspectRatio: String(STIMPIE_RATIO) }}>
               <img
-                src={s.artworkUrl}
+                src={imageUrl ? imageUrl(s.artworkUrl, CARD_IMAGE_WIDTH) : s.artworkUrl}
                 alt=""
                 width={160}
                 height={250}

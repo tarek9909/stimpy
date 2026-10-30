@@ -6,6 +6,9 @@ import { CART_FULL_TEXT, useAddToCart } from '@/features/cart/useAddToCart';
 import { track } from '@/lib/track';
 import { toBuilderHoodie } from './data';
 
+/** The site's image optimizer, which resizes and converts on request and caches the result. */
+const optimizedImage = (url: string, width: number) => `/_next/image?url=${encodeURIComponent(url)}&w=${width}&q=75`;
+
 /**
  * The website's Builder island: the shared `@stimpy/builder` component fed with the server-fetched payloads, wired to
  * the cart store (`useAddToCart`), the analytics entry point and the share-link URL sync.
@@ -40,6 +43,7 @@ export function BuilderClient({ data, share, source }: { data: BuilderData; shar
       onAddToCart={onAddToCart}
       refreshInventory={refreshInventory}
       only3d
+      imageUrl={optimizedImage}
       stageAspect="1 / 1"
       hrefs={{ sizeGuide: '/help?tab=size' }}
       track={track}

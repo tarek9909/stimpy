@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
+import { preload } from 'react-dom';
 import { Button, Section } from '@stimpy/ui';
 import type { BuilderConfig, HoodieDetail, OptionsResponse, Pack, Stimpie } from '@stimpy/api-client';
 import { parseShareParams } from '@stimpy/builder/src/lib/share';
 import { getBuilderConfig, getHoodie, getOptions, getPacks, getStimpies } from '@/lib/data';
 import { pageMetadata } from '@/lib/seo';
 import { BuilderClient } from '@/features/builder/BuilderClient';
-import { toBuilderData } from '@/features/builder/data';
+import { STOREFRONT_MODEL, toBuilderData } from '@/features/builder/data';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -59,6 +60,8 @@ export default async function BuilderPage({ searchParams }: { searchParams: Prom
   const share = parseShareParams(sp);
   const loaded = await loadBuilder(!!share.stimpie);
   const data = loaded ? toBuilderData(loaded) : null;
+  // Start the model before the page's images take the bandwidth.
+  if (data) preload(STOREFRONT_MODEL.url, { as: 'fetch', crossOrigin: 'anonymous', fetchPriority: 'high' });
 
   return (
     <Section tone="white" heading="Build your look" headingLevel={1}>

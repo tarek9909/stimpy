@@ -48,7 +48,7 @@ describe('Builder data mapping', () => {
   it('the Builder page always uses the website model, whatever the stored config says', () => {
     const d = toBuilderData({ config, options, stimpies: [stimpie], packs: [], hoodie: null });
     expect(d.config.effectiveMode).toBe('3D');
-    expect(d.config.model3d).toMatchObject({ url: '/models/hoodie.glb', backPanelMesh: 'back_panel' });
+    expect(d.config.model3d).toMatchObject({ url: expect.stringMatching(/^\/models\/hoodie\.glb\?v=[1-9]\d*$/), backPanelMesh: 'back_panel' });
     expect(d.config.colors[0]?.texture3d).toBeNull();
     expect(d.config.stimpieTextures).toEqual([]);
   });

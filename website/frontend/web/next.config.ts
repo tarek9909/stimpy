@@ -90,6 +90,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
+      // The URL carries the model's size, so a changed model is a new URL (features/builder/data.ts).
+      { source: '/models/:file*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
       // Bump the filename version when regenerating campaign images.
       { source: '/images/stimpy-campaign-:variant-v2-:size.:format', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
     ];

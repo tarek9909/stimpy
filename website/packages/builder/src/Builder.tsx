@@ -108,6 +108,8 @@ export interface BuilderProps {
   render2DStage?: (context: { color: JoinedColor; stimpie: BuilderStimpie | null }) => ReactNode;
   /** The 3D model is the only preview: no 2D stage, and 3D never steps aside for slow devices or data saving. */
   only3d?: boolean;
+  /** Host hook: a smaller copy of an image for the given display width (for example the host's image optimizer). */
+  imageUrl?: (url: string, width: number) => string;
   /** Aspect ratio for the preview frame. Defaults to the standard 4:5 hoodie cutout. */
   stageAspect?: string;
   className?: string;
@@ -119,6 +121,9 @@ interface EnvState {
   userView: BuilderView | null;
   tierVerdict: { disabled: boolean; tier: Tier | null };
 }
+
+/** The panel fills about a third of the stage: this stays sharp when zoomed in on a 2x screen. */
+const PANEL_IMAGE_WIDTH = 1080;
 
 const reportedFallbacks = new Set<string>();
 const reportedInteractions = new Set<string>();
@@ -151,6 +156,7 @@ export function Builder({
   renderPreviewAction,
   render2DStage,
   only3d = false,
+  imageUrl,
   stageAspect = '4 / 5',
   className,
 }: BuilderProps) {
@@ -313,7 +319,12 @@ export function Builder({
       }
     : null;
   const stage2dArt = stageStimpie ? { key: stageStimpie.id, src: stageStimpie.artworkUrl, alt: `${stageStimpie.name} Stimpie` } : null;
-  const engineArt = stageStimpie ? engineArtFor(stageStimpie, config.stimpieTextures) : null;
+  // The original stays as the fallback if the smaller copy cannot be loaded.
+  const panelArt = (s: BuilderStimpie) => {
+    const art = engineArtFor(s, config.stimpieTextures);
+    return imageUrl ? { ...art, url: imageUrl(art.url, PANEL_IMAGE_WIDTH), fallbackUrl: art.url } : art;
+  };
+  const engineArt = stageStimpie ? panelArt(stageStimpie) : null;
   const label3d = `3D preview of a ${color?.name ?? ''} Stimpy hoodie${stageStimpie ? ` with the ${stageStimpie.name} Stimpie on the back` : ''}. Drag to rotate.`;
   const tier: Tier = env?.tierVerdict.tier ?? decision?.tier ?? 'mid';
   const sim = typeof throttleSimulator === 'object' ? throttleSimulator : undefined;
@@ -591,7 +602,7 @@ export function Builder({
                   tint={tintFor(color)}
                   fabricTextureUrl={color.texture3d}
                   art={engineArt}
-                  neighbours={neighbours.map((n) => engineArtFor(n, config.stimpieTextures))}
+                  neighbours={neighbours.map(panelArt)}
                   tier={tier}
                   reducedMotion={reduced}
                   label={label3d}
@@ -688,6 +699,7 @@ export function Builder({
             selectOnFocus={compact}
             reducedMotion={reduced}
             eagerCount={compact ? 0 : 4}
+            imageUrl={imageUrl}
           />
           {!compact ? <SlotChips slots={selection.slots} focus={selection.focus} stimpies={stimpies} onFocus={(slot) => dispatch({ type: 'focus', slot })} /> : null}
           {!compact && pack && pack.stimpieCount > 1 ? <p className="text-caption text-fg-muted">Choose Stimpies in order. Tap a numbered card to replace it.</p> : null}

@@ -6,8 +6,8 @@ import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { Document, NodeIO } from '@gltf-transform/core';
 import { EXTMeshoptCompression, KHRMeshQuantization } from '@gltf-transform/extensions';
-import { meshopt } from '@gltf-transform/functions';
-import { MeshoptEncoder } from 'meshoptimizer';
+import { meshopt, simplify, weld } from '@gltf-transform/functions';
+import { MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
 
 const input = new URL('../../pp/pp.obj', import.meta.url);
 const outputDir = new URL('../../website/frontend/web/public/models/', import.meta.url);
@@ -229,7 +229,13 @@ const root = doc
   .addChild(addMesh('back_panel', parts.panel, panelMaterial, panelUv));
 doc.createScene().addChild(root);
 
+// The CLO mesh has far more triangles than the small stage can show, and every one costs download time on slow connections.
+const KEEP_TRIANGLES = 0.3;
+const MAX_ERROR = 0.0005;
 await MeshoptEncoder.ready;
+await MeshoptSimplifier.ready;
+await doc.transform(weld(), simplify({ simplifier: MeshoptSimplifier, ratio: KEEP_TRIANGLES, error: MAX_ERROR }));
+for (const mesh of doc.getRoot().listMeshes()) console.log(`${mesh.getName()}: ${mesh.listPrimitives()[0].getIndices().getCount() / 3} triangles after simplifying`);
 await doc.transform(meshopt({ encoder: MeshoptEncoder, level: 'high' }));
 
 mkdirSync(outputDir, { recursive: true });
