@@ -31,6 +31,9 @@ export interface HomeCommerceProps {
 
 /** Identical section geometry for the server preview and deferred interactive cards. */
 export function HomeCommerce(props: HomeCommerceProps) {
+  const dropArtwork = props.drop?.teaserImage || props.drop?.stimpies[0]?.artworkUrl || null;
+  const usesStimpieArtwork = !!props.drop?.stimpies[0]?.artworkUrl && !props.drop?.teaserImage;
+
   return <>
     {props.coreStimpies.length > 0 ? <section className="store-section" aria-labelledby="core-title"><div className="container">
       <header className="store-section-heading"><div><p className="store-eyebrow">A different kind of wardrobe</p>
@@ -60,12 +63,12 @@ export function HomeCommerce(props: HomeCommerceProps) {
                 >
                   <div className="store-drop-art-inner">
                     <Media
-                      src={props.drop.teaserImage}
+                      src={dropArtwork}
                       alt={`${props.drop.name} collection artwork`}
-                      ratio="2610 / 2115"
-                      fit="cover"
-                      className="!bg-transparent"
-                      sizes="(min-width: 1024px) 480px, (min-width: 768px) 400px, 90vw"
+                      ratio={usesStimpieArtwork ? '1 / 1' : '2610 / 2115'}
+                      fit={usesStimpieArtwork ? 'contain' : 'cover'}
+                      className="store-drop-art-media"
+                      sizes="(min-width: 1024px) 430px, (min-width: 768px) 380px, 90vw"
                     />
                   </div>
                   <div className="store-drop-art-inspect">

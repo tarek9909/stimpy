@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/react';
+import type { Drop } from '@stimpy/api-client';
 import { StoreHero, usesDefaultCampaign } from '@/components/StoreHero';
 import { HomeCommerce, PackTile } from '@/features/home/HomeCommerce';
 import { HomeHowItWorks } from '@/features/home/HomeHowItWorks';
@@ -88,5 +89,16 @@ describe('storefront commerce previews', () => {
     const view = render(<HomeCommerce packs={[]} hoodieSlug={null} extraCents={0} minExtra={1000} drop={null} coreStimpies={[stimpie()]} />);
     expect(view.getByRole('link', {name:'THE VOID'})).toHaveAttribute('href','/shop/stimpie/the-void');
     expect(view.getByRole('link', {name:'Stimpies from $10'})).toHaveAttribute('href','/shop?tab=stimpies');
+  });
+  it('uses the first Stimpie artwork when a featured drop has no teaser image', () => {
+    const drop = {
+      name: 'Drop test', slug: 'drop-test', story: '', state: 'UPCOMING', unitsRemaining: null,
+      teaserImage: null, stimpies: [stimpie({ artworkUrl: 'https://cdn.example.test/drop-art.webp' })],
+    } as unknown as Drop;
+    const view = render(<HomeCommerce packs={[]} hoodieSlug={null} extraCents={0} minExtra={null} drop={drop} coreStimpies={[]} />);
+    const image = view.getByRole('img', { name: 'Drop test collection artwork' });
+    expect(image).toHaveAttribute('src', 'https://cdn.example.test/drop-art.webp');
+    expect(image).toHaveClass('object-contain');
+    expect(image.parentElement).toHaveStyle({ aspectRatio: '1 / 1' });
   });
 });
