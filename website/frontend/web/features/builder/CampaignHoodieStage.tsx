@@ -3,8 +3,10 @@
 import { useId } from 'react';
 import type { BuilderStimpie, JoinedColor } from '@stimpy/builder';
 import { placementStyle } from '@stimpy/builder/src/lib/placement';
+import { campaignImages } from '@/lib/campaign-images';
 
-const CAMPAIGN_IMAGE = '/images/stimpy-campaign-v1.png';
+const CAMPAIGN_IMAGE = campaignImages.builder;
+const CAMPAIGN_SIZES = '(max-width: 591px) calc(100vw - 32px), 560px';
 const CAMPAIGN_VIEW = '1000 0 809 809';
 const CAMPAIGN_PLACEMENT = { x: 0.522, y: 0.534, width: 0.352, rotation: 0 };
 
@@ -41,20 +43,24 @@ export function CampaignHoodieStage({ color, stimpie, priority = false, classNam
       className={['relative aspect-square w-full select-none overflow-hidden bg-[#d2d2d2]', className].filter(Boolean).join(' ')}
       style={{ isolation: 'isolate' }}
     >
-      <img
-        data-layer="hoodie"
-        src={CAMPAIGN_IMAGE}
-        alt=""
-        aria-hidden="true"
-        width={1942}
-        height={809}
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
-        decoding={priority ? 'sync' : 'async'}
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ objectPosition: '88.3% center' }}
-        draggable={false}
-      />
+      <picture>
+        <source type="image/avif" srcSet={CAMPAIGN_IMAGE.avifSrcSet} sizes={CAMPAIGN_SIZES} />
+        <img
+          data-layer="hoodie"
+          src={CAMPAIGN_IMAGE.src}
+          srcSet={CAMPAIGN_IMAGE.webpSrcSet}
+          sizes={CAMPAIGN_SIZES}
+          alt=""
+          aria-hidden="true"
+          width={CAMPAIGN_IMAGE.width}
+          height={CAMPAIGN_IMAGE.height}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover"
+          draggable={false}
+        />
+      </picture>
 
       <svg
         aria-hidden="true"

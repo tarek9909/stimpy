@@ -13,7 +13,7 @@ import { lineCard, shootFilm, type ShootDef } from '../../shoot/cards';
 const K = clock(100);
 const T = { walk0: 0.2, walk1: 7.6, text0: 3.6, text1: 6.6, card: 7.6, end: 10.4 };
 const CARD_AT = T.card + SIG_WIPE * 0.7;
-const SEQ = ['flame', 'wave', 'bloom', 'sun', 'tag', 'halftone'];
+const SEQ = ['sabotage', 'ducks', 'bubblegum', 'vhs', 'unhinged', 'chameleon'];
 const CHANGES = SEQ.map((_, i) => K.b(2 + i * 2) - K.beat);
 /** The glitches: a band of blocks slips for a moment. */
 const GLITCHES = [2.9, 5.3, 6.95];

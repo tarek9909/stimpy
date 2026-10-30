@@ -18,7 +18,16 @@ export const ALL = [C.coral, C.black, C.white, C.blue, C.butter, C.sky, C.lilac,
 
 /** Text colour that the brand's contrast table prescribes for a background. */
 export function ink(bg: string) {
-  return bg === C.black || bg === C.blue ? C.white : C.black;
+  if ((ALL as readonly string[]).includes(bg)) return bg === C.black || bg === C.blue ? C.white : C.black;
+  // Stimpie world colours outside the palette: by luminance
+  return isDark(bg) ? C.white : C.black;
+}
+
+/** True for colours dark enough to need white text (the electric blue counts as dark). */
+export function isDark(hex: string) {
+  const p = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * ((p >> 16) & 255) + 0.587 * ((p >> 8) & 255) + 0.114 * (p & 255)) / 255;
+  return lum < 0.5;
 }
 
 export const TAGLINE = 'One hoodie. Multiple identities.';

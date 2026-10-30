@@ -1,7 +1,7 @@
 // The edit. drawFrame(ctx, t) paints the whole frame for song time t and returns
 // the post-processing parameters. Every value derives from t and song.json.
 import { SONG, T, BEAT, BAR, pulse, since } from './song';
-import { CARDS, cardCanvas, CARD_ASPECT, BONE, BLACK, RED } from './cards';
+import { CARDS, cardCanvas, CARD_ASPECT, BONE, BLACK, RED, num, edition, cardForWorld } from './cards';
 import { drawHoodie, slotRect, HoodieOpts } from './hoodie';
 import { avatar } from './avatar';
 import {
@@ -23,19 +23,23 @@ export type Post = {
 // ---------------------------------------------------------------- the card schedule
 
 type Attach = { t: number; card: number; F: number; side: number };
+const WORLD_NAMES = ['void', 'afterdark', 'cedar', 'dreamer'];
+// each world is opened by the stimpie it borrows its colours from (see CARDS.world)
+const WORLD_CARDS = WORLD_NAMES.map(cardForWorld);
+const NCARDS = CARDS.length - 1; // the artwork stimpies (card 0 is the logo)
+// the swap: one stimpie per beat for 12 beats, cycling through all 11 (the first comes back on the last beat)
+const SWAP_CARDS = Array.from({ length: 12 }, (_, k) => (k % NCARDS) + 1);
 const ATTACH: Attach[] = [
-  { t: T(8), card: 1, F: 0.45, side: 1 },
-  { t: T(10), card: 2, F: 0.42, side: -1 },
-  { t: T(12), card: 3, F: 0.42, side: 1 },
-  { t: T(14), card: 4, F: 0.42, side: -1 },
-  ...Array.from({ length: 12 }, (_, k) => ({ t: T(20) + k * BEAT, card: 5 + k, F: 0.2, side: k % 2 ? 1 : -1 })),
+  { t: T(8), card: WORLD_CARDS[0], F: 0.45, side: 1 },
+  { t: T(10), card: WORLD_CARDS[1], F: 0.42, side: -1 },
+  { t: T(12), card: WORLD_CARDS[2], F: 0.42, side: 1 },
+  { t: T(14), card: WORLD_CARDS[3], F: 0.42, side: -1 },
+  ...SWAP_CARDS.map((card, k) => ({ t: T(20) + k * BEAT, card, F: 0.2, side: k % 2 ? 1 : -1 })),
   { t: T(23), card: 0, F: 0.42, side: 1 },
 ];
 const DETACH = T(16);
 const WORLD_CLICKS = ATTACH.slice(0, 4).map((a) => a.t);
 const SWAP_CLICKS = ATTACH.slice(4, 16).map((a) => a.t);
-const WORDS = ['ONE', 'HOODIE', 'ENDLESS', 'WORLDS', 'CLICK', 'SWAP', 'CLICK', 'SWAP', 'NEW', 'DAY', 'NEW', 'YOU'];
-const WORLD_NAMES = ['void', 'afterdark', 'cedar', 'dreamer'];
 
 function attachedAt(t: number): { a: Attach; i: number } | null {
   let r: { a: Attach; i: number } | null = null;
@@ -84,11 +88,13 @@ function drawCard(c: Ctx, n: number, cx: number, cy: number, w: number, rot: num
   c.globalAlpha = clamp(alpha);
   c.translate(cx, cy);
   c.rotate(rot);
-  // the shadow follows the picture's own shape
   if (shadow > 0) {
     c.shadowColor = `rgba(0,0,0,${shadow})`;
     c.shadowBlur = w * 0.12;
     c.shadowOffsetY = w * 0.05;
+    c.fillStyle = '#000';
+    c.fillRect(-w / 2, -h / 2, w, h);
+    c.shadowColor = 'transparent';
   }
   c.drawImage(cardCanvas(n), -w / 2, -h / 2, w, h);
   c.restore();
@@ -137,13 +143,15 @@ function drawWorld(c: Ctx, name: string, t: number, lt: number) {
   else worldDark(c, t, 1, 0, 0);
 }
 
+// scene light per world, from its stimpie's glow colours
 const LIGHT: Record<string, Partial<HoodieOpts>> = {
-  void: { rim: BONE, rimAmt: 0.4 },
-  afterdark: { rim: RED, rimAmt: 0.9, tint: RED, tintAmt: 0.03 },
-  cedar: { rim: '#ff9a5a', rimAmt: 0.6, tint: '#ffb070', tintAmt: 0.05 },
-  dreamer: { rim: BONE, rimAmt: 0.45, tint: RED, tintAmt: 0.08 },
+  void: { rim: '#E8F4FF', rimAmt: 0.75, tint: '#D6264A', tintAmt: 0.03 }, // NEON: white aura, crimson
+  afterdark: { rim: '#F26A4B', rimAmt: 0.85, tint: '#2F5FD0', tintAmt: 0.06 }, // VHS: sunset orange, tape blue
+  cedar: { rim: '#F2B35A', rimAmt: 0.65, tint: '#E8792B', tintAmt: 0.06 }, // IREZUMI: amber, tiger orange
+  dreamer: { rim: '#4FB6F0', rimAmt: 0.6, tint: '#F26A4B', tintAmt: 0.07 }, // SAME DAY: blue / coral
 };
-const HUD_INK: Record<string, string> = { void: BLACK, afterdark: BONE, cedar: '#1c110c', dreamer: BONE };
+const HUD_INK: Record<string, string> = { void: '#FFFFFF', afterdark: '#FFFFFF', cedar: '#FBEBD2', dreamer: '#F6EEDD' };
+const HUD_ACC: Record<string, string> = { void: '#D6264A', afterdark: '#FFD23F', cedar: '#F2B35A', dreamer: '#F26A4B' };
 
 // ---------------------------------------------------------------- the frame
 
@@ -270,15 +278,18 @@ export function drawFrame(c: Ctx, t: number): Post {
       c.restore();
     } else drawWorld(c, name, t, lt);
     if (name === 'dreamer') after = () => worldDreamerFront(c, t, lt);
-    post.bloom = name === 'afterdark' ? 1.0 : name === 'void' ? 0.35 : 0.6;
+    post.bloom = name === 'afterdark' ? 1.0 : name === 'void' ? 0.8 : 0.6;
     post.grain = name === 'cedar' ? 0.045 : 0.028;
     post.flash = 0.9 * Math.exp(-wc / 0.09);
     const ink = HUD_INK[name];
     hud = () => {
-      topHud(c, ink, 1);
-      const card = CARDS[wi + 1];
+      topHud(c, name === 'cedar' ? '#2a1208' : ink, 1); // dark on the amber sky, light on the sea below
+      const card = CARDS[WORLD_CARDS[wi]];
       const u = inv(wt + 0.05, wt + 0.5, t);
+      text(c, scramble(`STIMPIE N° ${num(card.n)} · ${card.spec!.word}`, u, wi * 10), 84, 1500, '600 26px PlexB', HUD_ACC[name], 'left', 1, 3);
       text(c, scramble(card.name, inv(wt + 0.1, wt + 0.6, t), wi * 10 + 3), 80, 1572, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), ink);
+      text(c, scramble(`EDITION ${edition(card.n)} · ${String(wi + 1).padStart(2, '0')}/04`, inv(wt + 0.2, wt + 0.8, t), wi * 10 + 5), 84, 1616, '400 24px Plex', ink, 'left', 0.85, 2);
+      text(c, card.spec!.line, 84, 1676, '400 40px CormI', ink, 'left', smooth(wt + 0.5, wt + 0.9, t) * 0.95);
     };
   } else if (t < T(20)) {
     // ------------------------------------------------ DECK: the system
@@ -300,17 +311,18 @@ export function drawFrame(c: Ctx, t: number): Post {
     const fan = (behind: boolean) => {
       const rf = SONG.riffle;
       const dur = rf[1] - rf[0];
-      for (let k = 0; k < 16; k++) {
-        const u = k / 16;
+      const N = NCARDS;
+      for (let k = 0; k < N; k++) {
+        const u = k / N;
         const tk = rf[0] + dur * (1 - Math.pow(1 - u, 1.7));
         const app = easeOutBack(clamp((t - tk) / 0.28), 1.3);
         if (t < tk) continue;
-        const a = (k - 7.5) * 0.1;
+        const a = (k - (N - 1) / 2) * (1.5 / N); // same overall fan width as before
         let x = 540 + Math.sin(a) * 1150;
         let y = 1950 - Math.cos(a) * 1150 - 20;
         let rot = a;
         let w = 230;
-        const oa = (k / 16) * TAU + spin;
+        const oa = (k / N) * TAU + spin;
         const depth = Math.sin(oa);
         const ox = 540 + Math.cos(oa) * 470, oy = 980 + depth * 170;
         x = lerp(x, ox, orbitMix);
@@ -350,8 +362,10 @@ export function drawFrame(c: Ctx, t: number): Post {
   } else if (t < T(23)) {
     // ------------------------------------------------ SWAP: a new stimpie every beat
     const k = Math.floor((t - T(20)) / BEAT);
-    const card = CARDS[5 + k];
+    const card = CARDS[SWAP_CARDS[k]];
     const pal = card.pal;
+    const sp = card.spec!;
+    const dark = ['#111111', '#0B0B12'].includes(sp.world);
     c.fillStyle = pal.bg;
     c.fillRect(0, 0, W, H);
     // halftone rings behind
@@ -365,7 +379,7 @@ export function drawFrame(c: Ctx, t: number): Post {
       c.stroke();
     }
     c.restore();
-    const word = WORDS[k];
+    const word = sp.word;
     const wu = easeOutCubic(clamp((t - SWAP_CLICKS[k]) / 0.12));
     c.save();
     c.translate(540, 350);
@@ -373,7 +387,7 @@ export function drawFrame(c: Ctx, t: number): Post {
     text(c, word, 0, 0, fitFont(c, word, '900', 'ArchivoX', 250, 980), pal.ink, 'center', 1);
     c.restore();
     hoodie = {
-      x: 540, y: 1040, s: 0.95, t, walk, walkAmt: 0.4, rim: pal.acc === BONE ? BONE : RED, rimAmt: pal.bg === BLACK ? 0.7 : 0.25,
+      x: 540, y: 1040, s: 0.95, t, walk, walkAmt: 0.4, rim: sp.glow[0] === sp.world ? sp.glow[1] : sp.glow[0], rimAmt: dark ? 0.7 : 0.3,
       card: att?.a.card ?? null, cardSettle: att ? Math.exp(-(t - att.a.t) / 0.06) : 0, snapFlash: att ? Math.exp(-(t - att.a.t) / 0.1) : 0,
     };
     post.flash = 0.3 * Math.exp(-sc / 0.07);
@@ -381,7 +395,10 @@ export function drawFrame(c: Ctx, t: number): Post {
     post.bloom = 0.5;
     hud = () => {
       topHud(c, pal.ink, 1);
+      text(c, `STIMPIE N° ${num(card.n)}`, 84, 1500, '600 26px PlexB', pal.ink, 'left', 1, 3);
       text(c, card.name, 80, 1572, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), pal.ink);
+      text(c, `${String(card.n).padStart(2, '0')}/${NCARDS}`, W - 84, 1572, '600 26px PlexB', pal.ink, 'right', 1, 3);
+      text(c, sp.line, 84, 1632, '400 40px CormI', pal.ink, 'left', 0.95);
     };
   } else {
     // ------------------------------------------------ LOGO
@@ -468,7 +485,7 @@ export function drawFrame(c: Ctx, t: number): Post {
   if (pu > 0 && pu < 1) {
     const r = slotRect({ x: 540, y: 1010, s: 1.0, t, walk, walkAmt: 0.55 });
     const e = pu * pu;
-    drawCard(c, 4, lerp(r.cx, 300, e), lerp(r.cy, -500, e), lerp(r.w, r.w * 1.6, e), lerp(0, -0.9, e), 1);
+    drawCard(c, ATTACH[3].card, lerp(r.cx, 300, e), lerp(r.cy, -500, e), lerp(r.w, r.w * 1.6, e), lerp(0, -0.9, e), 1);
   }
   c.restore(); // camera
 

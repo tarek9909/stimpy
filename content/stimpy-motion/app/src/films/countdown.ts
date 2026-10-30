@@ -116,7 +116,7 @@ function launchFront(c: Ctx, t: number) {
   const hop = Math.sin(Math.PI * turn) * 30;
   drawHoodie(c, {
     x: HX, y: HY - hop, s: HS, color: C.cream, turn, shadow: 0.6, shadowY: 420 + hop / HS,
-    panel: { art: art('orbit', t), zip: 1, parked: true }, lining: C.coral,
+    panel: { art: art('neon', t), zip: 1, parked: true }, lining: C.coral,
   });
   kinetic(c, 'Launch day.', W / 2, SAFE.bottom - 40, t - 0.25, { size: 104, weight: 700, color: C.white, align: 'center', stagger: 0.1 });
   // the huge zipper runs down the screen before it opens

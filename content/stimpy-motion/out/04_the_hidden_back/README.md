@@ -16,5 +16,3 @@ Each idea below is a filmable concept for the real footage. Each folder has:
 | [Censored](e_censored/) | 10.4 s | A sunny walk away with the back pixelated, glitching for two frames at a time. |
 
 Every one ends on a ready-made card from [`../00_end_cards`](../00_end_cards/), which carries the signature zip sound.
-
-> The old renders still in this folder (stimpy_hidden.mp4/.wav, hidden_sheet.png) are the first motion version you didn't like. It has been replaced by the ideas above. Delete it whenever you like.

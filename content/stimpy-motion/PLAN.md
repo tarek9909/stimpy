@@ -18,8 +18,10 @@ preview in the browser is exactly what the final render will be.
 
 ## The Stimpie library (`art/designs.ts`)
 
-These are procedural, animated back designs made only from brand colours, and each is signed with the split S in a corner:
-FLAME · BLOOM · STATIC · WAVE · NIGHT · SUN · TAG · ORBIT · HALFTONE · CHECKER · EYE · PIXEL.
+The 11 real artworks (`app/public/stimpies/`, spec in `content/_stimpies/stimpies.json`), drawn unaltered: each fills the
+panel with its world colour and is cover-fitted with the crop centred on its hero detail; films zoom and pan onto its focus points:
+SABOTAGE · BUBBLEGUM · IREZUMI (tiger) · ZERO DUCKS · B-SIDE · RECEIPT · VHS · UNHINGED · SAME DAY · CHAMELEON · NEON.
+The brand mark (SIGNATURE) is kept for the Split Screen's final back.
 
 ## The videos
 
@@ -27,7 +29,7 @@ FLAME · BLOOM · STATIC · WAVE · NIGHT · SUN · TAG · ORBIT · HALFTONE · 
 02. **The Question** (15 s): cream. "How many hoodies do you own…". A hoodie drops, then more hoodies rain down faster, each with a different back, while a blue counter ticks 3… 7… 12… 20. The tower wobbles and collapses and the music cuts. A vacuum pulls everything into ONE hoodie whose back flickers through every design. "What if you only needed one?" Zip wipe to the logo.
 05. **Stimpie Glimpses** (10 s, a series of 5 episodes): a giant closed zipper over the hint colour. It cracks open for slivers of the art and snaps shut, faster and faster, with 2-frame hidden flashes. It stops at 80%, zips shut, and shows "Not yet."
 07. **Countdown** (6 s template: 5 · 4 · 3 · 2 · 1 · Tomorrow, plus an 8 s launch day): a hoodie from behind. A Stimpie zips on, and its design IS the number, in a different art style each day. "Days left." On launch day the hoodie turns to the viewer, and a giant zipper unzips the screen to reveal "Live now" on electric blue, with room for the link sticker.
-09. **Which Back Are You?** (10 s poll, 3 pairs: Loud/Quiet · Chaos/Calm · Night/Day) plus an 8 s results follow-up: two silhouetted Stimpies leak colour at their edges, labels fade in, a spotlight sweeps between them, and they pulse with the music. The follow-up shows a result bar filling, the winner cracking with light, and "You chose. Revealed first."
+09. **Which Back Are You?** (10 s poll, 3 pairs: Loud/Soft · Wild/Chill · Unleashed/Offline) plus an 8 s results follow-up: two silhouetted Stimpies leak colour at their edges, labels fade in, a spotlight sweeps between them, and they pulse with the music. The follow-up shows a result bar filling, the winner cracking with light, and "You chose. Revealed first."
 10. **The Split Screen** (15 s, seamless loop): a figure in a plain hoodie. A zip on every beat brings a new Stimpie and a new world colour. The swaps accelerate into a 4-way split, then slam into one: "Same hoodie." A final zip: "Different you." It ends on the plain hoodie it started with.
 
 ## Workflow

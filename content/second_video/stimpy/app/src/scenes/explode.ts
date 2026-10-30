@@ -5,6 +5,7 @@ import type { Stage } from '../engine/stage';
 import { W, H, DIST, SAFE } from '../engine/gl';
 import { seg, ease, clamp, pulse } from '../engine/util';
 import { DOCK } from '../engine/hoodie';
+import { IDX } from '../art/designs';
 import { EV, BONE, placeHoodie, mono, display, leader, riseText } from './common';
 
 function blueprint(c: CanvasRenderingContext2D, t: number) {
@@ -49,7 +50,7 @@ export function explode(S: Stage, t: number) {
 
   // the Stimpie: highest layer, then flies off at 15
   const p = h.panels[0]!.state;
-  p.art = S.art[1]!;
+  p.art = S.art[IDX('bubblegum')]!; // was 'bloom'
   const away = ease.inCubic(seg(t, EV.away - 0.25, EV.away + 0.6));
   p.z = 460 * sep + away * 900;
   p.y = away * 900;

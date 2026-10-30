@@ -27,8 +27,8 @@ export function end(S: Stage, t: number) {
   const g = seg(t, 57.0, 58.2);
   if (g > 0 && g < 1) {
     const q = h.panels[1]!.state;
-    const i = Math.floor(g * 12);
-    q.art = i % 2 ? S.artAlt[(i >> 1) % 6]! : S.art[(i >> 1) % 6]!;
+    const i = Math.min(S.art.length - 1, Math.floor(g * S.art.length));
+    q.art = S.art[i]!;
     q.opacity = 0.9;
     q.flash = 0.15;
     q.shadow = 0.5;

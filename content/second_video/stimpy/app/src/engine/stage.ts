@@ -37,8 +37,7 @@ export class Stage {
   cards!: Cards;
   designs: Design[] = DESIGNS;
   mine: Design = MINE;
-  art: THREE.Texture[] = [];     // DESIGNS[i] core colourway
-  artAlt: THREE.Texture[] = [];  // DESIGNS[i] alternate colourway
+  art: THREE.Texture[] = [];     // DESIGNS[i] panel (the artwork over its world colour)
   artMine!: THREE.Texture;
   artCanvas: HTMLCanvasElement[] = [];
   mineCanvas!: HTMLCanvasElement;
@@ -57,20 +56,20 @@ export class Stage {
       return t;
     };
     const fronts: THREE.Texture[] = [];
+    // the artworks are decoded before init (Engine.init awaits loadStimpies), so these canvases are complete
     for (const d of DESIGNS) {
-      const a = renderDesign(d, 0), b = renderDesign(d, 1);
+      const a = renderDesign(d);
       this.artCanvas.push(a);
       this.art.push(tex(a));
-      this.artAlt.push(tex(b));
-      fronts.push(tex(renderCard(a)), tex(renderCard(b)));
+      fronts.push(tex(renderCard(d, a)));
     }
-    fronts.splice(11, 1, tex(renderCardBlank())); // 11 designs + the empty 'yours' slot
-    this.mineCanvas = renderDesign(MINE, 0);
+    fronts.push(tex(renderCardBlank())); // 11 Stimpies + the empty 'yours' slot
+    this.mineCanvas = renderDesign(MINE);
     this.artMine = tex(this.mineCanvas);
     this.cards = new Cards(fronts, tex(renderCardBack()), this.light);
     this.scene.add(this.cards.group);
     // pre-upload every texture so the first frame of a scene doesn't stall
-    for (const t of [...this.art, ...this.artAlt, this.artMine, ...fronts]) renderer.initTexture(t);
+    for (const t of [...this.art, this.artMine, ...fronts]) renderer.initTexture(t);
   }
 
   reset(t: number) {

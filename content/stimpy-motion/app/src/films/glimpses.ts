@@ -6,11 +6,11 @@
 //          so they survive a 30 fps upload) show a much bigger piece: "Pause it if you can."
 //  8–9.45  the pull runs down to 80%, stops… and zips shut
 //  9.45–10 "Not yet."
-import { C, ink, rgba } from '../engine/brand';
+import { C, isDark, rgba } from '../engine/brand';
 import { drawLockup, LOGO } from '../engine/logo';
 import { text, type Ctx } from '../engine/draw';
 import { closedTeeth, openTeeth, drawPull, Track, type TeethStyle } from '../engine/zipper';
-import { byId, type Design } from '../art/designs';
+import { byId, paint, type Design } from '../art/designs';
 import type { Film, Post } from '../engine/engine';
 import { Score, n, chord } from '../audio/score';
 import { W, H, SAFE, fabricFill, glow, pill } from './common';
@@ -19,13 +19,15 @@ import { ease, seg, clamp, pulse, mulberry, clock, lerp } from '../engine/util';
 const K = clock(120);
 const b = K.b;
 
-export interface Episode { id: string; no: number; design: string; hint: string; teeth: string; tab: string; root: string; focus?: number; zoom?: number }
+/** One episode per Stimpie: the fabric is the design's own world colour (the hint), the slivers land on its details. */
+export interface Episode { id: string; no: number; design: string; hint: string; teeth: string; tab: string; root: string }
+const ep = (no: number, design: string, teeth: string, tab: string, root: string): Episode => ({ id: design, no, design, hint: byId(design).world, teeth, tab, root });
 export const EPISODES: Episode[] = [
-  { id: 'flame', no: 1, design: 'flame', hint: C.coral, teeth: C.black, tab: C.black, root: 'F', focus: 0.74, zoom: 1.35 },
-  { id: 'sun', no: 2, design: 'sun', hint: C.butter, teeth: C.black, tab: C.coral, root: 'G' },
-  { id: 'wave', no: 3, design: 'wave', hint: C.sky, teeth: C.white, tab: C.coral, root: 'A', focus: 0.62, zoom: 1.2 },
-  { id: 'bloom', no: 4, design: 'bloom', hint: C.lilac, teeth: C.black, tab: C.coral, root: 'D' },
-  { id: 'night', no: 5, design: 'night', hint: C.blue, teeth: C.white, tab: C.coral, root: 'E' },
+  ep(1, 'sabotage', C.black, C.coral, 'F'),
+  ep(2, 'bubblegum', C.black, C.coral, 'G'),
+  ep(3, 'receipt', C.white, C.coral, 'A'),
+  ep(4, 'tiger', C.black, C.black, 'D'),
+  ep(5, 'sameday', C.white, C.coral, 'E'),
 ];
 
 const PARK = 330;       // the slider rests near the top of the safe area (its tab hangs above)
@@ -33,15 +35,15 @@ const LONG = { t0: b(16), stop: b(17.8), shut0: b(18.5), shut1: b(18.9) };
 const NOT_YET = LONG.shut1 + 0.03;
 const END = 10;
 
-interface Op { t0: number; open: number; hold: number; close: number; yA: number; len: number; amp: number; flash?: boolean }
+interface Op { t0: number; open: number; hold: number; close: number; yA: number; len: number; amp: number; flash?: boolean; focus?: number }
 
-function buildOps(seed: number): Op[] {
+function buildOps(seed: number, nFocus: number): Op[] {
   const r = mulberry(seed);
   const ops: Op[] = [];
   // three slow glimpses
-  ops.push({ t0: b(4), open: 0.28, hold: 0.45, close: 0.09, yA: 700, len: 330, amp: 96 });
-  ops.push({ t0: b(6.4), open: 0.24, hold: 0.4, close: 0.08, yA: 1080, len: 360, amp: 104 });
-  ops.push({ t0: b(8.4), open: 0.2, hold: 0.32, close: 0.07, yA: 430, len: 300, amp: 92 });
+  ops.push({ t0: b(4), open: 0.28, hold: 0.45, close: 0.09, yA: 700, len: 330, amp: 128 });
+  ops.push({ t0: b(6.4), open: 0.24, hold: 0.4, close: 0.08, yA: 1080, len: 360, amp: 136 });
+  ops.push({ t0: b(8.4), open: 0.2, hold: 0.32, close: 0.07, yA: 430, len: 300, amp: 122 });
   // 8ths then 16ths
   for (let q = 10; q < 13; q += 0.5) ops.push({ t0: b(q), open: 0.07, hold: 0.08, close: 0.05, yA: 330 + r() * 1000, len: 220 + r() * 180, amp: 80 + r() * 40 });
   for (let q = 13; q < 16; q += 0.25) ops.push({ t0: b(q), open: 0.035, hold: 0.04, close: 0.03, yA: 330 + r() * 1050, len: 200 + r() * 220, amp: 76 + r() * 44 });
@@ -50,7 +52,12 @@ function buildOps(seed: number): Op[] {
     const tf = Math.round(f * 60) / 60;
     ops.push({ t0: tf, open: 0, hold: 2 / 60 - 1e-4, close: 0, yA: 280, len: 1450, amp: 430, flash: true });
   }
-  return ops.sort((a, b2) => a.t0 - b2.t0);
+  ops.sort((a, b2) => a.t0 - b2.t0);
+  // every sliver lands on one of the design's details (cycling the secondary ones; the hero is saved for the
+  // hidden flashes and the long open)
+  let k = 0;
+  for (const o of ops) o.focus = o.flash ? 0 : (k++ % (nFocus - 1)) + 1;
+  return ops;
 }
 
 /** Extent 0..1 of an op at t (0 = shut). */
@@ -64,7 +71,7 @@ function extent(o: Op, t: number) {
   return 0;
 }
 
-interface State { gap: (y: number) => number; pull: number; swing: number; flash: boolean; openness: number }
+interface State { gap: (y: number) => number; pull: number; swing: number; flash: boolean; openness: number; frame: Op | null }
 
 function state(ops: Op[], t: number): State {
   // the long open: a V below the parked slider
@@ -74,7 +81,7 @@ function state(ops: Op[], t: number): State {
     const target = lerp(PARK, PARK + 0.8 * (H - PARK), down);
     const pull = lerp(target, PARK, up);
     const spread = 0.36 * (1 - up * 0.3);
-    return { gap: (y) => (y > PARK && y < pull ? Math.min((pull - y) * spread, (y - PARK) * 1.4 + 2) : 0), pull, swing: Math.sin(t * 9) * 0.25 * (1 - seg(t, LONG.stop, LONG.stop + 0.4)), flash: false, openness: (pull - PARK) / (H - PARK) };
+    return { gap: (y) => (y > PARK && y < pull ? Math.min((pull - y) * spread, (y - PARK) * 1.4 + 2) : 0), pull, swing: Math.sin(t * 9) * 0.25 * (1 - seg(t, LONG.stop, LONG.stop + 0.4)), flash: false, openness: (pull - PARK) / (H - PARK), frame: null };
   }
   const active = ops.filter((o) => extent(o, t) > 0.001);
   let pull = PARK, flash = false, openness = 0;
@@ -94,22 +101,28 @@ function state(ops: Op[], t: number): State {
     }
     return g;
   };
-  return { gap, pull: flash ? pull : pull, swing: 0, flash, openness };
+  // the art is framed for the most recent opening (it re-frames only while the zipper is shut)
+  const frame = [...ops].reverse().find((o) => t >= o.t0) ?? null;
+  return { gap, pull: flash ? pull : pull, swing: 0, flash, openness, frame };
 }
 
-/** The artwork behind the zipper, full frame. */
-function artwork(c: Ctx, d: Design, t: number, focus = 0.5, zoom = 1) {
-  const s = Math.max(W / 300, H / 364) * 1.05 * zoom;
-  c.save();
-  c.translate(W / 2 - 150 * s, clamp(H / 2 - 364 * focus * s, H - 364 * s, 0));
-  c.scale(s, s);
-  d.draw(c, 300, 364, t);
-  c.restore();
+/**
+ * The artwork behind the zipper, full frame, placed so the detail being glimpsed sits right in the opening:
+ * slivers zoom in on a secondary detail, the hidden flashes and the long open show the hero.
+ */
+function artwork(c: Ctx, d: Design, st: State, t: number) {
+  const o = st.frame;
+  let focus = d.focus[0]!, ay = 700, zoom = 1.12;
+  if (o && !o.flash && t < LONG.t0) { focus = d.focus[o.focus ?? 1] ?? focus; ay = o.yA + o.len * 0.3; zoom = 1.3; } // above the slider, where the opening is widest
+  else if (o?.flash) { ay = 900; zoom = 1.05; }
+  // a slow drift toward the detail while it is visible
+  const drift = o && t < LONG.t0 ? 1 + 0.03 * clamp((t - o.t0) / 0.6) : 1 + 0.04 * seg(t, LONG.t0, LONG.shut0);
+  paint(c, d, -40, -40, W + 80, H + 80, { focus, anchor: [(W / 2 + 40) / (W + 80), (ay + 40) / (H + 80)], zoom: zoom * drift, reach: 2.2 });
 }
 
 function hud(c: Ctx, ep: Episode, t: number) {
-  const fg = ink(ep.hint);
-  const col = ep.hint === C.coral ? LOGO.main : ep.hint === C.blue ? { ...LOGO.onBlack, outline: C.butter } : { ...LOGO.onWhite, outline: C.coral };
+  const fg = byId(ep.design).ink;
+  const col = isDark(ep.hint) ? { ...LOGO.onBlack, solid: fg, word: fg, outline: C.coral } : { ...LOGO.onWhite, outline: C.coral };
   // the zipper splits the frame: the HUD sits on either side of it
   const lk = { x: SAFE.left + 150, y: SAFE.bottom - 30 };
   drawLockup(c, lk.x, lk.y, 46, col, { word: { reveal: seg(t, 0.2, 1.0) } });
@@ -123,7 +136,7 @@ function hud(c: Ctx, ep: Episode, t: number) {
     const cur = e.no === ep.no;
     c.beginPath(); c.arc(x, y - 9, cur ? 18 : 15, 0, Math.PI * 2);
     c.fillStyle = e.hint; c.fill();
-    c.lineWidth = cur ? 5 : 3; c.strokeStyle = cur ? fg : C.white; c.stroke();
+    c.lineWidth = cur ? 5 : 3; c.strokeStyle = cur ? fg : isDark(ep.hint) ? rgba(C.white, 0.6) : C.white; c.stroke();
   });
 }
 
@@ -135,7 +148,7 @@ function scene(c: Ctx, ep: Episode, ops: Op[], t: number, post: Post | null) {
   const push = t < NOT_YET ? 1 + 0.045 * ease.inOutQuad(seg(t, 0, NOT_YET)) : 1;
   c.save();
   c.translate(W / 2, H / 2); c.scale(push, push); c.translate(-W / 2, -H / 2);
-  artwork(c, d, t, ep.focus, ep.zoom);
+  artwork(c, d, st, t);
   // the fabric: two halves with the openings cut into their shared edge
   const Lp = new Path2D(), Rp = new Path2D();
   const left: { x: number; y: number }[] = [], right: { x: number; y: number }[] = [];
@@ -193,7 +206,7 @@ function scene(c: Ctx, ep: Episode, ops: Op[], t: number, post: Post | null) {
 
 export function makeGlimpse(v: string): Film {
   const ep = EPISODES.find((e) => e.id === v) ?? EPISODES[0]!;
-  const ops = buildOps(ep.no * 101);
+  const ops = buildOps(ep.no * 101, byId(ep.design).focus.length);
   return {
     id: 'glimpses', title: `05 · Stimpie Glimpses — Nº 0${ep.no}`, duration: END,
     marks: [

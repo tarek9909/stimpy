@@ -6,6 +6,9 @@ import { text } from '../engine/draw2d';
 import { W, H } from '../engine/gl';
 import { clamp, ease, pulse, wobble } from '../engine/util';
 import music from '../music.json';
+import * as THREE from 'three';
+import { DOCK } from '../engine/hoodie';
+import { focusOnPanel, type Design } from '../art/designs';
 
 export const BEAT = music.beat;
 export const EV = music.events;
@@ -138,4 +141,13 @@ export function walkFloor(c: Ctx, t: number, color: string, alpha = 0.35, horizo
     c.stroke();
   }
   c.restore();
+}
+
+/** World position of a Stimpie's focus point k on the docked panel (call after placeHoodie). Zooms aim here. */
+export function focusWorld(S: Stage, d: Design, k = 0): [number, number] {
+  const [px, py] = focusOnPanel(d, k);
+  const g = S.hoodie.group;
+  g.updateMatrixWorld(true);
+  const v = new THREE.Vector3(DOCK.x + px, DOCK.y + py, 2.5).applyMatrix4(g.matrixWorld);
+  return [v.x, v.y];
 }

@@ -3,7 +3,7 @@
 import type { Stage } from '../engine/stage';
 import { W, H, SAFE } from '../engine/gl';
 import { seg, ease, lerp, clamp, pulse } from '../engine/util';
-import { drawDoodle } from '../art/designs';
+import { drawDoodle, MINE } from '../art/designs';
 import { WORLDS } from '../art/worlds';
 import { EV, INK, BLUE, placeHoodie, landed, mono, display } from './common';
 import { rrect } from '../engine/draw2d';
@@ -142,7 +142,7 @@ export function yours(S: Stage, t: number) {
 }
 
 function worldPart(S: Stage, t: number, age: number) {
-  WORLDS.mine!(S.bgc(), t, age, 'yours.');
+  WORLDS.mine!(S.bgc(), t, age, { ...MINE, word: 'yours.' });
   placeHoodie(S, { x: 0, y: 270, s: 0.98, walk: 1, punch: 0.06 * pulse(age, 9) });
   const p = S.hoodie.panels[0]!.state;
   p.art = S.artMine;

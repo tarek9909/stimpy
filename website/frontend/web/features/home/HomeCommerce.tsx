@@ -66,7 +66,6 @@ export function HomeCommerce(props: HomeCommerceProps) {
                       fit="cover"
                       className="!bg-transparent"
                       sizes="(min-width: 1024px) 480px, (min-width: 768px) 400px, 90vw"
-                      priority
                     />
                   </div>
                   <div className="store-drop-art-inspect">

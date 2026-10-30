@@ -2,14 +2,14 @@
 // the person turns around, and it ends on the launch date.
 //
 //  0.0–0.5    black
-//  0.5–1.25   close on the back of a black hoodie wearing FLAME. A hand reaches in for the coral pull
+//  0.5–1.25   close on the back of a black hoodie wearing SABOTAGE. A hand reaches in for the coral pull
 //  1.35–2.55  it unzips the Stimpie all the way round (one click per tooth)
 //  2.6–3.15   peels it off and throws it out of frame
-//  2.95–3.45  a second hand brings in WAVE; it lands with a squash
+//  2.95–3.45  a second hand brings in ZERO DUCKS; it lands with a squash
 //  3.55–4.75  zips it on, all the way round
-//  5.0        SNAP: the drop. The world bursts from coral to sky out of the panel
+//  5.0        SNAP: the drop. The world bursts from butter yellow to warm tan out of the panel
 //  5.0–6.25   the camera pulls back to the whole figure while the back keeps changing on the beat
-//             (night → bloom → sun → tag), each change re-colouring the world. "One hoodie." /
+//             (receipt → bubblegum → vhs → unhinged), each change re-colouring the world. "One hoodie." /
 //             "Multiple identities."
 //  8.0–9.0    the person turns around to face you (coral hood lining, the split S on the chest)
 //  9.5        signature zip wipe → the launch date on coral
@@ -45,9 +45,9 @@ const T = {
 };
 const CARD_AT = T.wipe + SIG_WIPE * 0.7;
 
-const FIRST = 'flame', SECOND = 'wave';
+const FIRST = 'sabotage', SECOND = 'ducks';
 /** The back keeps changing on the beat once the second Stimpie is on. */
-const SWAPS = [{ t: b(12), id: 'night' }, { t: b(13), id: 'bloom' }, { t: b(14), id: 'sun' }, { t: b(15), id: 'tag' }];
+const SWAPS = [{ t: b(12), id: 'receipt' }, { t: b(13), id: 'bubblegum' }, { t: b(14), id: 'vhs' }, { t: b(15), id: 'unhinged' }];
 const SWAP_DUR = 0.34;
 /** World colour changes: they burst out of the panel. */
 const WORLDS = [{ t: T.snap, col: byId(SECOND).world }, ...SWAPS.map((s) => ({ t: s.t, col: byId(s.id).world }))];
@@ -67,7 +67,7 @@ function cam(t: number) {
 // ---------------------------------------------------------------- the panels
 interface PanelState { opts: PanelOpts; id: string }
 
-/** The panel that stays on the hoodie (FLAME until it is peeled off, then WAVE). */
+/** The panel that stays on the hoodie (SABOTAGE until it is peeled off, then ZERO DUCKS). */
 function onPanel(t: number): PanelState | null {
   if (t < T.peel0) {
     const zip = t < T.unzip0 ? 1 : 1 - ease.inOutQuad(seg(t, T.unzip0, T.unzip1));
@@ -97,7 +97,7 @@ function onPanel(t: number): PanelState | null {
   return { id: cur, opts: o };
 }
 
-/** FLAME, peeled off and thrown out of frame. */
+/** SABOTAGE, peeled off and thrown out of frame. */
 function offPanel(t: number): PanelOpts | null {
   if (t < T.peel0 || t > T.peel1 + 0.3) return null;
   const lift = ease.outCubic(seg(t, T.peel0, T.peel0 + 0.22));

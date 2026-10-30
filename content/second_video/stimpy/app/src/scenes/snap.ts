@@ -4,9 +4,12 @@
 import type { Stage } from '../engine/stage';
 import { W, H, DIST, SAFE } from '../engine/gl';
 import { seg, ease, pulse, wobble, clamp, lerp } from '../engine/util';
-import { EV, BONE, BLUE, studio, placeHoodie, landed, mono, display, peelOff, beatOf } from './common';
+import { EV, BONE, BLUE, studio, placeHoodie, landed, mono, display, peelOff, beatOf, focusWorld } from './common';
+import { IDX } from '../art/designs';
+import { ORDER } from './identities';
 
 const HY = 250, HS = 1.0;
+const NEON = IDX('neon'); // was 'orbit'
 
 export function snap(S: Stage, t: number) {
   const age = t - EV.snap;
@@ -34,8 +37,11 @@ export function snap(S: Stage, t: number) {
 
   const shake = hit ? wobble(age, 11, 7) : 0;
   const push = ease.inOutCubic(seg(t, 19.5, 22));
+  const hero = S.designs[NEON]!;
   placeHoodie(S, { x: 0, y: HY, s: HS, punch: hit ? 0.05 * pulse(age, 9) : 0, walk: hit ? seg(t, 18.6, 19.4) : 0 });
-  S.cam({ dist: DIST * (1 - 0.14 * push), ty: -60 * push, roll: shake * 0.012, tx: shake * 6 });
+  // the slow push drifts toward the Stimpie's hero detail
+  const [fx, fy] = focusWorld(S, hero);
+  S.cam({ dist: DIST * (1 - 0.14 * push), ty: lerp(0, fy * 0.35, push), roll: shake * 0.012, tx: shake * 6 + fx * 0.35 * push });
   S.light.uRim.value.setRGB(0.12, 0.16, 0.5);
 
   // the dock arms: a light chases round it, faster toward the drop, pulsing in 16ths
@@ -48,7 +54,7 @@ export function snap(S: Stage, t: number) {
 
   // the Stimpie's flight: tumble in from the top, hover, slam
   const p = h.panels[0]!.state;
-  p.art = S.art[2]!;
+  p.art = S.art[NEON]!;
   if (!hit) {
     const fly = ease.outCubic(seg(t, 16.0, 17.5));
     const hover = Math.sin((t - 17.5) * 9) * 6 * seg(t, 17.5, 17.6);
@@ -69,10 +75,10 @@ export function snap(S: Stage, t: number) {
   if (t > 21.65) {
     const q = h.panels[1]!.state;
     Object.assign(q, { ...p });
-    q.art = S.art[2]!;
+    q.art = S.art[NEON]!;
     q.z = 1.2;
     peelOff(q, seg(t, 21.65, 22.0));
-    p.art = S.art[0]!;
+    p.art = S.art[ORDER[0]!]!;
     p.ripAge = -1; p.ripAmp = 0; p.scale = 1; p.flash = 0; p.zipGlow = 0;
   }
 
@@ -86,7 +92,7 @@ export function snap(S: Stage, t: number) {
     mono(f, z < 1 ? `ZIPPING ON — ${String(Math.floor(z * 100)).padStart(3, '0')}%` : 'ZIPPED ON.', SAFE.left, SAFE.top + 20, { size: 20, weight: 700, color: '#7C89FF' });
     f.fillStyle = 'rgba(237,232,222,0.25)'; f.fillRect(SAFE.left, SAFE.top + 36, 320, 6);
     f.fillStyle = '#5A6BFF'; f.fillRect(SAFE.left, SAFE.top + 36, 320 * ease.inOutCubic(z), 6);
-    mono(f, S.designs[2]!.name, SAFE.right, SAFE.top + 20, { size: 20, align: 'right', alpha: seg(age, 0.3, 0.5) });
+    mono(f, `Nº${hero.no} — ${hero.name}`, SAFE.right, SAFE.top + 20, { size: 20, align: 'right', alpha: seg(age, 0.3, 0.5) });
     display(f, 'ONE HOODIE.', W / 2, SAFE.bottom - 10, { size: 70, alpha: seg(age, 1.0, 1.3) });
   }
   S.post.flash = hit ? 0.75 * pulse(age, 10) : 0;

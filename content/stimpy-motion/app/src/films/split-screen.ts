@@ -7,7 +7,7 @@
 //  9.8–11.7  on the drop the panels slam into one and freeze on the plain hoodie: "Same hoodie."
 //  11.7–13.8 one final zip, a new Stimpie: "Different you."
 //  13.8–15   it unzips back to the plain hoodie it started with; the last frame leads into the first
-import { C, ink, mix } from '../engine/brand';
+import { C, ink, mix, isDark } from '../engine/brand';
 import { drawIcon, LOGO } from '../engine/logo';
 import { drawHoodie, type Art } from '../engine/hoodie';
 import type { Ctx } from '../engine/draw';
@@ -23,8 +23,8 @@ const PLAIN_BG = C.cream;
 
 interface Swap { t: number; dur: number; design: string | null }
 // quarter-note swaps, then 8ths
-const SEQ1 = ['flame', 'wave', 'bloom', 'static', 'night', 'sun', 'tag', 'orbit'];
-const SEQ2 = ['halftone', 'checker', 'eye', 'pixel', 'flame', 'bloom'];
+const SEQ1 = ['sabotage', 'ducks', 'bubblegum', 'sameday', 'receipt', 'vhs', 'unhinged', 'neon'];
+const SEQ2 = ['chameleon', 'tiger', 'bside', 'vhs', 'sabotage', 'bubblegum'];
 const T = { first: b(6), eighths: b(14), split: b(17), drop: b(21), final: b(25), off: b(29.5), end: b(32) };
 
 const SWAPS: Swap[] = [
@@ -33,10 +33,10 @@ const SWAPS: Swap[] = [
 ];
 // the four panels (16ths, each offset); the drop resets everything to plain
 const QUAD_SEQ = [
-  ['sun', 'orbit', 'tag', 'wave', 'flame', 'pixel', 'night', 'static'],
-  ['bloom', 'halftone', 'eye', 'checker', 'sun', 'wave', 'orbit', 'tag'],
-  ['night', 'static', 'flame', 'bloom', 'pixel', 'eye', 'halftone', 'sun'],
-  ['checker', 'pixel', 'wave', 'night', 'static', 'tag', 'bloom', 'orbit'],
+  ['vhs', 'neon', 'unhinged', 'ducks', 'sabotage', 'bside', 'receipt', 'sameday'],
+  ['bubblegum', 'chameleon', 'bside', 'tiger', 'vhs', 'ducks', 'neon', 'unhinged'],
+  ['receipt', 'sameday', 'sabotage', 'bubblegum', 'tiger', 'bside', 'chameleon', 'vhs'],
+  ['tiger', 'unhinged', 'ducks', 'receipt', 'sameday', 'chameleon', 'bubblegum', 'neon'],
 ];
 const quadSwaps = (q: number): Swap[] => QUAD_SEQ[q]!.map((d, i) => ({ t: T.split + b(i * 0.5 + (q % 2) * 0.25) - b(0), dur: 0.14, design: d }));
 const FINAL: Swap[] = [{ t: T.drop, dur: 0, design: null }, { t: T.final, dur: 0.42, design: 'signature' }, { t: T.off, dur: 0.42, design: null }];
@@ -82,7 +82,7 @@ function figure(c: Ctx, t: number, L: Look, live: boolean, beatAge: number) {
 function beats(t: number) { return t < 0 ? 99 : (t % K.beat); }
 
 function wordmark(c: Ctx, bg: string) {
-  drawIcon(c, W / 2, SAFE.top - 40, 72, bg === C.coral ? LOGO.main : bg === C.black || bg === C.blue ? LOGO.onBlack : LOGO.onWhite);
+  drawIcon(c, W / 2, SAFE.top - 40, 72, bg === C.coral ? LOGO.main : isDark(bg) ? LOGO.onBlack : LOGO.onWhite);
 }
 
 export function makeSplitScreen(): Film {

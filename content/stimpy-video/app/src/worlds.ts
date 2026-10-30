@@ -107,14 +107,30 @@ export function worldDark(c: Ctx, t: number, door: number, travel: number, flick
   c.restore();
 }
 
-// ---------------------------------------------------------------- 001 THE VOID: bone void, black eclipse
+// ---------------------------------------------------------------- THE VOID (stimpie NEON): night void, white-hot eclipse aura, crimson ring
+
+const NEON = { bg: '#0B0B12', white: '#E8F4FF', red: '#D6264A' };
 
 export function worldVoid(c: Ctx, t: number, lt: number) {
-  c.fillStyle = BONE;
+  c.fillStyle = NEON.bg;
   c.fillRect(0, 0, W, H);
   const cx = 540, cy = 560, R = 300 + lt * 6;
   c.save();
-  c.strokeStyle = BLACK;
+  // crimson haze low, white bloom behind the eclipse
+  c.globalCompositeOperation = 'lighter';
+  const hz = c.createRadialGradient(540, 1500, 0, 540, 1500, 900);
+  hz.addColorStop(0, 'rgba(214,38,74,0.28)');
+  hz.addColorStop(1, 'rgba(214,38,74,0)');
+  c.fillStyle = hz;
+  c.fillRect(0, 0, W, H);
+  const bl = c.createRadialGradient(cx, cy, R * 0.8, cx, cy, R * 2.4);
+  bl.addColorStop(0, 'rgba(232,244,255,0.35)');
+  bl.addColorStop(1, 'rgba(232,244,255,0)');
+  c.fillStyle = bl;
+  c.fillRect(0, 0, W, H);
+  c.globalCompositeOperation = 'source-over';
+  c.strokeStyle = NEON.white;
+  c.globalAlpha = 0.45;
   c.lineWidth = 1.3;
   c.setLineDash([3, 9]);
   for (const rr of [R + 90, R + 150, R + 230, R + 330]) {
@@ -123,41 +139,50 @@ export function worldVoid(c: Ctx, t: number, lt: number) {
     c.stroke();
   }
   c.setLineDash([]);
+  c.globalAlpha = 1;
+  // the corona: white strands, glowing
+  c.shadowColor = NEON.white;
+  c.shadowBlur = 18;
   const spin = t * 0.05;
   for (let i = 0; i < 360; i++) {
     const a = (i / 360) * TAU + spin;
     const len = 20 + 170 * Math.abs(noise1(i * 0.17 + t * 0.4, 3)) + (i % 6 === 0 ? 60 : 0);
     c.lineWidth = i % 6 === 0 ? 2 : 1;
+    c.globalAlpha = i % 6 === 0 ? 0.95 : 0.6;
     c.beginPath();
     c.moveTo(cx + Math.cos(a) * (R + 6), cy + Math.sin(a) * (R + 6));
     c.lineTo(cx + Math.cos(a) * (R + 6 + len), cy + Math.sin(a) * (R + 6 + len));
     c.stroke();
   }
-  c.fillStyle = BLACK;
+  c.globalAlpha = 1;
+  c.shadowBlur = 50;
+  c.fillStyle = NEON.bg;
   c.beginPath();
   c.arc(cx, cy, R, 0, TAU);
   c.fill();
-  // the diamond ring, in acid red
+  // the diamond ring, crimson
   const a = -0.75 + t * 0.05;
-  c.shadowColor = RED;
+  c.shadowColor = NEON.red;
   c.shadowBlur = 60;
-  c.fillStyle = RED;
+  c.fillStyle = NEON.red;
   c.beginPath();
   c.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, 16, 0, TAU);
   c.fill();
-  c.strokeStyle = RED;
+  c.strokeStyle = NEON.red;
   c.lineWidth = 5;
   c.beginPath();
   c.arc(cx, cy, R, a - 0.45, a + 0.45);
   c.stroke();
   c.shadowBlur = 0;
-  // horizon + engraved ground
-  c.strokeStyle = BLACK;
+  // horizon + engraved ground, faint white
+  c.strokeStyle = NEON.white;
+  c.globalAlpha = 0.6;
   c.lineWidth = 3;
   c.beginPath();
   c.moveTo(0, 1500);
   c.lineTo(W, 1500);
   c.stroke();
+  c.globalAlpha = 0.28;
   c.lineWidth = 1.4;
   let y = 1515, gap = 30;
   const scroll = (lt * 40) % 30;
@@ -169,18 +194,20 @@ export function worldVoid(c: Ctx, t: number, lt: number) {
     gap = Math.max(8, gap * 0.88);
     y += gap;
   }
-  // black ash rising
-  c.fillStyle = BLACK;
+  // white-hot sparks rising, a few crimson
   for (let i = 0; i < 90; i++) {
     const x = hash(i) * W + noise1(t * 0.3 + i, 2) * 40;
     const yy = (hash(i + 300) * 1600 - t * (20 + hash(i + 7) * 50) + 1600 * 10) % 1600;
+    c.fillStyle = hash(i + 5) < 0.2 ? NEON.red : NEON.white;
     c.globalAlpha = 0.25 + hash(i + 1) * 0.6;
     c.fillRect(x, yy, 2 + hash(i + 2) * 3, 2 + hash(i + 2) * 3);
   }
   c.restore();
 }
 
-// ---------------------------------------------------------------- 002 AFTER DARK: neon rain city
+// ---------------------------------------------------------------- AFTER DARK (stimpie VHS): blue night city, striped VHS sunset
+
+const VHS = { sky0: '#081236', sky1: '#2F5FD0', yellow: '#FFD23F', orange: '#F26A4B', far: '#142b6e', near: '#0a163f', street: '#071030' };
 
 function skylineLayer(c: Ctx, seed: number, base: number, scale: number, drift: number, t: number, col: string, winA: number) {
   let x = -((drift % 1400) + 1400) % 1400 - 200;
@@ -198,7 +225,7 @@ function skylineLayer(c: Ctx, seed: number, base: number, scale: number, drift: 
           const hh = hash2(Math.floor(wx * 7 + wy * 13), seed + id);
           if (hh < 0.28) {
             const on = noise1(t * 0.5 + hh * 90, id) > -0.6;
-            c.fillStyle = hh < 0.05 ? RED : BONE;
+            c.fillStyle = hh < 0.05 ? VHS.orange : VHS.yellow;
             c.globalAlpha = winA * (on ? 0.8 : 0.1);
             c.fillRect(wx, wy, 9 * scale, 12 * scale);
           }
@@ -210,8 +237,8 @@ function skylineLayer(c: Ctx, seed: number, base: number, scale: number, drift: 
       // neon sign
       const fl = noise1(t * 6 + id, 4) > -0.7 ? 1 : 0.2;
       c.save();
-      c.strokeStyle = RED;
-      c.shadowColor = RED;
+      c.strokeStyle = VHS.orange;
+      c.shadowColor = VHS.orange;
       c.shadowBlur = 40;
       c.globalAlpha = fl;
       c.lineWidth = 5;
@@ -225,8 +252,8 @@ function skylineLayer(c: Ctx, seed: number, base: number, scale: number, drift: 
 
 export function worldAfterDark(c: Ctx, t: number, lt: number) {
   const g = c.createLinearGradient(0, 0, 0, 1450);
-  g.addColorStop(0, '#040406');
-  g.addColorStop(1, '#1a0706');
+  g.addColorStop(0, VHS.sky0);
+  g.addColorStop(1, VHS.sky1);
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
   // striped red sun
@@ -235,39 +262,40 @@ export function worldAfterDark(c: Ctx, t: number, lt: number) {
   c.arc(540, 760, 400, 0, TAU);
   c.clip();
   const sgr = c.createLinearGradient(0, 360, 0, 1160);
-  sgr.addColorStop(0, RED);
-  sgr.addColorStop(1, '#6e0c06');
+  sgr.addColorStop(0, VHS.yellow);
+  sgr.addColorStop(0.55, VHS.orange);
+  sgr.addColorStop(1, '#b8452f');
   c.fillStyle = sgr;
   c.fillRect(0, 0, W, H);
-  c.fillStyle = '#060607';
+  c.fillStyle = '#2a50b8';
   for (let i = 0; i < 10; i++) {
     const y = 760 + i * 34 + i * i * 2 - ((lt * 30) % 34);
     c.fillRect(0, y, W, 4 + i * 3);
   }
   c.restore();
-  skylineLayer(c, 11, 1300, 0.7, lt * 18, t, '#0c0a0b', 0.35);
-  skylineLayer(c, 23, 1460, 1.0, lt * 45, t, '#060606', 0.8);
+  skylineLayer(c, 11, 1300, 0.7, lt * 18, t, VHS.far, 0.35);
+  skylineLayer(c, 23, 1460, 1.0, lt * 45, t, VHS.near, 0.8);
   // wet street
-  c.fillStyle = '#050505';
+  c.fillStyle = VHS.street;
   c.fillRect(0, 1460, W, H - 1460);
   c.save();
   c.globalCompositeOperation = 'lighter';
   for (let i = 0; i < 70; i++) {
     const x = ((hash(i) * W - lt * 45 * 1.0) % W + W) % W;
     const red = hash(i + 4) < 0.35;
-    c.fillStyle = red ? 'rgba(255,42,26,0.35)' : 'rgba(236,230,218,0.18)';
+    c.fillStyle = red ? 'rgba(242,106,75,0.4)' : 'rgba(255,210,63,0.22)';
     const len = 40 + hash(i + 8) * 260;
     c.fillRect(x, 1470 + hash(i + 2) * 80, 3 + hash(i + 3) * 5, len);
   }
   const rg = c.createLinearGradient(0, 1460, 0, H);
-  rg.addColorStop(0, 'rgba(255,42,26,0.25)');
-  rg.addColorStop(1, 'rgba(255,42,26,0)');
+  rg.addColorStop(0, 'rgba(242,106,75,0.3)');
+  rg.addColorStop(1, 'rgba(242,106,75,0)');
   c.fillStyle = rg;
   c.fillRect(0, 1460, W, H - 1460);
   c.restore();
   // rain
   c.save();
-  c.strokeStyle = BONE;
+  c.strokeStyle = '#cfe0ff';
   c.lineWidth = 1.5;
   for (let i = 0; i < 380; i++) {
     const sp = 1800 + hash(i + 11) * 1400;
@@ -282,7 +310,7 @@ export function worldAfterDark(c: Ctx, t: number, lt: number) {
   c.restore();
 }
 
-// ---------------------------------------------------------------- 003 THE CEDAR: faded Beirut memory
+// ---------------------------------------------------------------- THE CEDAR (stimpie IREZUMI): tiger-orange dusk, ink-black cedar
 
 function cedarSil(c: Ctx, cx: number, top: number, bottom: number, width: number, t: number) {
   const tiers = 5;
@@ -304,8 +332,8 @@ function cedarSil(c: Ctx, cx: number, top: number, bottom: number, width: number
 
 export function worldCedar(c: Ctx, t: number, lt: number) {
   const g = c.createLinearGradient(0, 0, 0, 1180);
-  g.addColorStop(0, '#efe4cf');
-  g.addColorStop(1, '#e2b98d');
+  g.addColorStop(0, '#F2B35A');
+  g.addColorStop(1, '#E8792B');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
   const hz = 1180;
@@ -314,13 +342,13 @@ export function worldCedar(c: Ctx, t: number, lt: number) {
   c.beginPath();
   c.rect(0, 0, W, hz);
   c.clip();
-  c.fillStyle = 'rgba(255,42,26,0.9)';
+  c.fillStyle = '#D8452B';
   c.beginPath();
   c.arc(840, 330 + lt * 6, 130, 0, TAU);
   c.fill();
   c.restore();
   // birds
-  c.strokeStyle = '#2a1a12';
+  c.strokeStyle = '#2a1208';
   c.lineWidth = 3;
   for (let i = 0; i < 7; i++) {
     const bx = ((hash(i) * W + lt * (60 + hash(i + 1) * 40)) % (W + 200)) - 100;
@@ -335,8 +363,8 @@ export function worldCedar(c: Ctx, t: number, lt: number) {
   }
   // sea
   const sg = c.createLinearGradient(0, hz, 0, H);
-  sg.addColorStop(0, '#a4735a');
-  sg.addColorStop(1, '#4a2e22');
+  sg.addColorStop(0, '#b4501f');
+  sg.addColorStop(1, '#3d160a');
   c.fillStyle = sg;
   c.fillRect(0, hz, W, H - hz);
   c.save();
@@ -344,7 +372,7 @@ export function worldCedar(c: Ctx, t: number, lt: number) {
   for (let j = 0; j < 40; j++) {
     const y = hz + 6 + j * j * 0.55;
     const w = 40 + (40 - j) * 5;
-    c.fillStyle = `rgba(255,120,80,${0.3 * (1 - j / 40)})`;
+    c.fillStyle = `rgba(242,179,90,${0.35 * (1 - j / 40)})`;
     const off = Math.sin(t * 2 + j) * 20;
     c.fillRect(840 - w / 2 + off, y, w, 2 + j * 0.12);
   }
@@ -361,7 +389,7 @@ export function worldCedar(c: Ctx, t: number, lt: number) {
     c.stroke();
   }
   // Raouche: the pigeon rocks
-  c.fillStyle = '#23150f';
+  c.fillStyle = '#2a1208';
   c.beginPath();
   c.moveTo(700, hz + 10);
   c.lineTo(730, 930);
@@ -380,24 +408,26 @@ export function worldCedar(c: Ctx, t: number, lt: number) {
   c.closePath();
   c.fill();
   // the cedar, big, on the left
-  c.fillStyle = '#1c110c';
+  c.fillStyle = '#1a0b05';
   cedarSil(c, 70, 820, 1200, 330, t);
   // light leaks
   c.save();
   c.globalCompositeOperation = 'lighter';
   const lk = 0.5 + 0.5 * noise1(t * 1.3, 8);
   const lg = c.createRadialGradient(W, 200, 0, W, 200, 800);
-  lg.addColorStop(0, `rgba(255,90,40,${0.35 * lk})`);
-  lg.addColorStop(1, 'rgba(255,90,40,0)');
+  lg.addColorStop(0, `rgba(216,69,43,${0.35 * lk})`);
+  lg.addColorStop(1, 'rgba(216,69,43,0)');
   c.fillStyle = lg;
   c.fillRect(0, 0, W, H);
   c.restore();
 }
 
-// ---------------------------------------------------------------- 004 THE DREAMER: red sky, floating stairs
+// ---------------------------------------------------------------- THE DREAMER (stimpie SAME DAY): coral-to-blue sky, floating stairs
+
+const SD = { coral: '#F26A4B', blue: '#4FB6F0', cream: '#F6EEDD', ink: '#111111' };
 
 function stair(c: Ctx, x: number, y: number, s: number) {
-  c.fillStyle = BONE;
+  c.fillStyle = SD.cream;
   c.beginPath();
   c.moveTo(x, y);
   c.lineTo(x + 140 * s, y);
@@ -405,7 +435,7 @@ function stair(c: Ctx, x: number, y: number, s: number) {
   c.lineTo(x + 60 * s, y - 44 * s);
   c.closePath();
   c.fill();
-  c.fillStyle = BLACK;
+  c.fillStyle = SD.ink;
   c.fillRect(x, y, 140 * s, 70 * s);
   c.beginPath();
   c.moveTo(x + 140 * s, y);
@@ -428,16 +458,17 @@ function cloudShape(c: Ctx, x: number, y: number, s: number) {
 
 export function worldDreamer(c: Ctx, t: number, lt: number) {
   const g = c.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#ff3a22');
-  g.addColorStop(1, '#a8150b');
+  g.addColorStop(0, SD.coral);
+  g.addColorStop(0.55, '#a8455a');
+  g.addColorStop(1, '#0f2236');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
-  // upside-down crescent
-  c.fillStyle = BONE;
+  // upside-down crescent, in the blue of the second face
+  c.fillStyle = SD.blue;
   c.beginPath();
   c.arc(250, 330, 120, 0, TAU);
   c.fill();
-  c.fillStyle = '#fa3520';
+  c.fillStyle = g;
   c.beginPath();
   c.arc(290, 290, 110, 0, TAU);
   c.fill();
@@ -453,7 +484,7 @@ export function worldDreamer(c: Ctx, t: number, lt: number) {
   const dx = 760, dy = 170 + Math.sin(t) * 10;
   c.save();
   c.globalAlpha = 0.3;
-  c.fillStyle = BONE;
+  c.fillStyle = SD.cream;
   c.beginPath();
   c.moveTo(dx, dy);
   c.lineTo(dx + 110, dy);
@@ -462,14 +493,14 @@ export function worldDreamer(c: Ctx, t: number, lt: number) {
   c.closePath();
   c.fill();
   c.restore();
-  c.fillStyle = BONE;
+  c.fillStyle = SD.cream;
   c.fillRect(dx, dy, 110, 190);
-  c.strokeStyle = BLACK;
+  c.strokeStyle = SD.ink;
   c.lineWidth = 6;
   c.strokeRect(dx, dy, 110, 190);
   // clouds
-  c.fillStyle = BONE;
-  c.strokeStyle = BLACK;
+  c.fillStyle = SD.cream;
+  c.strokeStyle = SD.ink;
   c.lineWidth = 4;
   for (let i = 0; i < 5; i++) {
     const x = ((hash(i + 60) * 1400 + lt * (25 + i * 8)) % 1500) - 300;
@@ -477,8 +508,8 @@ export function worldDreamer(c: Ctx, t: number, lt: number) {
     cloudShape(c, x, y, 0.8 + hash(i + 61) * 0.6);
   }
   // falling-upward sparks
-  c.fillStyle = BONE;
   for (let i = 0; i < 70; i++) {
+    c.fillStyle = i % 2 ? SD.blue : SD.cream;
     const x = hash(i + 200) * W;
     const y = ((hash(i + 201) * H - t * (60 + hash(i) * 80)) % H + H) % H;
     c.globalAlpha = 0.3 + hash(i + 3) * 0.6;

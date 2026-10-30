@@ -81,8 +81,8 @@ export class Engine {
   }
 
   async init(timeline: SceneDef[], duration: number) {
-    await loadFonts();
-    await loadStimpies();
+    // fonts and every artwork must be decoded before any panel canvas / GL texture is built
+    await Promise.all([loadFonts(), loadStimpies()]);
     this.stage.init(this.renderer);
     this.timeline = timeline;
     this.duration = duration;

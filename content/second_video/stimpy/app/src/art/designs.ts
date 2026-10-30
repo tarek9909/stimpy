@@ -1,7 +1,10 @@
-// The Stimpies: six drop 001 prints (each with an alternate for the collection) plus the hand-drawn custom
-// one made in "Yours". Drawn once at boot in panel units (300 × 364).
+// The Stimpies: the 11 real back-panel artworks (stimpies.json, images in public/stimpies/), plus the
+// hand-drawn custom one made in "Yours". Each panel is the artwork cover-fitted toward its hero detail
+// (focus[0]) over its world colour, drawn once at boot in panel units (300 × 364). The artwork pixels are
+// never altered: only cropped, scaled and placed.
 import { makeCanvas, text, scribble, type Ctx } from '../engine/draw2d';
 import { mulberry, TAU } from '../engine/util';
+import SPEC from './stimpies.json';
 
 export const PW_ = 300, PH_ = 364;
 export const INK = '#0E0E10', BONE = '#EDE8DE', BLUE = '#2B3DFF';
@@ -11,39 +14,89 @@ export interface Design {
   no: string;
   name: string;
   word: string;     // the identity it gives you (identities scene)
-  altName?: string; // the alternate's name when it is a different print
-  pal: { bg: string; fg: string; accent: string; ink: string }; // world palette
-  draw: (c: Ctx, v: number) => void;
+  line: string;     // its one-liner
+  pal: { bg: string; fg: string; accent: string; ink: string }; // world palette (bg = world, accent = a glow that reads on it)
+  glow: string[];
+  focus: [number, number][];
+  transparent: boolean;
+  file: string;
+  img?: HTMLImageElement;
+  draw: (c: Ctx) => void;
 }
 
-// ---------------------------------------------------------------- helpers
-export function flower(c: Ctx, x: number, y: number, r: number, petals: number, col: string, center: string, rot = 0, grow = 1) {
-  if (grow <= 0) return;
+/** Draws `d`'s artwork cover-fitted into the rect (x, y, w, h), centred as far as possible on focus[k], magnified by `zoom`. */
+export function drawArt(c: Ctx, d: Design, x: number, y: number, w: number, h: number, k = 0, zoom = 1, under = true) {
+  const img = d.img!;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const s = Math.max(w / iw, h / ih) * zoom;
+  const dw = iw * s, dh = ih * s;
+  const [fx, fy] = d.focus[k] ?? d.focus[0]!;
+  const dx = Math.min(0, Math.max(w - dw, w / 2 - fx * dw));
+  const dy = Math.min(0, Math.max(h - dh, h / 2 - fy * dh));
   c.save();
-  c.translate(x, y);
-  c.rotate(rot);
-  c.scale(grow, grow);
-  c.fillStyle = col;
-  for (let i = 0; i < petals; i++) {
-    c.save();
-    c.rotate((i / petals) * TAU);
-    c.beginPath();
-    c.ellipse(0, -r * 0.55, r * 0.32, r * 0.55, 0, 0, TAU);
-    c.fill();
-    c.restore();
-  }
-  c.fillStyle = center;
-  c.beginPath();
-  c.arc(0, 0, r * 0.26, 0, TAU);
-  c.fill();
-  c.fillStyle = 'rgba(0,0,0,0.25)';
-  for (let i = 0; i < 7; i++) {
-    const a = i * 2.4, d = r * 0.12 * Math.sqrt(i / 7);
-    c.beginPath();
-    c.arc(Math.cos(a) * d, Math.sin(a) * d, r * 0.025, 0, TAU);
-    c.fill();
-  }
+  c.beginPath(); c.rect(x, y, w, h); c.clip();
+  if (under) { c.fillStyle = d.pal.bg; c.fillRect(x, y, w, h); }
+  c.drawImage(img, x + dx, y + dy, dw, dh);
   c.restore();
+}
+
+/** Where focus[k] lands on the panel, in panel units relative to the panel centre (x right, y up). */
+export function focusOnPanel(d: Design, k = 0): [number, number] {
+  const img = d.img!;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const s = Math.max(PW_ / iw, PH_ / ih);
+  const dw = iw * s, dh = ih * s;
+  const [fx, fy] = d.focus[k] ?? d.focus[0]!;
+  const dx = Math.min(0, Math.max(PW_ - dw, PW_ / 2 - fx * dw));
+  const dy = Math.min(0, Math.max(PH_ - dh, PH_ / 2 - fy * dh));
+  return [dx + fx * dw - PW_ / 2, -(dy + fy * dh - PH_ / 2)];
+}
+
+// a glow colour that stands out from the world colour
+function lum(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+}
+function pickAccent(world: string, glow: string[]) {
+  const sorted = [...glow].sort((a, b) => Math.abs(lum(b) - lum(world)) - Math.abs(lum(a) - lum(world)));
+  return sorted.find((g) => g.toLowerCase() !== world.toLowerCase()) ?? glow[0]!;
+}
+
+export const DESIGNS: Design[] = SPEC.stimpies.map((s, i) => {
+  const d: Design = {
+    id: s.id, no: String(i + 1).padStart(3, '0'), name: s.name, word: s.word, line: s.line,
+    pal: { bg: s.world, fg: s.ink, accent: pickAccent(s.world, s.glow), ink: s.ink },
+    glow: s.glow, focus: s.focus as [number, number][], transparent: s.transparent, file: s.file,
+    draw(c) { drawArt(c, d, 0, 0, PW_, PH_, 0); },
+  };
+  return d;
+});
+
+/** Index of a Stimpie by id. */
+export const IDX = (id: string) => { const i = DESIGNS.findIndex((d) => d.id === id); if (i < 0) throw new Error(`no stimpie ${id}`); return i; };
+
+/** Loads and decodes every artwork. Must finish before any design canvas or texture is built. */
+export async function loadStimpies() {
+  await Promise.all(DESIGNS.map(async (d) => {
+    const img = new Image();
+    img.src = `stimpies/${d.file}`;
+    await img.decode();
+    d.img = img;
+  }));
+}
+
+// ---------------------------------------------------------------- pattern helpers (used by the worlds)
+export function stars(c: Ctx, w: number, h: number, seed: number, n: number, col: string, tw = 0) {
+  const rnd = mulberry(seed);
+  c.fillStyle = col;
+  for (let i = 0; i < n; i++) {
+    const x = rnd() * w, y = rnd() * h, s = rnd() ** 3 * 1.8 + 0.3;
+    const a = 0.5 + 0.5 * Math.sin(tw * (2 + rnd() * 3) + i);
+    c.globalAlpha = tw ? 0.35 + 0.65 * a : 1;
+    c.beginPath(); c.arc(x, y, s, 0, TAU); c.fill();
+    if (s > 1.6) { c.fillRect(x - s * 3, y - 0.3, s * 6, 0.6); c.fillRect(x - 0.3, y - s * 3, 0.6, s * 6); }
+  }
+  c.globalAlpha = 1;
 }
 
 export function tigerStripes(c: Ctx, w: number, h: number, color: string, seed: number, spacing = 26, t = 0) {
@@ -72,128 +125,19 @@ export function tigerStripes(c: Ctx, w: number, h: number, color: string, seed: 
   }
 }
 
-export function stars(c: Ctx, w: number, h: number, seed: number, n: number, col: string, tw = 0) {
+export function barcode(c: Ctx, x: number, y: number, w: number, h: number, col: string, seed: number) {
   const rnd = mulberry(seed);
   c.fillStyle = col;
-  for (let i = 0; i < n; i++) {
-    const x = rnd() * w, y = rnd() * h, s = rnd() ** 3 * 1.8 + 0.3;
-    const a = 0.5 + 0.5 * Math.sin(tw * (2 + rnd() * 3) + i);
-    c.globalAlpha = tw ? 0.35 + 0.65 * a : 1;
-    c.beginPath(); c.arc(x, y, s, 0, TAU); c.fill();
-    if (s > 1.6) { c.fillRect(x - s * 3, y - 0.3, s * 6, 0.6); c.fillRect(x - 0.3, y - s * 3, 0.6, s * 6); }
-  }
-  c.globalAlpha = 1;
+  let p = x;
+  while (p < x + w) { const bw = rnd() < 0.3 ? 2 : 0.8; c.fillRect(p, y, bw, h); p += bw + 0.8 + rnd() * 2; }
 }
 
-export function skyline(c: Ctx, w: number, base: number, seed: number, col: string, win: string, scale = 1, lit = 0.35) {
-  const rnd = mulberry(seed);
-  let x = -10;
-  while (x < w + 10) {
-    const bw = (18 + rnd() * 34) * scale, bh = (30 + rnd() * 90) * scale;
-    c.fillStyle = col;
-    c.fillRect(x, base - bh, bw, bh + 200);
-    c.fillStyle = win;
-    for (let wy = base - bh + 6 * scale; wy < base - 4 * scale; wy += 7 * scale)
-      for (let wx = x + 4 * scale; wx < x + bw - 5 * scale; wx += 6 * scale)
-        if (rnd() < lit) c.fillRect(wx, wy, 2.4 * scale, 3 * scale);
-    x += bw + rnd() * 3;
-  }
-}
-
-export function checkerTunnel(c: Ctx, cx: number, cy: number, R: number, a: string, b: string, t = 0, rings = 16, sectors = 24) {
-  c.fillStyle = b;
-  c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.fill();
-  c.fillStyle = a;
-  for (let i = 0; i < rings; i++) {
-    const f0 = (i + (t % 2)) / rings, f1 = (i + 1 + (t % 2)) / rings;
-    const r0 = R * f0 ** 2.2, r1 = R * Math.min(1, f1) ** 2.2;
-    if (r0 >= R) continue;
-    for (let j = 0; j < sectors; j++) {
-      if ((i + j + Math.floor(t % 2 >= 1 ? 1 : 0)) % 2) continue;
-      const tw = 1.4 * (1 - f0) + t * 0.3;
-      const a0 = (j / sectors) * TAU + tw, a1 = ((j + 1) / sectors) * TAU + tw * 1.02;
-      c.beginPath();
-      c.arc(cx, cy, r1, a0, a1);
-      c.arc(cx, cy, Math.max(0.1, r0), a1, a0, true);
-      c.closePath();
-      c.fill();
-    }
-  }
-}
-
-// ---------------------------------------------------------------- the designs: the drop 001 prints
-// Each panel is a finished print (public/stimpies, exported from content/drop-001); loadStimpies() must
-// resolve before renderDesign(). v = 1 is the collection's alternate: a second print, or the same one on
-// another backing.
-const ART = {
-  scruffy: '01-scruffy-black-cat.webp',
-  sabotage: '02-sabotage.webp',
-  manga: '03-pink-haired-manga-girl.webp',
-  split: '04-split-tone-abstract.webp',
-  halfEvil: '05-half-evil-333.webp',
-  maneki: '06-maneki-neko-tiger.webp',
-  irritated: '07-irritated-cat-comic.webp',
-  neon: '08-neon-spectrum.webp',
-};
-const IMAGES = new Map<string, HTMLImageElement>();
-export function loadStimpies(): Promise<void> {
-  return Promise.all(Object.values(ART).map(async (f) => {
-    const img = new Image();
-    img.src = `stimpies/${f}`;
-    await img.decode();
-    IMAGES.set(f, img);
-  })).then(() => undefined);
-}
-
-type Side = { file: string; back: string; name?: string; cover?: boolean };
-/** Just the picture: the whole print, as large as the panel allows, on a transparent panel. */
-function print(c: Ctx, s: Side) {
-  const img = IMAGES.get(s.file);
-  if (!img) return;
-  const k = Math.min(PW_ / img.width, PH_ / img.height);
-  const w = img.width * k, h = img.height * k;
-  c.imageSmoothingQuality = 'high';
-  c.drawImage(img, (PW_ - w) / 2, (PH_ - h) / 2, w, h);
-}
-const sides = (core: Side, alt: Side) => ({ altName: alt.name, draw: (c: Ctx, v: number) => print(c, v ? alt : core) });
-
-export const DESIGNS: Design[] = [
-  {
-    id: 'static', no: '001', name: 'SABOTAGE', word: 'LOUD',
-    pal: { bg: '#E9E4DA', fg: INK, accent: '#FF3B1F', ink: INK },
-    ...sides({ file: ART.sabotage, back: INK }, { file: ART.halfEvil, back: INK, name: 'HALF EVIL' }),
-  },
-  {
-    id: 'bloom', no: '002', name: 'MANGA GIRL', word: 'soft',
-    pal: { bg: '#F2C4CC', fg: '#8E1420', accent: '#F2892B', ink: '#8E1420' },
-    ...sides({ file: ART.manga, back: '#F2C4CC' }, { file: ART.manga, back: '#1F3B2C' }),
-  },
-  {
-    id: 'orbit', no: '003', name: 'SPLIT TONE', word: 'SPACED OUT',
-    pal: { bg: BLUE, fg: BONE, accent: '#FF6A2B', ink: BONE },
-    ...sides({ file: ART.split, back: BLUE }, { file: ART.split, back: BONE }),
-  },
-  {
-    id: 'night', no: '004', name: 'NEON SPECTRUM', word: 'OUT LATE',
-    pal: { bg: '#0A1030', fg: '#F4E7C5', accent: '#FFD66B', ink: '#F4E7C5' },
-    ...sides({ file: ART.neon, back: '#0A1030', cover: true }, { file: ART.neon, back: '#0A1030' }),
-  },
-  {
-    id: 'heat', no: '005', name: 'MANEKI TIGER', word: 'ON FIRE',
-    pal: { bg: '#FF3B1F', fg: '#121010', accent: '#FFD23F', ink: '#121010' },
-    ...sides({ file: ART.maneki, back: '#121010' }, { file: ART.maneki, back: BONE }),
-  },
-  {
-    id: 'acid', no: '006', name: 'IRRITATED CAT', word: 'UNHINGED',
-    pal: { bg: '#D4FF3A', fg: '#0B0B0B', accent: '#FF4FA3', ink: '#0B0B0B' },
-    ...sides({ file: ART.irritated, back: '#D4FF3A' }, { file: ART.scruffy, back: '#0B0B0B', name: 'SCRUFFY CAT' }),
-  },
-];
-
+// ---------------------------------------------------------------- the blank, personal slot
 /** The custom Stimpie drawn in "Yours": marker on notebook paper. */
 export const MINE: Design = {
-  id: 'mine', no: '∞', name: 'YOURS', word: 'yours',
+  id: 'mine', no: '∞', name: 'YOURS', word: 'yours', line: 'Made by you.',
   pal: { bg: '#F4EFE4', fg: '#1A1A1A', accent: '#E23B2E', ink: '#1A1A1A' },
+  glow: ['#E23B2E', '#FFC928'], focus: [[0.5, 0.5]], transparent: false, file: '',
   draw(c) {
     c.fillStyle = '#F6F1E6'; c.fillRect(0, 0, PW_, PH_);
     c.strokeStyle = 'rgba(43,61,255,0.18)'; c.lineWidth = 0.7;
@@ -266,17 +210,23 @@ export function drawDoodle(c: Ctx, p: number) {
   for (let i = 0; i < n; i++) steps[i]!();
 }
 
-export function renderDesign(d: Design, v = 0, scale = 3) {
+export function renderDesign(d: Design, scale = 3) {
   const { cv, c } = makeCanvas(PW_, PH_, scale);
-  d.draw(c, v);
+  d.draw(c);
   return cv;
 }
 
-/** A collectible card face: just the panel's picture, no frame or number. 240 × 336 units. */
-export function renderCard(art: HTMLCanvasElement, scale = 3) {
+/** A collectible card face: the panel art framed in its world colour with its number, name and word. 240 × 336 units. */
+export function renderCard(d: Design, art: HTMLCanvasElement, scale = 3) {
   const { cv, c } = makeCanvas(240, 336, scale);
-  const k = Math.min(240 / PW_, 336 / PH_), w = PW_ * k, h = PH_ * k;
-  c.drawImage(art, (240 - w) / 2, (336 - h) / 2, w, h);
+  const frame = d.pal.bg, ink = d.pal.ink;
+  c.fillStyle = frame; c.fillRect(0, 0, 240, 336);
+  c.drawImage(art, 12, 12, 216, 262);
+  text(c, `Nº ${d.no}`, 14, 300, { size: 10, family: 'Plex', weight: 700, color: ink, track: 0.08 });
+  const size = Math.min(15, 15 * 9 / Math.max(9, d.name.length));
+  text(c, d.name, 14, 320, { size, family: 'ArchivoX', weight: 900, color: ink, track: -0.01 });
+  text(c, 'DROP 01', 226, 300, { size: 8, family: 'Plex', weight: 500, color: ink, align: 'right', track: 0.14 });
+  text(c, d.word, 226, 320, { size: 8, family: 'Plex', weight: 700, color: d.pal.accent, align: 'right', track: 0.14 });
   return cv;
 }
 
@@ -301,6 +251,7 @@ export function renderCardBlank(scale = 3) {
   c.beginPath(); c.moveTo(120, 118); c.lineTo(120, 174); c.moveTo(92, 146); c.lineTo(148, 146); c.stroke();
   text(c, 'YOUR DESIGN', 120, 214, { size: 14, family: 'ArchivoX', weight: 900, color: BLUE, align: 'center' });
   text(c, 'HERE', 120, 234, { size: 14, family: 'ArchivoX', weight: 900, color: BLUE, align: 'center' });
+  text(c, 'Nº ∞', 14, 300, { size: 10, family: 'Plex', weight: 700, color: INK, track: 0.08 });
   text(c, 'YOURS', 14, 320, { size: 15, family: 'ArchivoX', weight: 900, color: INK });
   text(c, 'CUSTOM', 226, 320, { size: 8, family: 'Plex', weight: 500, color: BLUE, align: 'right', track: 0.14 });
   return cv;

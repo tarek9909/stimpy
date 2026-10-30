@@ -58,7 +58,7 @@ async function boot() {
       document.fonts.add(f);
     }),
   );
-  await loadStimpies();
+  await loadStimpies(); // every artwork decoded before any card canvas / texture is built
   CARDS.forEach((c) => cardCanvas(c.n));
   if (params.has('avatar')) {
     // 3D avatar is opt-in: ?avatar
@@ -70,6 +70,7 @@ async function boot() {
   (window as any).__stimpy = {
     ready: true,
     duration: DURATION,
+    cards: CARDS.length,
     frame(t: number, fps = 30, samples = 1, shutter = 0.5, quality = 0.95) {
       const cv = renderBlurred(t, fps, samples, shutter);
       return cv.toDataURL('image/jpeg', quality);
@@ -85,7 +86,8 @@ async function boot() {
       const cols = 6, cw = 400, ch = 625, g = 30;
       const lb = document.createElement('canvas');
       lb.width = cols * (cw + g) + g;
-      lb.height = 3 * (ch + g) + g + 120;
+      const rows = Math.ceil(CARDS.length / cols);
+      lb.height = rows * (ch + g) + g + 120;
       const s = lb.getContext('2d')!;
       s.fillStyle = '#050505';
       s.fillRect(0, 0, lb.width, lb.height);

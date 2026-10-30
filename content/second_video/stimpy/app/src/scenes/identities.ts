@@ -2,24 +2,25 @@
 // the whole world changes with it. The swaps accelerate from every two bars to every half-beat.
 import type { Stage } from '../engine/stage';
 import { DIST, SAFE } from '../engine/gl';
-import { lastEvent, pulse, clamp, ease } from '../engine/util';
+import { lastEvent, pulse, clamp, ease, seg } from '../engine/util';
 import { WORLDS } from '../art/worlds';
-import { EV, placeHoodie, landed, peelOff, mono } from './common';
+import { EV, placeHoodie, landed, peelOff, mono, focusWorld } from './common';
 import * as THREE from 'three';
+import { IDX, type Design } from '../art/designs';
 
-/** Design index per swap: static, bloom, night, heat, acid, orbit — twice. */
-export const ORDER = [0, 1, 3, 4, 5, 2, 0, 1, 3, 4, 5, 2];
-
-const LIGHT: Record<string, { key: string; rim: string; amb: string }> = {
-  static: { key: '#FFF6EC', rim: '#FF3B1F', amb: '#4A4744' },
-  bloom: { key: '#FFE9EC', rim: '#FF8FA6', amb: '#5A3F46' },
-  night: { key: '#9FB0FF', rim: '#FFD66B', amb: '#1C2250' },
-  heat: { key: '#FFD2A0', rim: '#FFD23F', amb: '#5A2A18' },
-  acid: { key: '#F4FFD0', rim: '#D4FF3A', amb: '#2E3514' },
-  orbit: { key: '#E8ECFF', rim: '#FF6A2B', amb: '#1E2A8A' },
-};
+/** Stimpie per swap: the six heroes (sameday, bubblegum, receipt, sabotage, unhinged, neon — in the slots
+ * static, bloom, night, heat, acid, orbit held), then the other five, and SAME DAY again to close the run. */
+export const ORDER = ['sameday', 'bubblegum', 'receipt', 'sabotage', 'unhinged', 'neon', 'tiger', 'ducks', 'bside', 'vhs', 'chameleon', 'sameday'].map(IDX);
 
 const tmp = new THREE.Color();
+const white = new THREE.Color(1, 1, 1);
+
+/** Scene light from the Stimpie's colours: key tinted by its soft glow, rim in its loud glow, ambient from its world. */
+function lightFor(S: Stage, d: Design) {
+  S.light.uKey.value.copy(white).lerp(tmp.set(d.glow[1] ?? d.glow[0]!), 0.22).multiplyScalar(1.1);
+  S.light.uRim.value.copy(tmp.set(d.glow[0]!)).multiplyScalar(0.35);
+  S.light.uAmb.value.copy(tmp.set(d.pal.bg)).multiplyScalar(0.45).add(new THREE.Color(0.12, 0.12, 0.13));
+}
 
 export function identities(S: Stage, t: number) {
   const swaps = EV.swaps;
@@ -30,14 +31,11 @@ export function identities(S: Stage, t: number) {
   const next = swaps[k + 1] ?? 40;
   const interval = next - t0;
 
-  WORLDS[d.id]!(S.bgc(), t, age, d.word);
+  WORLDS[d.id]!(S.bgc(), t, age, d);
 
   const fast = t >= 34;
   placeHoodie(S, { x: 0, y: 270, s: fast ? 1.02 : 0.98, walk: 1, punch: 0.05 * pulse(age, 12) });
-  const lt = LIGHT[d.id]!;
-  S.light.uKey.value.copy(tmp.set(lt.key)).multiplyScalar(1.1);
-  S.light.uRim.value.copy(tmp.set(lt.rim)).multiplyScalar(0.35);
-  S.light.uAmb.value.copy(tmp.set(lt.amb)).multiplyScalar(0.9);
+  lightFor(S, d);
 
   const cur = S.hoodie.panels[0]!.state;
   cur.art = S.art[ORDER[k]!]!;
@@ -71,7 +69,9 @@ export function identities(S: Stage, t: number) {
   S.post.flashColor.set(d.pal.accent);
   S.post.ca = 0.6 + (fast ? 2.5 : 1.2) * pulse(age, 10);
   S.post.vignette = 0.3;
-  // tiny camera kick per swap
-  S.cam({ roll: (k % 2 ? 1 : -1) * 0.012 * pulse(age, 6), dist: DIST * (1 - 0.03 * pulse(age, 7)) });
+  // tiny camera kick per swap; on the long holds the camera creeps in on the Stimpie's hero detail
+  const creep = interval >= 1.9 ? 0.3 * ease.inOutCubic(seg(age, 0.5, interval)) : 0;
+  const [fx, fy] = focusWorld(S, d);
+  S.cam({ tx: fx * creep, ty: fy * creep, roll: (k % 2 ? 1 : -1) * 0.012 * pulse(age, 6), dist: DIST * (1 - 0.03 * pulse(age, 7) - 0.25 * creep) });
   void ease;
 }

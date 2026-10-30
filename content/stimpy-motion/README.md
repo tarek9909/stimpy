@@ -33,9 +33,9 @@ Links like `?film=countdown&v=d3&t=2.4` open a film at a given variant and time.
 |---|---|---|---|---|
 | 01 | **Logo Reveal** | 10 s | – | "Something's about to change." |
 | 02 | **The Question** | 15 s | – | "Be honest. How many?" |
-| 05 | **Stimpie Glimpses** | 10 s each | 5 episodes: Flame/coral, Sun/butter, Wave/sky, Bloom/lilac, Night/blue | "Pause it if you can." |
+| 05 | **Stimpie Glimpses** | 10 s each | 5 episodes: `sabotage` (SABOTAGE/yellow), `bubblegum` (BUBBLEGUM/pink), `receipt` (RECEIPT/blue), `tiger` (IREZUMI/orange), `sameday` (SAME DAY/black) | "Pause it if you can." |
 | 07 | **Countdown** | 6 s each, launch 8 s | 5, 4, 3, 2, 1 days, Tomorrow, Launch day | (just the countdown) |
-| 09 | **Which Back Are You?** | 10 s poll + 8 s results | Loud/Quiet, Chaos/Calm, Night/Day (poll and results for each) | "Which back are you?" |
+| 09 | **Which Back Are You?** | 10 s poll + 8 s results | `loud`: Loud/Soft (SABOTAGE vs BUBBLEGUM), `wild`: Wild/Chill (UNHINGED vs ZERO DUCKS), `unleashed`: Unleashed/Offline (NEON vs RECEIPT) (poll and results for each) | "Which back are you?" |
 | 10 | **The Split Screen** | 15 s, seamless loop | – | "Count how many looks." |
 | 03 | **Zipper Close-Up** (shoot ideas) | 8–10 s | 4 ideas: Edge Zip, Sound First, Empty Frame, Perfect Loop | (no explanation) |
 | 04 | **The Hidden Back** (shoot ideas) | 10–10.6 s | 5 ideas: Shy Back, Always Blocked, Colour Leak Walk, Out of Frame, Censored | "The back changes. Soon." |
@@ -52,11 +52,11 @@ Links like `?film=countdown&v=d3&t=2.4` open a film at a given variant and time.
 - **Source:** `app/src/films/<folder>/`, with shared shoot pieces in `app/src/films/shoot/`.
 - **Film ids:** `edgezip`, `soundfirst`, `emptyframe`, `perfectloop`, `shyback`, `blocked`, `colourleak`, `outofframe`, `censored`, `endcards`, `reveal`.
 
-**01 Logo Reveal.** Black and silent. Then the zip sound starts and a seam of light is pulled down the dark, with a coral pull tab. The back parts, coral light floods out, and the two halves of the split S slide together while the wordmark rises. The letters flicker through four identities on the beat: flame, checkerboard, pastel bloom, graffiti. Then two quick 8th-note flickers. It settles, the tagline types itself, the zipper closes back over everything, and "Coming soon." appears with an electric-blue underline.
+**01 Logo Reveal.** Black and silent. Then the zip sound starts and a seam of light is pulled down the dark, with a coral pull tab. The back parts, coral light floods out, and the two halves of the split S slide together while the wordmark rises. The letters flicker through four Stimpies on the beat: SABOTAGE, SAME DAY, BUBBLEGUM, UNHINGED (then CHAMELEON and RECEIPT). Then two quick 8th-note flickers. It settles, the tagline types itself, the zipper closes back over everything, and "Coming soon." appears with an electric-blue underline.
 
 **02 The Question.** "How many hoodies do you own…" One hoodie drops. "…just because of the back design?" Hoodies rain down faster and faster, each with a different printed back, and the blue counter ticks 1 → 3 → 7 → 12 → 20. The tower wobbles and collapses, and the music cuts out. Silence. A vacuum pulls everything into ONE Stimpy hoodie, whose back flickers through every design like a slot machine, and the counter flips to a coral "1". "What if you only needed one?" Signature zip wipe to the logo.
 
-**05 Glimpses.** The whole screen is a giant closed zipper over the drop's colour. It cracks open for slivers of the design and snaps shut, faster and faster with the music. Three hidden flashes show a much bigger piece. Each flash lasts 2 frames at 60 fps, so it survives Instagram's 30 fps re-encode as exactly one frame. At the end it opens to 80%, stops in silence, zips shut, and shows "Not yet."
+**05 Glimpses.** The whole screen is a giant closed zipper over the Stimpie's world colour. It cracks open for slivers of the artwork (each one framed on one of its detail points) and snaps shut, faster and faster with the music. Three hidden flashes show a much bigger piece. Each flash lasts 2 frames at 60 fps, so it survives Instagram's 30 fps re-encode as exactly one frame. At the end it opens to 80%, stops in silence, zips shut, and shows "Not yet."
 
 **07 Countdown.** The hoodie is seen from behind. A Stimpie flies in, lands, and zips on around its edge, and its design IS the number, in a different art style each day:
 
@@ -79,7 +79,7 @@ A day track at the top carries every day's colour. On launch day the hoodie turn
 
 ## Brand rules followed
 
-- **All 8 brand colours are in every one of the 21 variants.** This was checked by an automated pixel scan: coral, black, white, electric blue, butter, sky, lilac, cream.
+- **Brand colours.** Coral, black, white and electric blue lead every film (the pixel scan for all 8 colours was done with the earlier procedural designs; the real artworks now bring their own world colours).
 - **Colour roles.** Primary colours lead. Electric blue is used for action moments: the counter, "Live now", the "Coming soon" underline, the poll bar colours. The secondaries arrive as Stimpie and drop colours.
 - **Poppins throughout.** Other fonts appear only inside Stimpie artwork, such as the countdown's changing number styles.
 - **The split S.** It's rebuilt as vector art from the Poppins Bold "S", matching `identity/`, and it signs every Stimpie in the corner.
@@ -112,7 +112,7 @@ Film ids: `logo`, `question`, `glimpses`, `countdown`, `which`, `split`. The var
 | Countdown lines ("Days left.", "Be ready.") | `src/films/countdown.ts` → `DAYS` |
 | Launch-day text ("Live now.", "Tap the link") | `src/films/countdown.ts` → `live()` |
 | Glimpse episodes (design and colour) | `src/films/glimpses.ts` → `EPISODES` |
-| The Stimpie designs | `src/art/designs.ts`. These are placeholders until the real artwork exists; swap in real art per design. |
+| The Stimpie designs | `src/art/designs.ts` (`SPEC`) and the images in `app/public/stimpies/` (copied from `content/_stimpies/`). |
 
 ## Layout
 
@@ -122,7 +122,7 @@ Film ids: `logo`, `question`, `glimpses`, `countdown`, `which`, `split`. The var
   - `zipper.ts`: teeth, pull and zip wipe
   - `hoodie.ts`: the flat hoodie, figure and Stimpie panel
   - `engine.ts`: WebGL motion blur and grade
-- `src/art/`: the 12 Stimpie designs and the 6 countdown number artworks.
+- `src/art/`: the 11 Stimpie artworks (image painters: world colour + cover-fit crop centred on the hero detail) and the 6 countdown number artworks.
 - `src/audio/score.ts`: the synthesiser (drums, synths, zip, whooshes and more).
 - `src/films/`: one file per film, and `index.ts` (the registry).
 - `scripts/render.ts`: the offline renderer.

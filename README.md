@@ -19,9 +19,9 @@ Official repository containing the motion design pipelines, 3D/WebGL video rende
 │   │   ├── stimpy_logo.mp4        # Logo Reveal teaser
 │   │   ├── stimpy_question.mp4    # "How many hoodies do you own?" teaser
 │   │   ├── stimpy_split.mp4       # The Split Screen loop
-│   │   ├── stimpy_glimpses_*.mp4  # Glimpses series (Bloom, Flame, Night, Sun, Wave)
+│   │   ├── stimpy_glimpses_*.mp4  # Glimpses series (Sabotage, Bubblegum, Receipt, Tiger, Sameday)
 │   │   ├── stimpy_countdown_*.mp4 # Daily Countdown series (D5 through Launch)
-│   │   └── stimpy_which_*.mp4     # "Which Back Are You?" poll & result films
+│   │   └── stimpy_which_*.mp4     # "Which Back Are You?" poll & result films (loud, wild, unleashed)
 │   ├── PLAN.md                    # Motion graphics implementation plan
 │   └── README.md                  # Motion engine documentation & render guide
 │

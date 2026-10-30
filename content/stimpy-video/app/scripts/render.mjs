@@ -3,6 +3,7 @@
 //   node scripts/render.mjs video  [--fps 30] [--samples 4] [--shutter 0.5] [--from 0] [--to 49.75] [--crf 16] [--out ../out/stimpy.mp4]
 //   node scripts/render.mjs sheet  [--every 1.5 | --times 1,2,3] [--cols 6] [--out ../out/sheet.jpg]
 //   node scripts/render.mjs stills --times 1,2,3 [--dir ../out/stills]
+//   node scripts/render.mjs cards  [--scale 4] [--dir ../out/stimpies]   (stimpie PNGs + lookbook)
 import { createServer } from 'vite';
 import { chromium } from 'playwright-core';
 import { spawn, execFileSync } from 'node:child_process';
@@ -26,7 +27,8 @@ function ffmpegPath() {
 process.env.STIMPY_NO_HMR = '1';
 const server = await createServer({ root, logLevel: 'error', server: { port: 5191 } });
 await server.listen();
-const url = `http://localhost:${server.config.server.port}/?render=1${process.argv.includes('--avatar') ? '&avatar' : ''}`;
+// the port actually bound (vite moves on if 5191 is taken by another render)
+const url = `http://localhost:${server.httpServer.address().port}/?render=1${process.argv.includes('--avatar') ? '&avatar' : ''}`;
 
 const browser = await chromium.launch({
   channel: 'chrome',
@@ -55,8 +57,9 @@ try {
   } else if (mode === 'cards') {
     const dir = path.resolve(root, arg('dir', '../out/stimpies'));
     mkdirSync(dir, { recursive: true });
-    const scale = Number(arg('scale', 4));
-    for (let n = 0; n <= 16; n++) {
+    const scale = Number(arg('scale', 2)); // 2 = 1600x2500, the artworks' native resolution
+    const count = await page.evaluate(() => window.__stimpy.cards);
+    for (let n = 0; n < count; n++) {
       const d = await page.evaluate(([n, s]) => window.__stimpy.card(n, s), [n, scale]);
       writeFileSync(path.join(dir, `stimpie-${String(n).padStart(3, '0')}.png`), b64(d));
     }

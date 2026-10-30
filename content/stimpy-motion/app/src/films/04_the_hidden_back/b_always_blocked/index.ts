@@ -141,7 +141,7 @@ function scene(c: Ctx, t: number) {
   const p = pose(t);
   const [, feet] = pr(0, 1, Z);
   footShadow(c, p.x, feet, p.s);
-  walker(c, p, { panel: { art: art('flame', t), zip: 1 } });
+  walker(c, p, { panel: { art: art('sabotage', t), zip: 1 } });
   const r = panelRect(p);
   const kind = KINDS[k]!;
   if (kind === 'box') box(c, r, u, t);

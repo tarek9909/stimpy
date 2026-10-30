@@ -88,7 +88,11 @@ const nextConfig: NextConfig = {
     return config;
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      // Bump the filename version when regenerating campaign images.
+      { source: '/images/stimpy-campaign-:variant-v2-:size.:format', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+    ];
   },
 };
 

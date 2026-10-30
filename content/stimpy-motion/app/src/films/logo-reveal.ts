@@ -4,7 +4,7 @@
 //  0.55–2.0  the zip sound starts: a thin line of light is pulled down the dark, like a zipper in the dark
 //  2.0–3.4   the line splits open like the back of a hoodie parting; coral light floods out; the split S
 //            closes its two halves and the wordmark rises
-//  4.0–6.0   one identity per beat: the letters flicker through flame, checkerboard, pastel print, graffiti
+//  4.0–6.0   one identity per beat: the letters flicker through Stimpies (SABOTAGE, SAME DAY, BUBBLEGUM, UNHINGED)
 //            (then two quick 8th-note flickers)
 //  6.0–8.0   it settles on the main logo; the tagline types itself underneath
 //  8.0–9.2   the zipper closes back over everything (the signature zip)
@@ -13,7 +13,7 @@ import { C, TAGLINE, rgba } from '../engine/brand';
 import { drawIcon, drawWord, lockup, LOGO, type LogoColors } from '../engine/logo';
 import { typeOn, measure, text, type Ctx } from '../engine/draw';
 import { closedTeeth, openTeeth, drawPull, zipWipe, Track, WIPE } from '../engine/zipper';
-import { art, byId } from '../art/designs';
+import { paint } from '../art/designs';
 import type { Film, Post } from '../engine/engine';
 import { Score, n, chord } from '../audio/score';
 import { W, H, fabricFill, fill, glow, kinetic, SIG_WIPE } from './common';
@@ -33,12 +33,12 @@ const CLOSE_DUR = SIG_WIPE;
 
 interface Identity { t: number; design: string; bg: string; outline: string; iy?: number }
 const IDS: Identity[] = [
-  { t: 4.0, design: 'flame', bg: C.butter, outline: C.coral, iy: -0.75 },
-  { t: 4.5, design: 'static', bg: C.blue, outline: C.butter },
-  { t: 5.0, design: 'bloom', bg: C.black, outline: C.lilac },
-  { t: 5.5, design: 'tag', bg: C.sky, outline: C.white },
-  { t: 5.75, design: 'halftone', bg: C.lilac, outline: C.black },
-  { t: 5.875, design: 'night', bg: C.cream, outline: C.blue },
+  { t: 4.0, design: 'sabotage', bg: C.butter, outline: C.coral, iy: -0.75 },
+  { t: 4.5, design: 'sameday', bg: C.blue, outline: C.butter },
+  { t: 5.0, design: 'bubblegum', bg: C.black, outline: C.lilac },
+  { t: 5.5, design: 'unhinged', bg: C.sky, outline: C.white },
+  { t: 5.75, design: 'chameleon', bg: C.lilac, outline: C.black },
+  { t: 5.875, design: 'receipt', bg: C.cream, outline: C.blue },
 ];
 
 const LOGO_Y = 880, ICON_H = 252;
@@ -46,14 +46,9 @@ const LOGO_Y = 880, ICON_H = 252;
 /** Pull position (0..1 of the frame height) during the dark line. */
 const linePull = (u: number) => lerp(-0.02, 1.02, u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2);
 
-/** Draw a design scaled to cover a rect. */
+/** Draw a design cover-fitted to a rect, centred on its hero detail, drifting slowly toward it. */
 function cover(c: Ctx, id: string, t: number, x: number, y: number, w: number, h: number) {
-  const s = Math.max(w / 300, h / 364);
-  c.save();
-  c.translate(x + (w - 300 * s) / 2, y + (h - 364 * s) / 2);
-  c.scale(s, s);
-  byId(id).draw(c, 300, 364, t);
-  c.restore();
+  paint(c, id, x, y, w, h, { zoom: 1.04 + 0.05 * clamp((t - T.ids) / 2) });
 }
 
 function logo(c: Ctx, t: number, col: LogoColors, o: { split?: number; scale?: number; word?: number; id?: Identity; alpha?: number }) {

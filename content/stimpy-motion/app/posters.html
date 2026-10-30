@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Stimpy — Posts</title>
+  <style>
+    html, body { margin: 0; background: #0b0b0b; color: #ddd; font: 12px ui-monospace, Menlo, Consolas, monospace; }
+    #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; padding: 16px; }
+    #grid figure { margin: 0; }
+    #grid canvas { width: 100%; height: auto; display: block; box-shadow: 0 0 0 1px #222; }
+    #grid figcaption { padding: 6px 2px; color: #999; }
+  </style>
+</head>
+<body>
+  <div id="grid">loading…</div>
+  <script type="module" src="/src/posters/main.ts"></script>
+</body>
+</html>

@@ -40,9 +40,9 @@ const routeBudgets = [
 ];
 
 const failures = [];
-function check(name, bytes, limit) {
+function check(name, bytes, limit, encoding = 'gzip') {
   const passed = bytes <= limit * 1024;
-  console.log(`${passed ? 'PASS' : 'FAIL'} ${name}: ${kib(bytes)} / ${limit} KiB gzip`);
+  console.log(`${passed ? 'PASS' : 'FAIL'} ${name}: ${kib(bytes)} / ${limit} KiB${encoding ? ` ${encoding}` : ''}`);
   if (!passed) failures.push(`${name} exceeds ${limit} KiB by ${kib(bytes - limit * 1024)}`);
 }
 
@@ -91,6 +91,12 @@ if (routes.length === routeBudgets.length) {
 // authoritative App Router initial route set. Include shared CSS from the layout entry.
 const layoutFiles = routeFiles('/layout') ?? [];
 check('website CSS', measure(layoutFiles, '.css').bytes, 25);
+// Fixed campaign images are pre-encoded and served directly, rather than going
+// through a cold runtime optimizer. Keep every responsive candidate lightweight.
+const campaignDir = path.resolve(process.cwd(), 'public/images');
+const campaignFiles = fs.readdirSync(campaignDir).filter((file) => /^stimpy-campaign-(desktop|mobile|builder)-v2-\d+\.(avif|webp)$/.test(file));
+if (campaignFiles.length !== 18) failures.push(`Expected 18 optimized campaign images, found ${campaignFiles.length}`);
+for (const file of campaignFiles) check(file, fs.statSync(path.join(campaignDir, file)).size, 64, '');
 if (!pagesManifest.polyfillFiles?.every((file) => file.endsWith('.js'))) {
   failures.push('Unable to classify Next legacy polyfills; expected build-manifest polyfillFiles to contain JavaScript only');
 }
@@ -114,5 +120,5 @@ if (failures.length) {
   for (const failure of failures) console.error(`- ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log('\nAll measured website JavaScript and CSS budgets passed.');
+  console.log('\nAll measured website JavaScript, CSS and campaign image budgets passed.');
 }

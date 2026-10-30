@@ -6,9 +6,10 @@ a new Stimpie on every click. The music is synthesized from code too, so every c
 ## Layout
 
 - `song/synth.py` — the track (128 BPM, F minor, EDM). Writes `app/public/stimpy.wav` and the timing map `app/src/song.json`.
-- `app/src/cards.ts` — the 17 Stimpie cards (tarot-card format: number, art, nameplate, edition), carrying the drop 001 prints.
+- `app/src/cards.ts` — the Stimpie cards (tarot-card format: number, art, nameplate, edition): card 0 = STIMPY logo,
+  cards 1–11 = the real artworks from `app/src/stimpies.json` (copy of `content/_stimpies/stimpies.json`), images in `app/public/stimpies/`.
 - `app/src/hoodie.ts` — the ghost hoodie, the Stimpie slot and the snap studs.
-- `app/src/worlds.ts` — Darkness, THE VOID, AFTER DARK, THE CEDAR, THE DREAMER, studio, end.
+- `app/src/worlds.ts` — Darkness, THE VOID (NEON), AFTER DARK (VHS), THE CEDAR (IREZUMI), THE DREAMER (SAME DAY), studio, end.
 - `app/src/scene.ts` — the edit: what happens when, all driven by `song.json`.
 - `app/scripts/render.mjs` — export (headless Chrome → ffmpeg).
 
@@ -45,6 +46,11 @@ python -m venv .venv
 
 ## Stimpie artwork
 
-The cards carry the drop 001 prints from `content/drop-001`, exported (trimmed, 1600 px max, WebP) into
-`app/public/stimpies/`. To change a design, replace its file there and point the card in `CARDS`
-(`app/src/cards.ts`) at it; transparent prints are fitted whole, full-bleed ones use `print(file, 'cover')`.
+The cards draw the real artworks: each card's art area shows its image cover-fitted toward `focus[0]` over the
+spec's `world` colour; palette (world / ink / glow) and name come from the spec. Images are loaded and decoded
+(`loadStimpies()`) before any card canvas or 3D texture is built and before `__stimpy.ready` is set.
+
+```sh
+node scripts/render.mjs cards            # out/stimpies/stimpie-000..011.png + lookbook.jpg
+node scripts/render.mjs video --avatar --fps 30 --samples 4 --out ../out/stimpy_avatar.mp4   # 3D avatar cut
+```

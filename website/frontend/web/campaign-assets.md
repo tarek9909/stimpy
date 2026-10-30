@@ -7,6 +7,32 @@ Generated using the built-in image-generation tool, not the CLI. Original catalo
 - `public/images/stimpy-campaign-v1.png`: desktop campaign, 1942 x 809.
 - `public/images/stimpy-campaign-mobile-v1.png`: mobile campaign, 1024 x 1536.
 
+## Optimized website delivery
+
+The PNGs above remain the master images. The storefront serves pre-encoded AVIF
+with responsive WebP fallback, without waiting for a first-request image conversion:
+
+- Desktop: `stimpy-campaign-desktop-v2-{960,1440,1942}.{avif,webp}`.
+- Mobile: `stimpy-campaign-mobile-v2-{480,768,1024}.{avif,webp}`.
+- Builder: `stimpy-campaign-builder-v2-{400,640,809}.{avif,webp}`.
+
+The builder uses the same registered square as before: desktop pixels x=1000,
+y=0, width=809, height=809. SVG tint and panel coordinates stay in that original
+image space. Desktop/mobile hero compositions are only resized, never cropped.
+
+Regenerate with `npm run assets:campaign -w @stimpy/web` from the website root.
+They are rebuilt automatically before the website dev server and production build,
+from the tracked PNG masters, so generated formats need not be committed.
+The script uses Sharp with AVIF quality 65 (70 for the builder) and WebP quality
+82. Largest desktop/mobile AVIFs are about 27/33 KB; the builder is about 31 KB,
+compared with its previous full-width 1.7 MB PNG download. The build checks that
+all 18 responsive files exist and each stays below 64 KiB.
+
+Versioned derivatives receive a one-year immutable browser cache. Bump `v2` in
+the generator, `lib/campaign-images.ts`, cache header and performance budget
+when changing their contents. The hero stays eager/high-priority; below-fold
+drop images load lazily so they do not compete for the initial image download.
+
 ## Prompt Set
 
 Initial: Use case: product-mockup. Asset type: a wide 16:9 editorial campaign photograph for the Stimpy modular hoodie storefront, intended as a full-bleed homepage background with HTML text over the left side. Input image 1 is the exact hoodie silhouette and back-panel placement reference. Input image 2 is the exact THE VOID interchangeable panel artwork. Create a sophisticated, tactile studio still life: a black heavyweight hoodie viewed from the back, with the provided rectangular THE VOID panel neatly fitted on its back, lying naturally with realistic fabric folds on a pale cool-grey seamless surface. Preserve the provided hoodie silhouette and the panel's black, ivory and red design; do not invent a logo, extra zippers, new garment shapes, or additional artwork. Hoodie occupies the right 55 percent of the landscape composition; keep generous, genuinely empty pale-grey negative space in the left 45 percent for dark text. The entire hoodie and panel must be clearly visible, in focus and legible as objects, including hood and hem. Neutral daylight, soft natural shadows, premium fashion product photography, restrained and real material texture. No people, no scenery, no decorative props, no gradients, no additional text, no typography, no frames, no watermarks. The panel artwork is a design reference, not a separate floating poster. Deliver one image.

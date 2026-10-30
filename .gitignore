@@ -3,6 +3,7 @@
 Thumbs.db
 desktop.ini
 *.log
+/content/drop-001/DTF-Print-Pack-30x40cm-300dpi.zip
 .vscode/
 .idea/
 
@@ -34,6 +35,24 @@ dist/
 **/.tmp*
 .tmp-*/
 **/.tmp-*/
+
+# Photos and video files. Existing tracked assets stay tracked; these rules ignore new media files.
+*.avif
+*.bmp
+*.gif
+*.heic
+*.heif
+*.jpeg
+*.jpg
+*.png
+*.tif
+*.tiff
+*.webp
+*.3gp
+*.flv
+*.mpeg
+*.mpg
+*.wmv
 
 # Rendered outputs: reproducible with the render commands in each project's README.
 # The shoot briefs (out/**/README.md) stay tracked, and so does stimpy-video/out/stimpies:

@@ -1,7 +1,7 @@
-import { getImageProps } from 'next/image';
 import { NavigationLink as Link } from './NavigationLink';
 import type { Content, Stimpie } from '@stimpy/api-client';
 import { ArrowRight } from '@/components/icons';
+import { campaignImages } from '@/lib/campaign-images';
 
 /** Identify the bundled campaign in legacy homepage content. */
 export function usesDefaultCampaign(imageUrl: string | null | undefined): boolean {
@@ -14,20 +14,16 @@ export function usesDefaultCampaign(imageUrl: string | null | undefined): boolea
 }
 
 export function StoreHero({ homepage, stimpie = null, hoodieHref }: { homepage: Pick<Content['homepage'], 'heroHeadline' | 'heroSubheadline'>; stimpie?: Stimpie | null; hoodieHref: string }) {
-  const desktop = getImageProps({
-    src: '/images/stimpy-campaign-v1.png', alt: 'Black Stimpy hoodie with an interchangeable back panel',
-    width: 1942, height: 809, sizes: '100vw',
-  }).props;
-  const mobile = getImageProps({
-    src: '/images/stimpy-campaign-mobile-v1.png', alt: desktop.alt,
-    width: 1024, height: 1536, sizes: '100vw',
-  }).props;
+  const { desktop, mobile } = campaignImages;
 
   return (
     <section className="store-hero" aria-labelledby="store-hero-title">
       <picture className="store-hero-picture">
-        <source media="(max-width: 767px)" srcSet={mobile.srcSet} sizes="100vw" />
-        <img {...desktop} alt={desktop.alt} fetchPriority="high" loading="eager" />
+        <source media="(max-width: 767px)" type="image/avif" srcSet={mobile.avifSrcSet} sizes="100vw" width={mobile.width} height={mobile.height} />
+        <source media="(max-width: 767px)" type="image/webp" srcSet={mobile.webpSrcSet} sizes="100vw" width={mobile.width} height={mobile.height} />
+        <source type="image/avif" srcSet={desktop.avifSrcSet} sizes="100vw" />
+        <img src={desktop.src} srcSet={desktop.webpSrcSet} sizes="100vw" width={desktop.width} height={desktop.height}
+          alt="Black Stimpy hoodie with an interchangeable back panel" fetchPriority="high" loading="eager" decoding="async" />
       </picture>
       {stimpie ? <img className="store-hero-artwork" src={stimpie.artworkUrl} alt="" aria-hidden="true" /> : null}
       <div className="container store-hero-inner">

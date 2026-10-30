@@ -11,6 +11,7 @@ import { makeShyBack, makeAlwaysBlocked, makeColourLeak, makeOutOfFrame, makeCen
 import { makeEndCard, END_CARD_VARIANTS } from './00_end_cards';
 import { SHOOT_VARIANTS } from './shoot/cards';
 import { makeReveal } from './06_the_reveal';
+import { byId } from '../art/designs';
 
 export interface FilmDef {
   id: string;
@@ -27,7 +28,7 @@ export const FILMS: FilmDef[] = [
   { id: 'question', title: '02 · The Question (15 s)', brief: 'Feel the problem before the solution. Caption: "Be honest. How many?"', make: () => makeQuestion() },
   {
     id: 'glimpses', title: '05 · Stimpie Glimpses (10 s series)', brief: 'Build desire for the designs without revealing them. Caption: "Pause it if you can."',
-    variants: EPISODES.map((e) => ({ id: e.id, label: `Nº 0${e.no} — ${e.design.toUpperCase()}` })), make: (v) => makeGlimpse(v),
+    variants: EPISODES.map((e) => ({ id: e.id, label: `Nº 0${e.no} — ${byId(e.design).name}` })), make: (v) => makeGlimpse(v),
   },
   {
     id: 'countdown', title: '07 · Countdown (6 s stories)', brief: 'Daily story countdown for the final days; the number changes identity each day. Launch day turns and unzips to "Live now".',

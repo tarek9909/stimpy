@@ -69,7 +69,7 @@ function world(c: Ctx, t: number, p: Pose) {
   c.filter = 'blur(10px)';
   c.beginPath(); c.ellipse(500, 1402, 270, 40, 0, 0, Math.PI * 2); c.fill();
   c.restore();
-  walker(c, p, { panel: { art: art('night', t), zip: 1 } });
+  walker(c, p, { panel: { art: art('receipt', t), zip: 1 } });
 }
 
 /** Paint, with an extra smear along (vx, vy) local units: a whip pan. */

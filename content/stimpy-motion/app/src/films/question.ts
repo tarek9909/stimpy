@@ -162,12 +162,12 @@ function counter(c: Ctx, t: number) {
   c.restore();
 }
 
-// flicker schedule: 26 flicks slowing down, landing on FLAME
+// flicker schedule: 26 flicks slowing down, landing on SABOTAGE
 const FLICKS = Array.from({ length: 26 }, (_, k) => T.merge + 0.06 + (T.flickEnd - T.merge - 0.06) * Math.pow(k / 25, 1.9));
 function heroDesign(t: number): string {
   const [k] = lastEvent(FLICKS, t);
   if (k < 0) return DESIGNS[0]!.id;
-  if (k === FLICKS.length - 1) return 'flame';
+  if (k === FLICKS.length - 1) return 'sabotage';
   return DESIGNS[(k * 5 + 3) % DESIGNS.length]!.id;
 }
 

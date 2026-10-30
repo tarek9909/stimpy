@@ -13,7 +13,7 @@ import { shootFilm, type ShootDef } from '../../shoot/cards';
 const K = clock(120); // 8 s = 16 beats exactly, so the music loops too
 const T = { open0: K.b(1), open1: K.b(6.5), lift0: K.b(6.5), lift1: K.b(8.5), close0: K.b(9), close1: K.b(14.5), end: K.b(16) };
 const ARM: [number, number] = [1500, 2500];
-const DESIGN = 'bloom';
+const DESIGN = 'bubblegum';
 
 function zip(t: number) {
   if (t < T.open0) return 1;

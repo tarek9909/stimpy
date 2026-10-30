@@ -15,5 +15,3 @@ Each idea below is a filmable concept for the real footage. Each folder has:
 | [The Perfect Loop](d_the_perfect_loop/) | 8 s, seamless loop | Overhead: unzip all the way round and back, landing on frame one so it loops forever. |
 
 Every one ends on a ready-made card from [`../00_end_cards`](../00_end_cards/), which carries the signature zip sound.
-
-> The old renders still in this folder (stimpy_zipper.mp4/.wav, zipper_sheet.png) are the first motion version you didn't like. It has been replaced by the ideas above. Delete it whenever you like.

@@ -5,12 +5,12 @@
 //           6–10 the silhouettes pulse with the music; "Which back are you?" (room left for the poll sticker)
 // Results:  a bar fills between them; the winner's silhouette cracks with light shining through the gaps;
 //           "You chose. Revealed first."
-import { C, ink, rgba } from '../engine/brand';
+import { C, ink, rgba, isDark } from '../engine/brand';
 import { drawLockup, LOGO } from '../engine/logo';
 import { drawHoodie, DOCK } from '../engine/hoodie';
-import { text, scratch, type Ctx } from '../engine/draw';
+import { text, type Ctx } from '../engine/draw';
 import type { Design } from '../art/designs';
-import { art, byId } from '../art/designs';
+import { byId, paint } from '../art/designs';
 import type { Film, Post } from '../engine/engine';
 import { Score, n, chord } from '../audio/score';
 import { W, H, SAFE, fill, glow, kinetic } from './common';
@@ -21,9 +21,11 @@ const b = K.b;
 
 interface Pair { id: string; left: string; right: string; lLabel: string; rLabel: string; badge: string; ring: string; root: string; result: number }
 export const PAIRS: Pair[] = [
-  { id: 'loud', left: 'flame', right: 'eye', lLabel: 'Loud', rLabel: 'Quiet', badge: C.sky, ring: C.cream, root: 'E', result: 0.64 },
-  { id: 'chaos', left: 'static', right: 'wave', lLabel: 'Chaos', rLabel: 'Calm', badge: C.butter, ring: C.lilac, root: 'C', result: 0.41 },
-  { id: 'night', left: 'night', right: 'sun', lLabel: 'Night', rLabel: 'Day', badge: C.lilac, ring: C.sky, root: 'A', result: 0.58 },
+  // labels are the Stimpies' own words: SABOTAGE (LOUD) vs BUBBLEGUM (SOFT), UNHINGED (WILD) vs ZERO DUCKS (CHILL),
+  // NEON (UNLEASHED) vs RECEIPT (OFFLINE)
+  { id: 'loud', left: 'sabotage', right: 'bubblegum', lLabel: 'Loud', rLabel: 'Soft', badge: C.sky, ring: C.cream, root: 'E', result: 0.64 },
+  { id: 'wild', left: 'unhinged', right: 'ducks', lLabel: 'Wild', rLabel: 'Chill', badge: C.butter, ring: C.lilac, root: 'C', result: 0.41 },
+  { id: 'unleashed', left: 'neon', right: 'receipt', lLabel: 'Unleashed', rLabel: 'Offline', badge: C.lilac, ring: C.sky, root: 'A', result: 0.58 },
 ];
 
 const LX = 285, RX = 795, HY = 880, HS = 0.55;
@@ -37,35 +39,34 @@ function panelRect(x: number, y: number, s: number) {
 }
 
 /**
- * The design as a backlit silhouette: its shapes read clearly (flames, an eye, a moon…) as darks and lights
- * against a glow in the design's own colours, but the real artwork stays hidden. `light` brightens it
- * (spotlight, beat); `reveal` fades in the real, full-colour design.
+ * The design kept in the dark: the real artwork sits under a deep shadow (scene lighting only, the art itself
+ * is untouched), so only its biggest shapes read, with coloured light from the design's own glow catching
+ * its edges. `light` lifts the shadow a little (spotlight, beat); `reveal` brings it into full light.
  */
 function backlit(d: Design, t: number, light: number, reveal: number) {
+  void t;
   return (k: Ctx, w: number, h: number) => {
-    const L = scratch(300, 364, 2.4);
-    d.draw(L.c, 300, 364, t);
-    const g = k.createLinearGradient(0, 0, w, h);
-    g.addColorStop(0, d.glow[0]!);
-    g.addColorStop(1, d.glow[1] ?? d.glow[0]!);
+    paint(k, d, 0, 0, w, h);
+    const veil = (0.84 - 0.18 * clamp(light)) * (1 - clamp(reveal));
+    if (veil <= 0) return;
+    k.fillStyle = rgba('#000000', veil);
+    k.fillRect(0, 0, w, h);
+    // coloured backlight leaking in from the edges
+    k.save();
+    k.globalCompositeOperation = 'screen';
+    const a = 0.55 * (1 - clamp(reveal));
+    const g = k.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.32, w / 2, h / 2, Math.max(w, h) * 0.62);
+    g.addColorStop(0, rgba(d.glow[0]!, 0));
+    g.addColorStop(1, rgba(d.glow[1] ?? d.glow[0]!, a));
     k.fillStyle = g;
     k.fillRect(0, 0, w, h);
-    k.save();
-    k.filter = `grayscale(1) contrast(2.6) brightness(${0.7 + 0.3 * light})`;
-    k.globalCompositeOperation = 'multiply';
-    k.drawImage(L.cv, 0, 0, w, h);
     k.restore();
-    // keep it in shadow: a silhouette, not a reveal
-    k.fillStyle = rgba('#000000', 0.42 - 0.22 * light);
-    k.fillRect(0, 0, w, h);
-    if (reveal > 0) {
-      k.save();
-      k.globalAlpha = clamp(reveal);
-      k.drawImage(L.cv, 0, 0, w, h);
-      k.restore();
-    }
-    L.release();
   };
+}
+
+/** A label/accent colour from the design's glow that reads on black. */
+function accent(d: Design) {
+  return d.glow.find((g) => !isDark(g)) ?? C.white;
 }
 
 /** Light leaking out around a panel edge. */
@@ -226,8 +227,8 @@ function scene(c: Ctx, pair: Pair, t: number, o: { beats: number[]; labelsAt: nu
       c.save();
       c.globalAlpha = ease.outCubic(la) * dim;
       const ly = HY + 355 + (1 - ease.outCubic(la)) * 30;
-      c.shadowColor = d.glow[0]!; c.shadowBlur = 30 * (0.5 + beat);
-      text(c, label, x, ly, { size: 84, weight: 700, color: d.glow[0] === C.white || d.glow[0] === C.black ? C.white : d.glow[0], align: 'center' });
+      c.shadowColor = accent(d); c.shadowBlur = 30 * (0.5 + beat);
+      text(c, label, x, ly, { size: label.length > 6 ? 70 : 84, weight: 700, color: accent(d), align: 'center' });
       c.restore();
     }
   }
@@ -304,7 +305,7 @@ function makeResults(pair: Pair): Film {
       if (t < TR.chose - 0.3) kinetic(c, 'The results.', W / 2, SAFE.top + 190, t - 0.2, { size: 100, weight: 700, color: C.white, align: 'center' });
       else {
         kinetic(c, 'You chose.', W / 2, SAFE.top + 150, t - TR.chose, { size: 100, weight: 700, color: C.white, align: 'center' });
-        kinetic(c, 'Revealed first.', W / 2, SAFE.top + 262, t - TR.chose - 0.35, { size: 84, weight: 600, color: byId(win === 'l' ? pair.left : pair.right).glow[0] === C.white ? C.coral : byId(win === 'l' ? pair.left : pair.right).glow[0]!, align: 'center' });
+        kinetic(c, 'Revealed first.', W / 2, SAFE.top + 262, t - TR.chose - 0.35, { size: 84, weight: 600, color: accent(byId(win === 'l' ? pair.left : pair.right)), align: 'center' });
       }
       // the bar
       const bp = ease.inOutCubic(seg(t, TR.bar0, TR.bar1));
@@ -315,10 +316,10 @@ function makeResults(pair: Pair): Film {
         c.save();
         c.globalAlpha = ap;
         const mid = lerp(x0, x1, share);
-        const lc = byId(pair.left).glow[0]!, rc = byId(pair.right).glow[0]!;
+        const lc = accent(byId(pair.left)), rc = accent(byId(pair.right));
         c.beginPath(); c.roundRect(x0, y, x1 - x0, hgt, hgt / 2); c.clip();
-        c.fillStyle = lc === C.white ? C.cream : lc; c.fillRect(x0, y, mid - x0, hgt);
-        c.fillStyle = rc === C.white ? C.cream : rc; c.fillRect(mid, y, x1 - mid, hgt);
+        c.fillStyle = lc; c.fillRect(x0, y, mid - x0, hgt);
+        c.fillStyle = rc; c.fillRect(mid, y, x1 - mid, hgt);
         c.fillStyle = C.black; c.fillRect(mid - 3, y, 6, hgt);
         c.restore();
         c.save(); c.globalAlpha = ap;
@@ -329,7 +330,7 @@ function makeResults(pair: Pair): Film {
       }
       post.vignette = 0.35;
       post.flash = 0.12 * pulse(t - TR.crack - 0.5, 6) + 0.3 * pulse(t - TR.chose + 0.45, 7);
-      post.flashColor = byId(win === 'l' ? pair.left : pair.right).glow[0]!;
+      post.flashColor = accent(byId(win === 'l' ? pair.left : pair.right));
       post.ca = 0.8 * pulse(t - TR.crack - 0.5, 6);
     },
     score() {
