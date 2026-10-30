@@ -61,7 +61,7 @@ export function classifyOrderError(error: unknown): ErrorOutcome {
           type: 'validation',
           fields,
           requestId,
-          attributionRejected: Object.keys(fields).some((k) => /^(?:attribution|firstTouch)(?:\.|$)/.test(k)),
+          attributionRejected: Object.keys(fields).some((k) => /^(?:attribution|firstTouch|metaAds)(?:\.|$)/.test(k)),
         };
       }
       return { type: 'generic', message: GENERIC_TRY_AGAIN, requestId };

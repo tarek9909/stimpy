@@ -8,6 +8,7 @@ import type { ApiClient, CreateOrderRequest, DeliveryFees, PlacedOrder, Purchase
 import { cartStore, type CartStore } from '@/features/cart/store';
 import { hasUnavailable } from '@/features/cart/helpers';
 import { validateCart } from '@/features/cart/validate-cart';
+import { getMetaAdSignals } from '@/lib/meta-pixel';
 import { getAttribution, getFirstTouchAttribution, type Attribution } from '@/lib/utm';
 import { areaIdFor, type CheckoutValues } from './form';
 import { classifyOrderError } from './outcome';
@@ -49,6 +50,8 @@ export interface SubmitInput {
   pending?: PendingAttempt | null;
   attribution?: Attribution | undefined;
   firstTouch?: Attribution | undefined;
+  /** Defaults to `getMetaAdSignals()`. */
+  metaAds?: { fbp?: string; fbc?: string } | undefined;
   onToast?: (message: string) => void;
   isOnline?: () => boolean;
   now?: () => Date;
@@ -91,8 +94,8 @@ async function send(
         return send(client, body, freshKey(body, signature), signature, { ...retried, conflict: true });
       }
       case 'validation': {
-        if (outcome.attributionRejected && !retried.attribution && (body.attribution || body.firstTouch)) {
-          // Never block an order over tracking data: drop both attribution records and resend once with a new key.
+        if (outcome.attributionRejected && !retried.attribution && (body.attribution || body.firstTouch || body.metaAds)) {
+          // Never block an order over tracking data: drop the attribution records and ad signals, resend once with a new key.
           const stripped = withoutAttribution(body);
           return send(client, stripped, keyForPayload(stripped, signature).key, signature, { ...retried, attribution: true });
         }
@@ -168,6 +171,7 @@ export async function submitOrder(input: SubmitInput): Promise<SubmitOutcome> {
     expectedTotalCents,
     attribution: input.attribution ?? getAttribution(),
     firstTouch: input.firstTouch ?? getFirstTouchAttribution(),
+    metaAds: 'metaAds' in input ? input.metaAds : getMetaAdSignals(),
     hp: input.hp,
   });
   const { key } = keyForPayload(body, signature);

@@ -30,6 +30,7 @@ import { cartLinesFingerprint, hasUnavailable } from '@/features/cart/helpers';
 import { validateCart } from '@/features/cart/validate-cart';
 import { lastOrderNumber, saveOrderHandoff, thanksPath } from '@/features/order/handoff';
 import { browserApi } from '@/lib/api-browser';
+import { metaTrack } from '@/lib/meta-pixel';
 import { track } from '@/lib/track';
 import { useSecondsCountdown } from '@/lib/useSecondsCountdown';
 import { NotPurchasableDialog, PriceChangedDialog, SoldOutDialog } from './dialogs';
@@ -212,6 +213,7 @@ export function CheckoutView() {
     if (hydrated && lines.length > 0 && !trackedStart.current) {
       trackedStart.current = true;
       track('checkout_start', { items_count: lines.reduce((n, l) => n + l.item.qty, 0), value_cents: totals.totalCents });
+      metaTrack('InitiateCheckout', { currency: 'USD', value: totals.subtotalCents / 100, num_items: lines.reduce((n, l) => n + l.item.qty, 0) });
     }
   }, [hydrated, lines, totals.totalCents]);
 
@@ -326,6 +328,12 @@ export function CheckoutView() {
           has_pack: placed.order.items.some((i) => i.kind === 'PACK'),
           retry_count: 0,
         });
+        // Products only (no delivery fee), with the order number as the id the API also sends to the Conversions API.
+        metaTrack(
+          'Purchase',
+          { currency: 'USD', value: placed.order.subtotalCents / 100, num_items: placed.order.items.reduce((n, i) => n + i.qty, 0) },
+          placed.order.number,
+        );
         pendingRef.current = null;
         clearDraft();
         clearAttempt();
@@ -380,7 +388,7 @@ export function CheckoutView() {
         if (outcome.fields.expectedTotalCents !== undefined) await revalidate();
         // , an unknown key: a generic banner, no field (the reason is never revealed).
         const unknownKeys = other.filter(
-          (k) => k !== 'expectedTotalCents' && k !== 'attribution' && !k.startsWith('attribution.') && k !== 'firstTouch' && !k.startsWith('firstTouch.'),
+          (k) => !/^(?:expectedTotalCents|attribution|firstTouch|metaAds)(?:\.|$)/.test(k),
         );
         if (unknownKeys.length > 0) setGenericError({ message: GENERIC_FIELD_COPY, requestId: outcome.requestId });
         setExtraErrors([]);

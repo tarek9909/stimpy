@@ -26,6 +26,8 @@ export interface Attribution {
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
+  /** Which ad or creative brought the visitor (`utm_content`), so each ad's orders can be compared. */
+  utmContent?: string;
 }
 
 /** Strip control characters and cap at 100 characters (storage rule). */
@@ -132,6 +134,7 @@ function toApiAttribution(stored: StoredUtm | null): Attribution | undefined {
     ['utmSource', 'utm_source'],
     ['utmMedium', 'utm_medium'],
     ['utmCampaign', 'utm_campaign'],
+    ['utmContent', 'utm_content'],
   ];
   for (const [apiKey, storeKey] of map) {
     const raw = stored[storeKey];
@@ -143,7 +146,7 @@ function toApiAttribution(stored: StoredUtm | null): Attribution | undefined {
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/** Latest campaign touch for the Order; content, term and referrer remain local to the browser. */
+/** Latest campaign touch for the Order; term and referrer remain local to the browser. */
 export function getAttribution(): Attribution | undefined {
   return toApiAttribution(readUtm());
 }

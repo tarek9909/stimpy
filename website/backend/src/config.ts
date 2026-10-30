@@ -162,6 +162,12 @@ const envSchema = z.object({
     .default(0),
   DISABLE_JOBS: bool.default(false),
   MAILPIT_URL: url.default('http://localhost:8025'),
+  /** Meta Conversions API (optional). Both the pixel (dataset) id and the access token, or neither. */
+  META_PIXEL_ID: z.string().regex(/^\d{5,25}$/, 'must be the numeric pixel (dataset) id').optional(),
+  META_CAPI_TOKEN: z.string().trim().min(20, 'must be a Conversions API access token').optional(),
+  /** Events Manager "Test events" code: events then show there only. Remove it for live tracking. */
+  META_CAPI_TEST_EVENT_CODE: z.string().regex(/^[A-Za-z0-9]{1,40}$/, 'must be the code shown in Events Manager').optional(),
+  META_GRAPH_VERSION: z.string().regex(/^v\d+\.\d+$/, 'must look like v24.0').default('v24.0'),
 });
 
 export type Config = {
@@ -190,7 +196,11 @@ export type Config = {
   trustProxy: number;
   disableJobs: boolean;
   mailpitUrl: string;
+  /** Meta Conversions API, or null when not configured (then no events are sent). */
+  metaCapi: MetaCapiConfig | null;
 };
+
+export type MetaCapiConfig = { pixelId: string; accessToken: string; testEventCode?: string; graphVersion: string };
 
 /** Pure, throws ConfigError. Used by the server (process.env) and by tests (any object). */
 export function parseConfig(env: Record<string, string | undefined> = process.env): Config {
@@ -204,6 +214,9 @@ export function parseConfig(env: Record<string, string | undefined> = process.en
   }
   const e = parsed.data;
   const problems = productionConfigProblems(e);
+  if (Boolean(e.META_PIXEL_ID) !== Boolean(e.META_CAPI_TOKEN)) {
+    problems.push('META_PIXEL_ID / META_CAPI_TOKEN: set both to send Conversions API events, or neither');
+  }
   if (problems.length) throw new ConfigError(problems);
 
   return {
@@ -227,6 +240,10 @@ export function parseConfig(env: Record<string, string | undefined> = process.en
     trustProxy: e.TRUST_PROXY,
     disableJobs: e.DISABLE_JOBS,
     mailpitUrl: e.MAILPIT_URL.replace(/\/+$/, ''),
+    metaCapi:
+      e.META_PIXEL_ID && e.META_CAPI_TOKEN
+        ? { pixelId: e.META_PIXEL_ID, accessToken: e.META_CAPI_TOKEN, testEventCode: e.META_CAPI_TEST_EVENT_CODE, graphVersion: e.META_GRAPH_VERSION }
+        : null,
   };
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { metaTrack } from '@/lib/meta-pixel';
 import { track } from '@/lib/track';
 import { cartStore, type AddResult } from './store';
 import type { CartItem, CartLineUi } from './types';
@@ -27,6 +28,7 @@ export function useAddToCart(): (
         value_cents: line.ui.unitPriceCents * line.item.qty,
         source,
       });
+      metaTrack('AddToCart', { currency: 'USD', value: (line.ui.unitPriceCents * line.item.qty) / 100, content_type: 'product', content_category: line.item.kind.toLowerCase() });
     }
     return result;
   }, []);

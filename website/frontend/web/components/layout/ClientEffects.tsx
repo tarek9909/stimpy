@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Banner, useOptionalToast } from '@stimpy/ui';
 import { cartStore } from '@/features/cart/store';
+import { captureFbclid, metaTrack, type MetaParams } from '@/lib/meta-pixel';
 import { track, type TrackProps } from '@/lib/track';
 import { captureUtm, cleanForApi, readFirstTouch } from '@/lib/utm';
 
@@ -35,11 +36,19 @@ export function buildPageViewProps(pathname: string): TrackProps {
   return props;
 }
 
+/** `ViewContent` parameters for a product page (the hoodie, a Stimpie or the builder), or null for other pages. */
+export function metaViewContentFor(pathname: string): MetaParams | null {
+  const product = /^\/shop\/(hoodie|stimpie)\/([^/]+)\/?$/.exec(pathname);
+  if (product) return { content_type: 'product', content_category: product[1]!, content_name: product[2]! };
+  if (/^\/builder\/?$/.test(pathname)) return { content_type: 'product', content_category: 'builder' };
+  return null;
+}
+
 /**
  * Mounted once in the root layout. Does the app-wide client work that has no UI of its own:
  * - hydrates the cart from localStorage (and shows its one-time notices)
  * - captures UTM values on landing (sessionStorage `stimpy.utm`)
- * - tracks page views
+ * - tracks page views (and the Meta Pixel PageView / ViewContent when it is allowed)
  * - moves focus to the page `h1` on client navigation and announces the new title (accessibility 14)
  * - logs unhandled errors to the console with the `[stimpy:web]` prefix (no DSN transport in v1)
  * - shows the offline banner
@@ -73,11 +82,15 @@ export function ClientEffects() {
   // UTM capture on first client render (latest campaign touch wins).
   useEffect(() => {
     captureUtm(window.location.search, { landingPath: window.location.pathname, referrer: document.referrer });
+    captureFbclid(window.location.search);
   }, []);
 
   // Page views and route-change focus.
   useEffect(() => {
     track('page_view', buildPageViewProps(pathname ?? '/'));
+    metaTrack('PageView');
+    const viewContent = metaViewContentFor(pathname ?? '/');
+    if (viewContent) metaTrack('ViewContent', viewContent);
     if (first.current) {
       first.current = false;
       return;

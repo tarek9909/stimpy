@@ -7,6 +7,7 @@ import { normalizePhone } from '../../lib/phone';
 import { RATE_RULES, rateLimiter } from '../../lib/rate-limiter';
 import { z } from 'zod';
 import { addNote, buildWhatsapp, extendHold, sendOrderEmail, setCash, updateContact, updateDelivery } from '../../services/order-admin';
+import { queuePurchaseEvent } from '../../services/meta-capi';
 import { changeStatus, placeOrder, setDeliveryNumber, type PlaceOrderInput } from '../../services/orders';
 import type { ModuleDef } from '../module';
 import {
@@ -111,6 +112,21 @@ const publicRoutes: FastifyPluginAsyncZod = async (app) => {
       if (process.env.E2E_API_SERVER_TIMING === '1') {
         const phases = Object.entries(result.timings ?? {}).map(([name, duration]) => `${name};dur=${duration.toFixed(1)}`);
         reply.header('Server-Timing', [`order_service;dur=${serviceMs.toFixed(1)}`, ...phases, `order_response;dur=${(performance.now() - responseStarted).toFixed(1)}`].join(', '));
+      }
+      // Only new orders, and only when the storefront signalled permission (`metaAds` present). Not awaited.
+      if (result.created && b.metaAds) {
+        queuePurchaseEvent(app.ctx.config.metaCapi, {
+          orderNumber: body.order.number,
+          subtotalCents: body.order.subtotalCents,
+          numItems: body.order.items.reduce((n, i) => n + i.qty, 0),
+          email: body.order.contactEmail,
+          phoneE164: phone,
+          clientIp: req.ip,
+          userAgent: req.headers['user-agent'],
+          signals: { fbp: b.metaAds.fbp, fbc: b.metaAds.fbc },
+          eventSourceUrl: `${app.ctx.config.webUrl}/checkout`,
+          eventTime: new Date(),
+        });
       }
       return reply.code(result.created ? 201 : 200).send(body);
     },

@@ -103,3 +103,18 @@ describe('TRUST_PROXY', () => {
     expect(() => parseConfig({ ...base, TRUST_PROXY: 'yes' })).toThrow(ConfigError);
   });
 });
+
+describe('Meta Conversions API settings', () => {
+  it('is off unless both the pixel id and the token are set', () => {
+    expect(parseConfig(base).metaCapi).toBeNull();
+    expect(() => parseConfig({ ...base, META_PIXEL_ID: '123456789012345' })).toThrow(ConfigError);
+    expect(() => parseConfig({ ...base, META_CAPI_TOKEN: 'EAAB-test-token-0123456789' })).toThrow(ConfigError);
+  });
+
+  it('reads the pixel, token, optional test code and graph version', () => {
+    const c = parseConfig({ ...base, META_PIXEL_ID: '123456789012345', META_CAPI_TOKEN: 'EAAB-test-token-0123456789', META_CAPI_TEST_EVENT_CODE: 'TEST123' });
+    expect(c.metaCapi).toEqual({ pixelId: '123456789012345', accessToken: 'EAAB-test-token-0123456789', testEventCode: 'TEST123', graphVersion: 'v24.0' });
+    expect(() => parseConfig({ ...base, META_PIXEL_ID: 'abc', META_CAPI_TOKEN: 'EAAB-test-token-0123456789' })).toThrow(ConfigError);
+    expect(() => parseConfig({ ...base, META_PIXEL_ID: '123456789012345', META_CAPI_TOKEN: 'EAAB-test-token-0123456789', META_GRAPH_VERSION: '24' })).toThrow(ConfigError);
+  });
+});

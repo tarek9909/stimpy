@@ -282,3 +282,11 @@ Append-only. Format: `- [area] decision, reason`. Specs: `docs/website/` (open-q
 ## API Startup Readiness
 
 - [api/db-pool-readiness] Warm up up to 20 Prisma connections with concurrent `SELECT 1` queries before the API binds its port, bounded by an explicit `connection_limit` query parameter. This moves first-traffic connection creation ahead of readiness; the first 20 catalog requests after readiness then meet the documented p95 gate.
+
+## Meta Pixel and Conversions API
+
+- [meta/consent] The Pixel (`lib/meta-pixel.ts`) follows the analytics rule: production app and Next build only, and never when Do Not Track or Global Privacy Control is on. Automatic configuration is switched off, so Meta receives only the explicit events: PageView, ViewContent (hoodie, Stimpie and builder pages), AddToCart, InitiateCheckout and Purchase.
+- [meta/order-signal] Checkout sends the optional `metaAds: { fbp?, fbc? }` object under the same rule. Its presence is the permission for the API to send that order to the Conversions API; without it nothing is sent. `fbc` falls back to the landing `fbclid` kept in sessionStorage when the Pixel cookie is missing (Pixel blocked). A rejected `metaAds.*` field is dropped and resent with the attribution fields, so tracking never blocks an order.
+- [meta/dedup-value] Browser and server Purchase share the order number as the event id, so Meta counts an order once. The value is the products subtotal in USD without the delivery fee. Purchase fires when the order is placed (cash on delivery); delivered, refused and returned outcomes stay in the dashboard.
+- [meta/capi-delivery] The API sends the event after the order is committed, only for newly created website orders, and never awaits it in the request. Email and phone (digits of the E.164 number) are normalised and SHA-256 hashed; client IP and user agent come from the request. Network errors, 429 and 5xx are retried in memory after 2 s and 10 s; other answers are logged and dropped. No queue table was added: a restart loses a pending send, and the browser Pixel copy still counts.
+- [checkout/utm-content] Checkout `attribution` and `firstTouch` now also carry `utmContent`, so orders can be compared per ad. This supersedes the content part of [checkout/utm-payload]; `utm_term`, landing path and referrer stay local.

@@ -985,6 +985,10 @@ export interface paths {
                             /** Format: uri */
                             referrer?: string;
                         } | null;
+                        metaAds?: {
+                            fbp?: string;
+                            fbc?: string;
+                        } | null;
                         hp?: string;
                     };
                 };

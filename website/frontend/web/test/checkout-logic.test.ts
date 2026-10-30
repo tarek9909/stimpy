@@ -434,7 +434,7 @@ describe('submit sequence (3)', () => {
     captureUtm('?utm_source=latest&utm_medium=paid&utm_content=ad1&utm_term=hoodie', { landingPath: '/shop', referrer: 'https://ads.example/click?email=private' });
     const f = fake(store, () => created());
     expect((await submitOrder(base(store, f.client))).type).toBe('success');
-    expect(f.orderCalls()[0]!.body.attribution).toEqual({ utmSource: 'latest', utmMedium: 'paid' });
+    expect(f.orderCalls()[0]!.body.attribution).toEqual({ utmSource: 'latest', utmMedium: 'paid', utmContent: 'ad1' });
     expect(f.orderCalls()[0]!.body.firstTouch).toEqual({ utmSource: 'first', utmCampaign: 'welcome' });
   });
 
@@ -572,6 +572,19 @@ describe('submit sequence (3)', () => {
     expect(b!.body).not.toHaveProperty('attribution');
     expect(b!.body).not.toHaveProperty('firstTouch');
     expect(b!.key).not.toBe(a!.key);
+  });
+
+  it('Meta ad signals: sent with the order, and dropped with a resend when the server rejects them', async () => {
+    const store = setup();
+    const metaAds = { fbp: 'fb.1.1730000000000.1234567890' };
+    const f = fake(store, (_c, n) => (n === 0 ? api('VALIDATION_ERROR', 400, { fields: { 'metaAds.fbp': 'Not a Meta cookie value.' } }) : created()));
+    expect((await submitOrder(base(store, f.client, { metaAds }))).type).toBe('success');
+    const [a, b] = f.orderCalls();
+    expect(a!.body.metaAds).toEqual(metaAds);
+    expect(b!.body).not.toHaveProperty('metaAds');
+    const none = fake(store, () => created());
+    await submitOrder(base(store, none.client));
+    expect(none.orderCalls()[0]!.body).not.toHaveProperty('metaAds');
   });
 
   it('VALIDATION_ERROR with fields is returned for the form; 500 keeps the request id', async () => {

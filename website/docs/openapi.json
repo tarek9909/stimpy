@@ -12029,6 +12029,23 @@
                     },
                     "additionalProperties": false
                   },
+                  "metaAds": {
+                    "nullable": true,
+                    "type": "object",
+                    "properties": {
+                      "fbp": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^fb\\.\\d\\.\\d{10,16}\\.[A-Za-z0-9_\\-.]{1,400}$"
+                      },
+                      "fbc": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^fb\\.\\d\\.\\d{10,16}\\.[A-Za-z0-9_\\-.]{1,400}$"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
                   "hp": {
                     "type": "string",
                     "maxLength": 500

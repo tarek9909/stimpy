@@ -110,6 +110,15 @@ const attributionBody = z
   .nullable()
   .optional();
 
+/** Meta browser id (`_fbp`) and click id (`_fbc`), shaped `fb.<subdomain index>.<ms timestamp>.<value>`. */
+const metaCookie = z.string().max(500).regex(/^fb\.\d\.\d{10,16}\.[A-Za-z0-9_\-.]{1,400}$/, 'Not a Meta cookie value.');
+
+/**
+ * Sent by the storefront only when the visitor has no Do Not Track / Global Privacy Control signal. Its presence is the
+ * permission to send this order to the Meta Conversions API; both ids are optional (the Pixel may be blocked).
+ */
+const metaAdsBody = z.strictObject({ fbp: metaCookie.optional(), fbc: metaCookie.optional() }).nullable().optional();
+
 export const placeOrderBody = z.strictObject({
   customer: z.strictObject({ ...customerBase, email: z.string().trim().email().max(190) }),
   delivery: deliveryBody,
@@ -117,6 +126,7 @@ export const placeOrderBody = z.strictObject({
   expectedTotalCents: z.number().int().min(0).max(100_000_000).optional(),
   attribution: attributionBody,
   firstTouch: attributionBody,
+  metaAds: metaAdsBody,
   hp: z.string().max(500).optional(),
 });
 

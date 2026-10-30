@@ -25,7 +25,7 @@ beforeEach(() => {
 });
 
 describe('UTM capture', () => {
-  it('keeps full session data while sending only the documented campaign fields', () => {
+  it('keeps full session data while sending only the documented campaign and content fields', () => {
     const rec = captureUtm('?utm_source=instagram&utm_medium=story&utm_campaign=drop 002!&utm_content=x&utm_term=summer', {
       landingPath: '/shop',
       referrer: 'https://l.instagram.com/',
@@ -40,6 +40,7 @@ describe('UTM capture', () => {
       utmSource: 'instagram',
       utmMedium: 'story',
       utmCampaign: 'drop002',
+      utmContent: 'x',
     };
     expect(getAttribution()).toEqual(campaign);
     expect(getFirstTouchAttribution()).toEqual(campaign);
@@ -56,7 +57,7 @@ describe('UTM capture', () => {
     expect(getFirstTouchAttribution()).toEqual({ utmSource: 'a' });
   });
 
-  it('keeps content, term, and referrer local to the browser', () => {
+  it('keeps term and referrer local to the browser', () => {
     const rec = captureUtm('?utm_term=summer%20drop', {
       landingPath: '/shop',
       referrer: 'https://search.example/results?email=private@example.com',

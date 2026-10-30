@@ -17,6 +17,8 @@ export interface BuildPayloadInput {
   expectedTotalCents: number | null;
   attribution: Attribution | undefined;
   firstTouch: Attribution | undefined;
+  /** Meta ad signals; present only when the visitor allows ad measurement (lib/meta-pixel.ts). */
+  metaAds?: { fbp?: string; fbc?: string } | undefined;
   /** Current value of the honeypot input. A real person leaves it empty. */
   hp: string;
 }
@@ -45,6 +47,7 @@ export function buildOrderPayload(input: BuildPayloadInput): CreateOrderRequest 
     ...(input.expectedTotalCents !== null ? { expectedTotalCents: input.expectedTotalCents } : {}),
     ...(input.attribution ? { attribution: input.attribution } : {}),
     ...(input.firstTouch ? { firstTouch: input.firstTouch } : {}),
+    ...(input.metaAds ? { metaAds: input.metaAds } : {}),
     hp: input.hp,
   };
   return body;
@@ -66,11 +69,12 @@ export function checkoutValuesFromPayload(body: CreateOrderRequest): CheckoutVal
   };
 }
 
-/** Same body without `attribution` (resend once when the server rejects it, 4.3). */
+/** Same body without `attribution`, `firstTouch` and `metaAds` (resend once when the server rejects them, 4.3). */
 export function withoutAttribution(body: CreateOrderRequest): CreateOrderRequest {
-  const { attribution: _dropped, firstTouch: _firstTouch, ...rest } = body;
+  const { attribution: _dropped, firstTouch: _firstTouch, metaAds: _metaAds, ...rest } = body;
   void _dropped;
   void _firstTouch;
+  void _metaAds;
   return rest;
 }
 

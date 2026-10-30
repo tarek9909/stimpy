@@ -35,6 +35,10 @@ const isProductionApp = appEnvValue === 'production';
 const apiUrl = absoluteUrl('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL, true, isProductionApp)!;
 const siteUrlValue = absoluteUrl('NEXT_PUBLIC_SITE_URL', process.env.NEXT_PUBLIC_SITE_URL, true, isProductionApp)!;
 const analyticsSrc = absoluteUrl('NEXT_PUBLIC_ANALYTICS_SRC', process.env.NEXT_PUBLIC_ANALYTICS_SRC, false, true);
+const metaPixelId = clean(process.env.NEXT_PUBLIC_META_PIXEL_ID);
+if (metaPixelId && !/^\d{5,25}$/.test(metaPixelId)) {
+  throw new Error('Invalid website environment (see frontend/web/.env.example):\n  - NEXT_PUBLIC_META_PIXEL_ID: must be the numeric pixel (dataset) id');
+}
 
 /** Variables safe for the browser. */
 export const publicEnv = {
@@ -43,6 +47,7 @@ export const publicEnv = {
   NEXT_PUBLIC_DEV_NO_CACHE: clean(process.env.NEXT_PUBLIC_DEV_NO_CACHE),
   NEXT_PUBLIC_ANALYTICS_DOMAIN: clean(process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN),
   NEXT_PUBLIC_ANALYTICS_SRC: analyticsSrc,
+  NEXT_PUBLIC_META_PIXEL_ID: metaPixelId,
   NEXT_PUBLIC_ERROR_DSN: clean(process.env.NEXT_PUBLIC_ERROR_DSN),
   NEXT_PUBLIC_APP_ENV: appEnvValue as AppEnv,
   NEXT_PUBLIC_BUILD_ID: clean(process.env.NEXT_PUBLIC_BUILD_ID) ?? 'dev',

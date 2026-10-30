@@ -35,6 +35,7 @@ function contentSecurityPolicy(): string {
     apiOrigins,
     mediaOrigins: configuredMediaOrigins,
     analyticsOrigin: analytics || undefined,
+    metaPixel: Boolean(publicEnv.NEXT_PUBLIC_META_PIXEL_ID),
     development: !isProd,
   });
 }

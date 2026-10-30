@@ -97,6 +97,10 @@ The details needed to fulfil your order are shared with the people and services 
 
 The website uses browser storage for features such as your cart and shopping choices. It can also record campaign links and referral information to understand how customers reach the store.
 
+**Advertising measurement**
+
+We use the Meta Pixel and the Meta Conversions API to measure our Instagram and Facebook ads. When you browse, Meta may receive the pages you view and the items you add to your cart. When you place an order, we share its value, the number of items and your email address and phone number, scrambled (hashed) before they are sent, so Meta can match the order to an ad. If your browser sends a Do Not Track or Global Privacy Control signal, none of this is used.
+
 **Store updates**
 
 We may use your contact details to send store updates according to your messaging preferences. You can unsubscribe using the link in a marketing email or contact us to update your preferences.

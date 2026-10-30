@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-function privacySignalOn(): boolean {
+export function privacySignalOn(): boolean {
   if (typeof navigator === 'undefined') return true;
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean; doNotTrack?: string };
   return nav.doNotTrack === '1' || nav.globalPrivacyControl === true;
