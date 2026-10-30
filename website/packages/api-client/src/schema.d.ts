@@ -10181,7 +10181,7 @@ export interface paths {
                             whatsappNumber?: string | null;
                             /**
                              * Format: email
-                             * @default hello@stimpy.local
+                             * @default info@stimpylb.com
                              */
                             supportEmail?: string | null;
                             /**
@@ -10213,12 +10213,12 @@ export interface paths {
                             senderName?: string;
                             /**
                              * Format: email
-                             * @default orders@stimpy.local
+                             * @default info@stimpylb.com
                              */
                             senderAddress?: string;
                             /**
                              * Format: email
-                             * @default hello@stimpy.local
+                             * @default info@stimpylb.com
                              */
                             replyTo?: string;
                             /** @default Stimpy. One hoodie. Multiple identities. */
@@ -11275,6 +11275,11 @@ export interface components {
                 color: string | null;
                 size: string | null;
                 stimpies: string[];
+                hoodieImage?: string | null;
+                stimpieImages?: {
+                    name: string;
+                    imageUrl: string | null;
+                }[];
             };
         };
         PlacedOrderInput: {
@@ -11779,7 +11784,7 @@ export interface components {
                 whatsappNumber: string | null;
                 /**
                  * Format: email
-                 * @default hello@stimpy.local
+                 * @default info@stimpylb.com
                  */
                 supportEmail: string | null;
                 /**
@@ -11811,12 +11816,12 @@ export interface components {
                 senderName: string;
                 /**
                  * Format: email
-                 * @default orders@stimpy.local
+                 * @default info@stimpylb.com
                  */
                 senderAddress: string;
                 /**
                  * Format: email
-                 * @default hello@stimpy.local
+                 * @default info@stimpylb.com
                  */
                 replyTo: string;
                 /** @default Stimpy. One hoodie. Multiple identities. */
@@ -12352,6 +12357,11 @@ export interface components {
                 color: string | null;
                 size: string | null;
                 stimpies: string[];
+                hoodieImage?: string | null;
+                stimpieImages?: {
+                    name: string;
+                    imageUrl: string | null;
+                }[];
             };
         };
         PlacedOrder: {
@@ -12856,7 +12866,7 @@ export interface components {
                 whatsappNumber: string | null;
                 /**
                  * Format: email
-                 * @default hello@stimpy.local
+                 * @default info@stimpylb.com
                  */
                 supportEmail: string | null;
                 /**
@@ -12888,12 +12898,12 @@ export interface components {
                 senderName: string;
                 /**
                  * Format: email
-                 * @default orders@stimpy.local
+                 * @default info@stimpylb.com
                  */
                 senderAddress: string;
                 /**
                  * Format: email
-                 * @default hello@stimpy.local
+                 * @default info@stimpylb.com
                  */
                 replyTo: string;
                 /** @default Stimpy. One hoodie. Multiple identities. */

@@ -2365,6 +2365,29 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "hoodieImage": {
+                "nullable": true,
+                "type": "string"
+              },
+              "stimpieImages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "imageUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "imageUrl"
+                  ]
+                }
               }
             },
             "required": [
@@ -4860,7 +4883,7 @@
                 "type": "string"
               },
               "supportEmail": {
-                "default": "hello@stimpy.local",
+                "default": "info@stimpylb.com",
                 "nullable": true,
                 "type": "string",
                 "maxLength": 190,
@@ -4932,14 +4955,14 @@
                 "maxLength": 100
               },
               "senderAddress": {
-                "default": "orders@stimpy.local",
+                "default": "info@stimpylb.com",
                 "type": "string",
                 "maxLength": 190,
                 "format": "email",
                 "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
               },
               "replyTo": {
-                "default": "hello@stimpy.local",
+                "default": "info@stimpylb.com",
                 "type": "string",
                 "maxLength": 190,
                 "format": "email",
@@ -7559,6 +7582,30 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "hoodieImage": {
+                "nullable": true,
+                "type": "string"
+              },
+              "stimpieImages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "imageUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "imageUrl"
+                  ],
+                  "additionalProperties": false
+                }
               }
             },
             "required": [
@@ -10120,7 +10167,7 @@
                 "type": "string"
               },
               "supportEmail": {
-                "default": "hello@stimpy.local",
+                "default": "info@stimpylb.com",
                 "nullable": true,
                 "type": "string",
                 "maxLength": 190,
@@ -10209,14 +10256,14 @@
                 "maxLength": 100
               },
               "senderAddress": {
-                "default": "orders@stimpy.local",
+                "default": "info@stimpylb.com",
                 "type": "string",
                 "maxLength": 190,
                 "format": "email",
                 "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
               },
               "replyTo": {
-                "default": "hello@stimpy.local",
+                "default": "info@stimpylb.com",
                 "type": "string",
                 "maxLength": 190,
                 "format": "email",
@@ -18135,8 +18182,8 @@
                   },
                   "delta": {
                     "type": "integer",
-                    "minimum": -9007199254740991,
-                    "maximum": 9007199254740991
+                    "minimum": -1000000,
+                    "maximum": 1000000
                   },
                   "reason": {
                     "default": "CORRECTION",
@@ -28263,7 +28310,7 @@
                         "type": "string"
                       },
                       "supportEmail": {
-                        "default": "hello@stimpy.local",
+                        "default": "info@stimpylb.com",
                         "nullable": true,
                         "type": "string",
                         "maxLength": 190,
@@ -28337,14 +28384,14 @@
                         "maxLength": 100
                       },
                       "senderAddress": {
-                        "default": "orders@stimpy.local",
+                        "default": "info@stimpylb.com",
                         "type": "string",
                         "maxLength": 190,
                         "format": "email",
                         "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                       },
                       "replyTo": {
-                        "default": "hello@stimpy.local",
+                        "default": "info@stimpylb.com",
                         "type": "string",
                         "maxLength": 190,
                         "format": "email",
