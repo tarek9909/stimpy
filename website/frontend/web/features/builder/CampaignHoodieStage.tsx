@@ -13,19 +13,8 @@ const CAMPAIGN_CANVAS_SIZE = 809;
 const CAMPAIGN_PLACEMENT = { x: 0.531, y: 0.641, width: 0.296, rotation: 0 };
 const CAMPAIGN_PANEL_STYLE = { ...placementStyle(CAMPAIGN_PLACEMENT), aspectRatio: '3 / 4' };
 
-// The inner contour excludes the printed panel, so the selected artwork remains untouched.
-const HOODIE_CLIP = [
-  'M 1318 7',
-  'C 1360 0 1510 2 1554 16',
-  'L 1596 91 C 1627 111 1660 128 1687 158',
-  'C 1729 207 1776 333 1808 438',
-  'C 1830 514 1821 621 1772 672 L 1725 714 L 1674 679',
-  'L 1650 772 C 1553 791 1313 791 1208 773 L 1187 674 L 1139 711',
-  'C 1092 703 1051 671 1034 640 C 1005 588 1009 519 1025 468',
-  'C 1051 369 1092 270 1135 209 C 1166 166 1198 145 1241 124',
-  'L 1283 95 Z',
-  'M 1268 199 H 1591 V 671 H 1268 Z',
-].join(' ');
+// Keep the campaign photo's printed card unchanged while recolouring its fabric pixels.
+const PRINTED_PANEL = { left: 283, top: 179, right: 580, bottom: 656 };
 
 function rgbFromHex(hex: string): [number, number, number] {
   const match = /^#?([\da-f]{6})$/i.exec(hex);
@@ -42,32 +31,51 @@ function recolourPhoto(photo: HTMLImageElement, canvas: HTMLCanvasElement, tint:
   source.height = size;
   const sourceContext = source.getContext('2d', { willReadFrequently: true });
   const outputContext = canvas.getContext('2d');
-  if (!sourceContext || !outputContext || typeof Path2D === 'undefined') return;
+  if (!sourceContext || !outputContext) return;
 
   sourceContext.drawImage(photo, 0, 0, size, size);
   const pixels = sourceContext.getImageData(0, 0, size, size);
   const [targetR, targetG, targetB] = rgbFromHex(tint);
-  for (let i = 0; i < pixels.data.length; i += 4) {
-    const luminance = (0.2126 * pixels.data[i]! + 0.7152 * pixels.data[i + 1]! + 0.0722 * pixels.data[i + 2]!) / 255;
-    const shade = 0.42 + 0.58 * Math.pow(luminance, 0.55);
-    pixels.data[i] = Math.round(targetR * shade);
-    pixels.data[i + 1] = Math.round(targetG * shade);
-    pixels.data[i + 2] = Math.round(targetB * shade);
+  const leftEdge = new Int16Array(size).fill(size);
+  const rightEdge = new Int16Array(size).fill(-1);
+
+  // Find the dark garment edge in the photograph itself so the tint cannot leak into its light backdrop.
+  for (let y = 0; y < size; y++) {
+    const rowOffset = y * size * 4;
+    for (let x = 0; x < size; x++) {
+      const i = rowOffset + x * 4;
+      const luminance = 0.2126 * pixels.data[i]! + 0.7152 * pixels.data[i + 1]! + 0.0722 * pixels.data[i + 2]!;
+      if (luminance < 145) {
+        leftEdge[y] = Math.min(leftEdge[y]!, x);
+        rightEdge[y] = Math.max(rightEdge[y]!, x);
+      }
+    }
   }
 
-  const adjusted = document.createElement('canvas');
-  adjusted.width = size;
-  adjusted.height = size;
-  adjusted.getContext('2d')?.putImageData(pixels, 0, 0);
+  for (let y = 0; y < size; y++) {
+    const left = leftEdge[y]!;
+    const right = rightEdge[y]!;
+    if (right < left) continue;
+    const rowOffset = y * size * 4;
+    for (let x = left; x <= right; x++) {
+      if (x >= PRINTED_PANEL.left && x <= PRINTED_PANEL.right && y >= PRINTED_PANEL.top && y <= PRINTED_PANEL.bottom) continue;
+      const i = rowOffset + x * 4;
+      const sourceR = pixels.data[i]!;
+      const sourceG = pixels.data[i + 1]!;
+      const sourceB = pixels.data[i + 2]!;
+      const luminance = 0.2126 * sourceR + 0.7152 * sourceG + 0.0722 * sourceB;
+      const fabricMask = Math.max(0, Math.min(1, (165 - luminance) / 25));
+      if (fabricMask === 0) continue;
+      const shade = 0.42 + 0.58 * Math.pow(luminance / 255, 0.55);
+      pixels.data[i] = Math.round(sourceR + (targetR * shade - sourceR) * fabricMask);
+      pixels.data[i + 1] = Math.round(sourceG + (targetG * shade - sourceG) * fabricMask);
+      pixels.data[i + 2] = Math.round(sourceB + (targetB * shade - sourceB) * fabricMask);
+    }
+  }
 
   canvas.width = size;
   canvas.height = size;
-  outputContext.drawImage(photo, 0, 0, size, size);
-  outputContext.save();
-  outputContext.translate(-1000, 0);
-  outputContext.clip(new Path2D(HOODIE_CLIP), 'evenodd');
-  outputContext.drawImage(adjusted, 1000, 0);
-  outputContext.restore();
+  outputContext.putImageData(pixels, 0, 0);
 }
 
 /** Photo-based 2D Builder preview; the selected dashboard tint adjusts the photograph itself. */

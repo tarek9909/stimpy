@@ -38,8 +38,8 @@ export type { Decision, DecisionInput, HardCheckResult, SoftChecks } from './lib
 export { FrameTimeSampler, frameStats, frameVerdict, nextLowerTier } from './lib/frameSampler';
 export type { FrameStats, FrameVerdict } from './lib/frameSampler';
 export { LruCache } from './lib/lru';
-export { COVER_TOLERANCE, coverCrop, coverFitRect } from './lib/coverCrop';
-export type { CoverCrop } from './lib/coverCrop';
+export { analyzeArt, CUTOUT_INSET, FIT_TOLERANCE } from './lib/artFit';
+export type { ArtFit, FitRect } from './lib/artFit';
 export { buildShareQuery, buildShareUrl, parseShareParams } from './lib/share';
 export type { ShareParams, ShareState } from './lib/share';
 export {

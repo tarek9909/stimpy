@@ -1,0 +1,4 @@
+node_modules/
+dist/
+# Generated from ../pp/pp.obj by `npm run convert`
+public/pp.glb

@@ -197,8 +197,6 @@ describe('setup checklist', () => {
       ['policies', 'REVIEW', true, '/content?tab=policies'],
       ['email_texts', 'REVIEW', false, '/content?tab=emails'],
       ['first_stock', 'AUTO', true, '/stock'],
-      ['builder_2d', 'AUTO', false, '/content?tab=builder'],
-      ['builder_3d', 'AUTO', false, '/content?tab=builder'],
     ]);
     // The settings defaults are now the real shop address (info@stimpylb.com), so contact_emails starts DONE.
     expect(s.items.filter((i) => i.status !== 'TODO').map((i) => i.key)).toEqual(['contact_emails']);
@@ -232,28 +230,6 @@ describe('setup checklist', () => {
     expect(status(await setupOf(client), 'first_stock')).toBe('DONE');
     await t.prisma.stimpie.updateMany({ data: { quantity: 0 } });
     expect(status(await setupOf(client), 'first_stock')).toBe('TODO');
-  });
-
-  it('builder_2d needs an active colour with a 2D image and a placement; builder_3d needs a model and a named mesh', async () => {
-    const w = await buildWorld(t.prisma);
-    const { client } = await t.adminClient();
-    const set = (key: string, value: unknown) => t.prisma.builderConfig.upsert({ where: { key }, create: { key, value: value as object }, update: { value: value as object } });
-    expect(status(await setupOf(client), 'builder_2d')).toBe('TODO');
-    await set('colors', [{ colorId: w.colors.black.id, hoodieImage2d: 'http://x/y.webp', overlay2d: null, placement2d: null }]);
-    expect(status(await setupOf(client), 'builder_2d')).toBe('TODO'); // no placement
-    await set('colors', [{ colorId: w.colors.black.id, hoodieImage2d: null, overlay2d: null, placement2d: { x: 0.5, y: 0.5, width: 0.3, rotation: 0 } }]);
-    expect(status(await setupOf(client), 'builder_2d')).toBe('TODO'); // no image
-    await set('colors', [{ colorId: w.colors.black.id, hoodieImage2d: 'http://x/y.webp', overlay2d: null, placement2d: { x: 0.5, y: 0.5, width: 0.3, rotation: 0 } }]);
-    expect(status(await setupOf(client), 'builder_2d')).toBe('DONE');
-    await t.prisma.color.update({ where: { id: w.colors.black.id }, data: { active: false } });
-    expect(status(await setupOf(client), 'builder_2d')).toBe('TODO'); // the colour is hidden
-
-    await set('model3d', null);
-    expect(status(await setupOf(client), 'builder_3d')).toBe('TODO');
-    await set('model3d', { url: 'http://x/m.glb', sizeBytes: 5, backPanelMesh: '', panelAspect: 0.64 });
-    expect(status(await setupOf(client), 'builder_3d')).toBe('TODO');
-    await set('model3d', { url: 'http://x/m.glb', sizeBytes: 5, backPanelMesh: 'back_panel', panelAspect: 0.64 });
-    expect(status(await setupOf(client), 'builder_3d')).toBe('DONE');
   });
 
   it('REVIEW items are marked and un-marked through POST /admin/setup/:key/done and persist in settings.setup.reviewed', async () => {

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PP Viewer</title>
+    <style>
+      html, body { height: 100%; margin: 0; background: #8d8c88; }
+      canvas { display: block; }
+      #status {
+        position: fixed; inset: 0; display: grid; place-items: center;
+        font: 14px system-ui, sans-serif; color: #fff; pointer-events: none;
+      }
+      #colors {
+        position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+        display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.9); border-radius: 999px;
+      }
+      #colors button, #colors label {
+        width: 28px; height: 28px; padding: 0; border: 1px solid rgba(0, 0, 0, 0.25);
+        border-radius: 50%; cursor: pointer; flex: none;
+      }
+      #colors button[aria-pressed="true"] { outline: 2px solid #222; outline-offset: 2px; }
+      #colors label {
+        position: relative; overflow: hidden;
+        background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+      }
+      #colors label.active { outline: 2px solid #222; outline-offset: 2px; }
+      #colors input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <div id="status">Loading model…</div>
+    <div id="colors" role="group" aria-label="Hoodie colour" hidden>
+      <label title="Custom colour"><input id="custom-color" type="color" value="#d1d1d1" aria-label="Custom colour" /></label>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

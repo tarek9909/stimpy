@@ -1,12 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Eye, LayoutGrid, List, Plus, Search, TriangleAlert, X } from 'lucide-react';
+import { Eye, LayoutGrid, List, Plus, Search, X } from 'lucide-react';
 import { Badge, Button, EmptyState, Modal, Pill, Select, Skeleton, TextLink, cn } from '@stimpy/ui';
 import { DataTable, type Column } from '../../components/DataTable';
 import { Pagination } from '../../components/Pagination';
 import { QueryBoundary } from '../../components/QueryBoundary';
-import { Tooltip } from '../../components/Tooltip';
 import { useFormatters } from '../../lib/format';
-import { artworkAspectWarning } from '../../lib/upload';
 import { enumParam, optionalIntParam, paginationParams, stringParam, useUrlState } from '../../lib/urlState';
 import { ActiveCell, ActiveFilter, type ActiveView } from './shared';
 import { useActiveToggle, useAllDrops, useStimpies, type AdminStimpie } from './api';
@@ -73,13 +71,6 @@ export function StimpiesTab() {
         <span className={s.active ? undefined : 'text-fg-muted'}>
           <TextLink href={`/products/stimpies/${s.id}`} className="font-semibold text-fg hover:text-coral transition-colors">{s.name}</TextLink>
           {s.active ? null : <span className="ml-2 text-caption">Hidden</span>}
-          {artworkAspectWarning(s.artworkWidth, s.artworkHeight) ? (
-            <Tooltip content="The artwork is not 0.64 wide to tall, so the Builder will crop it.">
-              <span tabIndex={0} className="ml-2 inline-flex items-center gap-1 rounded-sm bg-butter px-1.5 text-caption text-ink">
-                <TriangleAlert size={12} aria-hidden="true" /> Check artwork
-              </span>
-            </Tooltip>
-          ) : null}
         </span>
       ),
     },
@@ -257,7 +248,6 @@ export function StimpiesTab() {
                   aria-label="Products Stimpies grid"
                 >
                   {data.items.map((s) => {
-                    const hasAspectWarning = artworkAspectWarning(s.artworkWidth, s.artworkHeight);
                     return (
                       <article
                         key={s.id}
@@ -295,17 +285,6 @@ export function StimpiesTab() {
                                 {s.active ? 'Active' : 'Hidden'}
                               </Pill>
                             </div>
-
-                            {/* Aspect Ratio Warning Pill */}
-                            {hasAspectWarning ? (
-                              <div className="absolute bottom-2.5 left-2.5">
-                                <Tooltip content="The artwork is not 0.64 wide to tall, so the Builder will crop it.">
-                                  <span tabIndex={0} className="inline-flex items-center gap-1 rounded-sm bg-butter px-1.5 py-0.5 text-[10px] font-bold text-ink shadow-sm">
-                                    <TriangleAlert size={11} aria-hidden="true" /> 0.64 crop
-                                  </span>
-                                </Tooltip>
-                              </div>
-                            ) : null}
 
                             {/* Quick Inspect Button */}
                             <button

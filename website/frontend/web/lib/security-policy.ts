@@ -32,7 +32,8 @@ export function buildContentSecurityPolicy(options: SecurityPolicyOptions): stri
   const metaEvents = options.metaPixel ? [META_PIXEL_EVENT_ORIGIN] : [];
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
-    'script-src': ["'self'", "'unsafe-inline'", ...(options.development ? ["'unsafe-eval'"] : []), ...analytics, ...metaScript],
+    // 'wasm-unsafe-eval': the Builder's hoodie model is meshopt-compressed and its decoder is WebAssembly.
+    'script-src': ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", ...(options.development ? ["'unsafe-eval'"] : []), ...analytics, ...metaScript],
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', 'blob:', ...media, ...metaEvents],
     'media-src': ["'self'", 'blob:', ...media],

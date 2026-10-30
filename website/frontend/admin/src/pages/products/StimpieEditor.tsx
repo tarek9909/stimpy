@@ -17,7 +17,6 @@ import { Select } from '@stimpy/ui';
 import { centsToDollarString } from '../../lib/format';
 import { dollarsToCents, intStringSchema, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
-import { STIMPIE_PANEL_ASPECT, artworkAspectWarning } from '../../lib/upload';
 import { invalidateFor, useAllDrops, useStimpie, type AdminStimpie } from './api';
 import { DeleteOrHide, EditorFrame } from './shared';
 import type { EditorProps } from './HoodieEditor';
@@ -71,12 +70,10 @@ function StimpieForm({ initial, onClose, crumbs }: { initial: AdminStimpie | nul
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const draft = useFormDraft(form);
   const [uploading, setUploading] = useState(false);
-  const [dims, setDims] = useState<{ w: number | null; h: number | null }>({ w: initial?.artworkWidth ?? null, h: initial?.artworkHeight ?? null });
   const type = useWatch({ control: form.control, name: 'type' });
   const dropId = useWatch({ control: form.control, name: 'dropId' });
   const artworkUrl = useWatch({ control: form.control, name: 'artworkUrl' });
 
-  const warn = artworkUrl !== '' && artworkAspectWarning(dims.w, dims.h);
 
   const common = (v: Values) => ({
     name: v.name,
@@ -190,7 +187,7 @@ function StimpieForm({ initial, onClose, crumbs }: { initial: AdminStimpie | nul
         </FormSection>
 
         <FormSection title="Images">
-          <Field name="artworkUrl" label="Artwork" required hint="Used as the back panel in the Builder. Aim for 0.64 wide to tall (for example 800 by 1250).">
+          <Field name="artworkUrl" label="Artwork" required hint="Shown on the back of the hoodie in the Builder. Any shape fits whole; 3:4 fills the panel (for example 1200 by 1600).">
             {(p) => (
               <FileUpload
                 variant="image"
@@ -199,18 +196,10 @@ function StimpieForm({ initial, onClose, crumbs }: { initial: AdminStimpie | nul
                 id={p.id}
                 onBusyChange={setUploading}
                 hint="JPG, PNG, WebP or SVG, up to 10 MB. Images larger than 2000 px are resized."
-                onChange={(r) => {
-                  p.onChange(r?.url ?? '');
-                  setDims({ w: r?.width ?? null, h: r?.height ?? null });
-                }}
+                onChange={(r) => p.onChange(r?.url ?? '')}
               />
             )}
           </Field>
-          {warn && dims.w && dims.h ? (
-            <Banner variant="warning" live title="This artwork is not the expected shape">
-              It is {dims.w} &times; {dims.h} ({(dims.w / dims.h).toFixed(2)}). The Builder panel is {STIMPIE_PANEL_ASPECT} wide to tall, so it will crop this image and may cut off the small split-S mark in the corner.
-            </Banner>
-          ) : null}
           <ImageListField name="images" label="Gallery images" onBusyChange={setUploading} />
         </FormSection>
 

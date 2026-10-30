@@ -170,39 +170,24 @@ export const SETUP_DEFS: Def[] = [
   { key: 'policies', kind: 'REVIEW', required: true, label: 'Review the policies', hint: 'Read the published delivery, care, terms and privacy information and update it when your business details change.', link: '/content?tab=policies' },
   { key: 'email_texts', kind: 'REVIEW', required: false, label: 'Review the email and WhatsApp texts', hint: 'Read the automatic messages your customers will receive and adjust the wording.', link: '/content?tab=emails' },
   { key: 'first_stock', kind: 'AUTO', required: true, label: 'Add your first stock', hint: 'At least one hoodie variant and one Stimpie need units in stock.', link: '/stock' },
-  { key: 'builder_2d', kind: 'AUTO', required: false, label: 'Set up the 2D Builder', hint: 'Add a back-view hoodie image and placement for at least one colour.', link: '/content?tab=builder' },
-  { key: 'builder_3d', kind: 'AUTO', required: false, label: 'Set up the 3D Builder', hint: 'Upload the 3D hoodie model and name the back-panel mesh that shows the Stimpie.', link: '/content?tab=builder' },
 ];
 export const REVIEW_KEYS = SETUP_DEFS.filter((d) => d.kind === 'REVIEW').map((d) => d.key);
 const PLACEHOLDER_EMAIL = /@stimpy\.local$/i;
 
-async function builderValue(ctx: AppContext, key: string): Promise<unknown> {
-  return (await ctx.prisma.builderConfig.findUnique({ where: { key } }))?.value ?? null;
-}
-
 async function autoStatuses(ctx: AppContext): Promise<Record<string, boolean>> {
-  const [business, email, notifications, variants, stimpies, colors, builderColors, model3d] = await Promise.all([
+  const [business, email, notifications, variants, stimpies] = await Promise.all([
     ctx.settings.get('business'),
     ctx.settings.get('email'),
     ctx.settings.get('notifications'),
     ctx.prisma.hoodieVariant.findMany({ where: { active: true, quantity: { gt: 0 }, hoodie: { active: true } }, select: { quantity: true, reserved: true } }),
     ctx.prisma.stimpie.findMany({ where: { quantity: { gt: 0 }, active: true }, select: { quantity: true, reserved: true } }),
-    ctx.prisma.color.findMany({ where: { active: true }, select: { id: true } }),
-    builderValue(ctx, 'colors'),
-    builderValue(ctx, 'model3d'),
   ]);
   const real = (v: string | null | undefined): boolean => Boolean(v && v.trim() && !PLACEHOLDER_EMAIL.test(v.trim()));
-  const activeIds = new Set(colors.map((c) => c.id));
-  const colorEntries = (Array.isArray(builderColors) ? builderColors : []) as { colorId?: unknown; hoodieImage2d?: unknown; placement2d?: unknown }[];
-  // api-reference 5.2: done when a 3D model is uploaded and its back-panel mesh is named (the Builder's own readiness rule).
-  const model = (model3d && typeof model3d === 'object' ? model3d : {}) as { url?: unknown; backPanelMesh?: unknown };
   return {
-    builder_3d: typeof model.url === 'string' && model.url !== '' && typeof model.backPanelMesh === 'string' && model.backPanelMesh.trim() !== '',
     business_whatsapp: Boolean(business.whatsappNumber),
     contact_emails: real(business.supportEmail) && real(email.senderAddress) && real(email.replyTo),
     founder_alerts: Boolean(notifications.founderEmail),
     first_stock: variants.some((v) => v.quantity - v.reserved > 0) && stimpies.some((s) => s.quantity - s.reserved > 0),
-    builder_2d: colorEntries.some((c) => typeof c.colorId === 'number' && activeIds.has(c.colorId) && typeof c.hoodieImage2d === 'string' && c.hoodieImage2d !== '' && c.placement2d && typeof c.placement2d === 'object'),
   };
 }
 

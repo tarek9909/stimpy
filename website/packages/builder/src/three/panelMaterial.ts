@@ -1,4 +1,4 @@
-import { Matrix3, MeshStandardMaterial, type Texture, type WebGLProgramParametersWithUniforms } from 'three';
+import { Color, Matrix3, MeshStandardMaterial, type Texture, type WebGLProgramParametersWithUniforms } from 'three';
 
 export interface PanelUniforms {
   /** Eased zip line position, 0 = old art everywhere, 1 = new art everywhere (builder.md 5.7). */
@@ -12,6 +12,8 @@ export interface PanelUniforms {
   /** Per-texture UV transform (cover-crop). */
   uMatOld: { value: Matrix3 };
   uMatNew: { value: Matrix3 };
+  /** The hoodie colour, seen through the transparent parts of the artwork. */
+  uBase: { value: Color };
 }
 
 export function createPanelUniforms(): PanelUniforms {
@@ -23,6 +25,7 @@ export function createPanelUniforms(): PanelUniforms {
     uMapNew: { value: null },
     uMatOld: { value: new Matrix3() },
     uMatNew: { value: new Matrix3() },
+    uBase: { value: new Color(0xffffff) },
   };
 }
 
@@ -45,6 +48,7 @@ uniform sampler2D uMapOld;
 uniform sampler2D uMapNew;
 uniform mat3 uMatOld;
 uniform mat3 uMatNew;
+uniform vec3 uBase;
 uniform float uProgress;
 uniform float uLine;
 `;
@@ -55,12 +59,15 @@ uniform float uLine;
  * (#111111, `step(0.5, fract(uv.x * 40.0))`).
  */
 const FRAG_MAP = /* glsl */ `
+// The mesh is a little larger than its 0..1 rectangle: trimming here gives the print straight edges.
+if (vPanelUv.x < 0.0 || vPanelUv.x > 1.0 || vPanelUv.y < 0.0 || vPanelUv.y > 1.0) discard;
 vec2 uvOld = (uMatOld * vec3(vPanelUv, 1.0)).xy;
 vec2 uvNew = (uMatNew * vec3(vPanelUv, 1.0)).xy;
 vec4 texOld = texture2D(uMapOld, uvOld);
 vec4 texNew = texture2D(uMapNew, uvNew);
 float isNew = 1.0 - step(uProgress, vPanelUv.y);
-diffuseColor *= mix(texOld, texNew, isNew);
+vec4 art = mix(texOld, texNew, isNew); // premultiplied alpha
+diffuseColor.rgb *= art.rgb + uBase * (1.0 - art.a);
 float zipBand = (1.0 - step(0.006, abs(vPanelUv.y - uProgress))) * uLine;
 float zipTooth = step(0.5, fract(vPanelUv.x * 40.0));
 vec3 zipColor = mix(vec3(0.0056), vec3(0.045), zipTooth);
@@ -82,7 +89,7 @@ export function createSwapPanelMaterial(opts: { onPatchFailed: () => void; break
   const uniforms = createPanelUniforms();
   const material = new MeshStandardMaterial({ roughness: 0.9, metalness: 0, color: 0xffffff });
   material.name = 'panel';
-  material.customProgramCacheKey = () => 'stimpy-swap-panel-v1';
+  material.customProgramCacheKey = () => 'stimpy-swap-panel-v3';
   material.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
     const hasAll =
       shader.vertexShader.includes('#include <common>') &&

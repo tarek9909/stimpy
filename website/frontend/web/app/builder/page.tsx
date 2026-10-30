@@ -50,9 +50,9 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 }
 
 /**
- * Server-rendered shell: heading, metadata, and the Builder's own server-rendered 2D markup (hoodie image + first
- * Stimpie), which doubles as the no-JS fallback image. The interactive island hydrates on top. The share link is
- * read once here (`searchParams`); the island keeps the URL in sync afterwards.
+ * Server-rendered shell: heading, metadata and the Builder's controls. The 3D hoodie loads in the interactive island,
+ * which falls back to a browse card only where the browser cannot run 3D. The share link is read once here
+ * (`searchParams`); the island keeps the URL in sync afterwards.
  */
 export default async function BuilderPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams;

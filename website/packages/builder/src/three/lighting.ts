@@ -14,12 +14,18 @@ export type LightDef =
  */
 export const LIGHTING: Record<LightingPreset, readonly LightDef[]> = {
   STUDIO: [
-    { kind: 'hemisphere', sky: 0xffffff, ground: 0x8a8a8a, intensity: 1.4 },
-    { kind: 'directional', color: 0xffffff, intensity: 2.2, position: [2, 3, -4] },
-    { kind: 'directional', color: 0xffffff, intensity: 1.4, position: [-3, 1, -2] },
-    { kind: 'directional', color: 0xffffff, intensity: 1.6, position: [0, 2, 3] },
-    // soft front fill from the camera side, low and wide, lifts large flat dark areas
-    { kind: 'directional', color: 0xffffff, intensity: 0.9, position: [0, 0.6, -5] },
+    { kind: 'hemisphere', sky: 0xffffff, ground: 0x8a8a8a, intensity: 0.7 },
+    // a raking key from high on one side: it is what draws the folds and leaves the far side in shadow
+    { kind: 'directional', color: 0xffffff, intensity: 1.3, position: [3.5, 3, -2.5] },
+    { kind: 'directional', color: 0xffffff, intensity: 0.45, position: [-3, 1, -2] },
+    // rims from above, one behind each view: their sheen is what shows the folds on dark fabric
+    { kind: 'directional', color: 0xffffff, intensity: 1.1, position: [0, 2, 3] },
+    { kind: 'directional', color: 0xffffff, intensity: 1.1, position: [0, 2, -3] },
+    // the same raking light on the hoodie's front, so it keeps its form when turned around
+    { kind: 'directional', color: 0xffffff, intensity: 0.9, position: [-3.5, 3, 2.5] },
+    // soft fills from the camera side and the front, kept low so the shadows stay dark
+    { kind: 'directional', color: 0xffffff, intensity: 0.2, position: [0, 0.6, -5] },
+    { kind: 'directional', color: 0xffffff, intensity: 0.2, position: [0, 0.6, 5] },
   ],
   SOFT: [
     { kind: 'ambient', color: 0xffffff, intensity: 1.2 },

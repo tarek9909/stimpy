@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  COVER_TOLERANCE,
   DecodedImageCache,
   FrameTimeSampler,
   LruCache,
@@ -8,8 +7,6 @@ import {
   buildShareQuery,
   buildShareUrl,
   colorsForView,
-  coverCrop,
-  coverFitRect,
   cubicBezier,
   frameStats,
   frameVerdict,
@@ -93,33 +90,6 @@ describe('placement maths (builder.md 4.2)', () => {
   });
 });
 
-describe('cover-crop fit (builder.md 5.5 and 7.4)', () => {
-  it('no fitting within 2%', () => {
-    expect(coverCrop(800, 1250, 0.64).needed).toBe(false);
-    expect(coverCrop(810, 1250, 0.64).needed).toBe(false); // 0.648 is 1.25% off
-    expect(COVER_TOLERANCE).toBe(0.02);
-  });
-  it('wider art is cropped left/right and centred', () => {
-    const c = coverCrop(1000, 1250, 0.64); // 0.8 aspect
-    expect(c.needed).toBe(true);
-    expect(c.repeatX).toBeCloseTo(0.8);
-    expect(c.repeatY).toBe(1);
-    expect(c.offsetX).toBeCloseTo(0.1);
-  });
-  it('taller art is cropped top/bottom and centred', () => {
-    const c = coverCrop(640, 1600, 0.64); // 0.4 aspect
-    expect(c.repeatY).toBeCloseTo(0.625);
-    expect(c.offsetY).toBeCloseTo(0.1875);
-    expect(c.repeatX).toBe(1);
-  });
-  it('unknown sizes need no fitting; 2D cover rect never leaves a gap', () => {
-    expect(coverCrop(0, 0, 0.64).needed).toBe(false);
-    const r = coverFitRect(1000, 1000, 160, 250);
-    expect(r.h).toBeCloseTo(250);
-    expect(r.w).toBeCloseTo(250);
-    expect(r.x).toBeCloseTo(-45);
-  });
-});
 
 describe('share link (builder.md 11)', () => {
   it('parses valid values and ignores invalid ones without error', () => {

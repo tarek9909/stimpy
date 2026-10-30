@@ -8,7 +8,6 @@ import { Button, EmptyState, Modal, Skeleton, useToast } from '@stimpy/ui';
 import { api, unwrap } from '../../api/client';
 import { ColorPicker } from '../../components/ColorPicker';
 import { DataTable, type Column } from '../../components/DataTable';
-import { FileUpload } from '../../components/FileUpload';
 import { AdminForm } from '../../components/form/AdminForm';
 import { SwitchField, TextField } from '../../components/form/Field';
 import { ImageListField } from '../../components/form/ListFields';
@@ -26,12 +25,11 @@ const colorSchema = z.object({
   hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a colour like #FF7A59.'),
   images: z.array(z.string()),
   builderTint: z.string().refine((v) => v === '' || /^#[0-9A-Fa-f]{6}$/.test(v), 'Use a colour like #FF7A59, or leave it empty.'),
-  builderTexture: z.string(),
   active: z.boolean(),
 });
 type ColorValues = z.infer<typeof colorSchema>;
-const COLOR_NEW: ColorValues = { name: '', hex: '#111111', images: [], builderTint: '', builderTexture: '', active: true };
-const colorValues = (c: AdminColor): ColorValues => ({ name: c.name, hex: c.hex.toUpperCase(), images: c.images, builderTint: c.builderTint?.toUpperCase() ?? '', builderTexture: c.builderTexture ?? '', active: c.active });
+const COLOR_NEW: ColorValues = { name: '', hex: '#111111', images: [], builderTint: '', active: true };
+const colorValues = (c: AdminColor): ColorValues => ({ name: c.name, hex: c.hex.toUpperCase(), images: c.images, builderTint: c.builderTint?.toUpperCase() ?? '', active: c.active });
 
 function ColorField({ name, label, optional, hint }: { name: string; label: string; optional?: boolean; hint?: string }) {
   const { control } = useFormContext();
@@ -46,7 +44,7 @@ function ColorDialog({ color, onClose }: { color: AdminColor | null; onClose: ()
   const [uploading, setUploading] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
-  const body = (v: ColorValues) => ({ name: v.name, hex: v.hex.toUpperCase(), images: v.images, builderTint: v.builderTint === '' ? null : v.builderTint.toUpperCase(), builderTexture: v.builderTexture === '' ? null : v.builderTexture, active: v.active });
+  const body = (v: ColorValues) => ({ name: v.name, hex: v.hex.toUpperCase(), images: v.images, builderTint: v.builderTint === '' ? null : v.builderTint.toUpperCase(), builderTexture: null, active: v.active });
   const save = useMutation({
     mutationFn: (v: ColorValues) => (color ? unwrap(api.PATCH('/api/v1/admin/colors/{id}', { params: { path: { id: color.id } }, body: body(v) })) : unwrap(api.POST('/api/v1/admin/colors', { body: body(v) }))),
   });
@@ -105,29 +103,13 @@ function ColorDialog({ color, onClose }: { color: AdminColor | null; onClose: ()
         <TextField name="name" label="Name" required maxLength={120} autoComplete="off" />
         <ColorField name="hex" label="Colour" hint="The colour of the hoodie as shown on the website." />
         <ImageListField name="images" label="Hoodie photos" onBusyChange={setUploading} />
-        <ColorField name="builderTint" label="Builder tint" optional hint="Used to color-adjust the hoodie photo in the storefront Builder. If empty, the colour value above is used." />
-        <BuilderTexture onBusyChange={setUploading} />
+        <ColorField name="builderTint" label="Storefront hoodie tint" optional hint="Colours the 3D hoodie in the storefront Builder. If empty, the colour value above is used." />
         <SwitchField name="active" label="Enable this colour" description="Available on the hoodies that offer it. Hiding keeps its variants and order history." />
       </AdminForm>
     </Modal>
     {guard.dialog}
     <ConfirmDialog open={confirmDiscard} title="Discard unsaved changes?" description="Your colour edits will be lost." confirmLabel="Discard changes" tone="destructive" onClose={() => setConfirmDiscard(false)} onConfirm={onClose} />
     </>
-  );
-}
-
-function BuilderTexture({ onBusyChange }: { onBusyChange: (b: boolean) => void }) {
-  const { control } = useFormContext();
-  const { field } = useController({ name: 'builderTexture', control });
-  return (
-    <FileUpload
-      variant="image"
-      label="Builder fabric texture (optional)"
-      value={(field.value as string) || null}
-      onChange={(r) => field.onChange(r?.url ?? '')}
-      onBusyChange={onBusyChange}
-      hint="A tileable fabric image for the 3D hoodie. Edited only here."
-    />
   );
 }
 
@@ -209,8 +191,7 @@ function SizeDialog({ size, onClose }: { size: AdminSize | null; onClose: () => 
 /* ------------------------------------------------------------------------------ the tab */
 
 function lookStatus(c: AdminColor): string {
-  const parts = [c.builderTint ? 'Tint set' : null, c.builderTexture ? 'Texture set' : null].filter(Boolean);
-  return parts.length ? parts.join(', ') : 'Not set';
+  return c.builderTint ? 'Photo tint set' : 'Uses colour value';
 }
 
 /** Products -> Options: shared colour and size definitions; hoodie assignments are edited on each hoodie. */
@@ -243,7 +224,7 @@ export function OptionsTab({ view, onViewChange }: { view: ActiveView; onViewCha
       ),
     },
     { id: 'photos', header: 'Photos', numeric: true, cell: (c) => c.images.length },
-    { id: 'look', header: 'Builder look', cell: lookStatus },
+    { id: 'look', header: 'Photo tint', cell: lookStatus },
     { id: 'active', header: 'On website', mobileLabel: '', cell: (c) => <ActiveCell active={c.active} name={c.name} onChange={(active) => toggleColor.mutate({ id: c.id, active })} /> },
     { id: 'edit', header: 'Edit', mobileLabel: '', cell: (c) => <Button variant="secondary" size="sm" aria-label={`Edit ${c.name}`} onClick={() => setDialog({ kind: 'color', item: c })}>Edit</Button> },
   ];

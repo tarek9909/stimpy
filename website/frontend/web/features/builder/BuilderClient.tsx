@@ -5,7 +5,6 @@ import { Builder, type BuilderCartItem, type BuilderCartSummary, type BuilderDat
 import { CART_FULL_TEXT, useAddToCart } from '@/features/cart/useAddToCart';
 import { track } from '@/lib/track';
 import { toBuilderHoodie } from './data';
-import { CampaignHoodieStage } from './CampaignHoodieStage';
 
 /**
  * The website's Builder island: the shared `@stimpy/builder` component fed with the server-fetched payloads, wired to
@@ -40,8 +39,7 @@ export function BuilderClient({ data, share, source }: { data: BuilderData; shar
       source={source}
       onAddToCart={onAddToCart}
       refreshInventory={refreshInventory}
-      renderPreviewAction={() => <span data-layer="preview-chip" className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-ink">2D preview</span>}
-      render2DStage={({ color, stimpie }) => <CampaignHoodieStage color={color} stimpie={stimpie} priority />}
+      only3d
       stageAspect="1 / 1"
       hrefs={{ sizeGuide: '/help?tab=size' }}
       track={track}

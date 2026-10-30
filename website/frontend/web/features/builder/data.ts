@@ -26,7 +26,33 @@ export function storefrontBuilderConfig(config: BuilderConfig): BuilderConfig {
   };
 }
 
-/** Customer facing builder surfaces use the image based preview only. */
+/** The Builder's hoodie model. It lives in the website, not in the Builder config. */
+const STOREFRONT_MODEL: NonNullable<BuilderConfig['model3d']> = {
+  url: '/models/hoodie.glb',
+  sizeBytes: 2_721_180,
+  backPanelMesh: 'back_panel',
+  // The print measures 30 x 40 cm; the engine fits any artwork inside this shape.
+  panelAspect: 0.75,
+  // Starts on the back of the hoodie, where the Stimpie sits. The whole garment, arms included, fits a square stage.
+  camera: { position: [0, 0.02, -2.35], target: [0, 0, 0], fov: 32 },
+  lighting: 'STUDIO',
+};
+
+/** The `/builder` page shows only the 3D model. */
+export function threeDimensionalBuilderConfig(config: BuilderConfig): BuilderConfig {
+  const storefront = storefrontBuilderConfig(config);
+  return {
+    ...storefront,
+    mode: '3D',
+    effectiveMode: '3D',
+    defaultView: '3D',
+    model3d: STOREFRONT_MODEL,
+    stimpieTextures: [],
+    colors: storefront.colors.map((color) => ({ ...color, texture3d: null })),
+  };
+}
+
+/** The homepage teaser uses the image based preview only. */
 export function twoDimensionalBuilderConfig(config: BuilderConfig): BuilderConfig {
   const storefront = storefrontBuilderConfig(config);
   return {
@@ -96,7 +122,7 @@ export function toBuilderData(args: {
 }): BuilderData {
   const hoodieColorIds = args.hoodie ? new Set(args.hoodie.colors.map((color) => color.id)) : null;
   return {
-    config: twoDimensionalBuilderConfig(args.config),
+    config: threeDimensionalBuilderConfig(args.config),
     colors: args.options.colors
       .filter((color) => hoodieColorIds === null || hoodieColorIds.has(color.id))
       .map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: c.images.slice(0, 1) })),

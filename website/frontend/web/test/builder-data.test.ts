@@ -45,6 +45,13 @@ describe('Builder data mapping', () => {
     expect(d.colors[0]?.images).toEqual(['a']);
     expect(d.hoodie).toBeNull();
   });
+  it('the Builder page always uses the website model, whatever the stored config says', () => {
+    const d = toBuilderData({ config, options, stimpies: [stimpie], packs: [], hoodie: null });
+    expect(d.config.effectiveMode).toBe('3D');
+    expect(d.config.model3d).toMatchObject({ url: '/models/hoodie.glb', backPanelMesh: 'back_panel' });
+    expect(d.config.colors[0]?.texture3d).toBeNull();
+    expect(d.config.stimpieTextures).toEqual([]);
+  });
   it('the teaser payload carries no 3D at all', () => {
     const d = toTeaserData({ config, options, stimpies: [stimpie] });
     expect(d.config.model3d).toBeNull();

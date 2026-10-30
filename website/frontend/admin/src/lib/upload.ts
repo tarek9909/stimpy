@@ -187,12 +187,3 @@ export const uploadFile: UploadFn = (file, options = {}) =>
     xhr.send(form);
   });
 
-/** Width / height of an uploaded Stimpie artwork against the 0.64 panel (builder.md 7.4). */
-export const STIMPIE_PANEL_ASPECT = 0.64;
-
-/** True when the artwork is more than 2 % off the panel aspect (the Builder would crop it). */
-export function artworkAspectWarning(width: number | null | undefined, height: number | null | undefined, panelAspect: number = STIMPIE_PANEL_ASPECT): boolean {
-  if (!width || !height) return false;
-  const ratio = width / height;
-  return Math.abs(ratio - panelAspect) / panelAspect > 0.02;
-}

@@ -4,7 +4,7 @@ import { applyParams, boolParam, csvParam, enumParam, fromSortParam, intParam, r
 import { isoToZonedInput, zonedInputToIso } from '../src/lib/time';
 import { moveItem, moveToPosition, sortByIds } from '../src/lib/reorder';
 import { pageWindow } from '../src/components/Pagination';
-import { artworkAspectWarning, validateFile } from '../src/lib/upload';
+import { validateFile } from '../src/lib/upload';
 import { sanitizeDraft } from '../src/auth/drafts';
 import { normalizeApiBaseUrl, parseEnv } from '../src/env';
 import { slugify, moneySchema } from '../src/lib/schemas';
@@ -90,14 +90,6 @@ describe('pagination window', () => {
   });
 });
 
-describe('artwork aspect', () => {
-  it('flags artwork more than 2% off 0.64', () => {
-    expect(artworkAspectWarning(800, 1250)).toBe(false);
-    expect(artworkAspectWarning(3200, 5000)).toBe(false);
-    expect(artworkAspectWarning(800, 1000)).toBe(true);
-    expect(artworkAspectWarning(null, null)).toBe(false);
-  });
-});
 
 describe('file validation', () => {
   const file = (name: string, size: number, type = '', bytes?: number[]) => {

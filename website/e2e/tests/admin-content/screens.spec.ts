@@ -42,16 +42,4 @@ test.describe('screens', () => {
     expect(c.errors, c.errors.join('\n')).toEqual([]);
   });
 
-  test('builder tab renders with the live preview', async ({ page }, info) => {
-    test.setTimeout(120_000);
-    const c = watchConsole(page);
-    await page.goto(`${ADMIN}/content?tab=builder`);
-    await expect(page.getByTestId('builder-preview')).toBeVisible();
-    await expect(page.getByText('Live mode')).toBeVisible();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2500);
-    await noHScroll(page);
-    await shot(page, 'content-builder', info.project.name);
-    expect(c.errors, c.errors.join('\n')).toEqual([]);
-  });
 });

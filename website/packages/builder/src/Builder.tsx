@@ -106,6 +106,8 @@ export interface BuilderProps {
   renderPreviewAction?: (context: BuilderPreviewContext) => ReactNode;
   /** Host override for the 2D garment scene (for example, a photo-based campaign mockup). */
   render2DStage?: (context: { color: JoinedColor; stimpie: BuilderStimpie | null }) => ReactNode;
+  /** The 3D model is the only preview: no 2D stage, and 3D never steps aside for slow devices or data saving. */
+  only3d?: boolean;
   /** Aspect ratio for the preview frame. Defaults to the standard 4:5 hoodie cutout. */
   stageAspect?: string;
   className?: string;
@@ -148,6 +150,7 @@ export function Builder({
   ref,
   renderPreviewAction,
   render2DStage,
+  only3d = false,
   stageAspect = '4 / 5',
   className,
 }: BuilderProps) {
@@ -173,7 +176,7 @@ export function Builder({
   const stimpies = useMemo(() => (compact ? data.stimpies.slice(0, 6) : data.stimpies), [data.stimpies, compact]);
   const model = config.model3d;
   const hasModel = !!model && !compact;
-  const has2d = joined.some(usable2D) && stimpies.length > 0;
+  const has2d = !only3d && joined.some(usable2D) && stimpies.length > 0;
   const has3d = hasModel && joined.length > 0 && stimpies.length > 0;
   const initialView: BuilderView | 'pending' | 'static' = has2d ? '2d' : has3d && effectiveMode !== '2D' ? 'pending' : 'static';
 
@@ -204,7 +207,7 @@ export function Builder({
       probe: wants3d ? applyWebGLSimulation(probeWebGL(), throttleSimulator) : null,
       signals,
       userView: stored === '2d' || stored === '3d' ? stored : null,
-      tierVerdict: force3d === true ? { disabled: false, tier: null } : readTierVerdict(),
+      tierVerdict: force3d === true || only3d ? { disabled: false, tier: null } : readTierVerdict(),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once on mount; the simulator re-runs it below
   }, []);
@@ -233,13 +236,13 @@ export function Builder({
       has3d,
       probe: env.probe,
       signals: env.signals,
-      force3d: !!force3d,
+      force3d: !!force3d || only3d,
       storedVerdict: threeFailure || (force3d !== true && env.tierVerdict.disabled) ? 'disabled' : null,
       userView: env.userView,
-      loadTapped,
+      loadTapped: loadTapped || only3d,
       shareView: initialShare?.view ?? null,
     });
-  }, [env, effectiveMode, defaultView, has2d, has3d, force3d, threeFailure, loadTapped, initialShare]);
+  }, [env, effectiveMode, defaultView, has2d, has3d, force3d, only3d, threeFailure, loadTapped, initialShare]);
 
   const view: BuilderView | 'pending' | 'static' = decision ? decision.view : initialView;
   const [threeReady, setThreeReady] = useState(false);
@@ -275,7 +278,7 @@ export function Builder({
   );
 
   // ----- colours valid for the current view -----
-  const viewForColors: BuilderView = view === '3d' ? '3d' : '2d';
+  const viewForColors: BuilderView = view === '3d' || only3d ? '3d' : '2d';
   const visibleColors = useMemo(() => colorsForView(joined, viewForColors, hasModel), [joined, viewForColors, hasModel]);
   useEffect(() => {
     const ok = resolveColorForView(joined, selection.colorId, viewForColors, hasModel);
@@ -550,7 +553,12 @@ export function Builder({
             className={compact ? 'relative mx-auto w-full max-w-[336px] bg-cream md:max-w-[384px]' : 'relative w-full bg-cream'}
             style={{ aspectRatio: stageAspect }}
           >
-            <div
+            {only3d && !threeReady ? (
+              <p role="status" data-builder-loading className="absolute inset-0 flex items-center justify-center text-body-sm text-fg-muted">
+                Loading your hoodie…
+              </p>
+            ) : null}
+            {only3d ? null : <div
               className="absolute inset-0"
               style={{
                 opacity: show3d && threeReady ? 0 : 1,
@@ -574,7 +582,7 @@ export function Builder({
                   onSwapDone={(s) => reportSwap('2d', s)}
                 />
               )}
-            </div>
+            </div>}
 
             {show3d && model && color && canvasCamera ? (
               <Canvas3DBoundary onError={() => handleFallback('GLB_FAILED')}>
@@ -594,7 +602,7 @@ export function Builder({
                   onTierChange={(t) => writeSession(STORAGE_TIER_KEY, t)}
                   onInteract={onInteract}
                   onSwapDone={(s) => reportSwap('3d', s)}
-                  skipFrameVerdict={force3d === true}
+                  skipFrameVerdict={force3d === true || only3d}
                   extraFrameMs={extraFrameMs}
                   debug={debug3d || !!force3d}
                   breakShader={breakShader}

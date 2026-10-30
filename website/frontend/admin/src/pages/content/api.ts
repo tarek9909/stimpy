@@ -91,11 +91,6 @@ export function useReviewMutations() {
   return { create, update, remove };
 }
 
-// ------------------------------------------------------------------ Builder
-export type { AdminBuilder } from './builderForm';
-export const useAdminBuilder = () =>
-  useQuery({ queryKey: queryKeys.builder, queryFn: () => unwrap(api.GET('/api/v1/admin/builder')), staleTime: 0 });
-
 // ------------------------------------------------------------------ Emails
 export type EmailTemplate = Schemas['EmailTemplate'];
 export type WhatsappTemplate = Schemas['WhatsappTemplate'];

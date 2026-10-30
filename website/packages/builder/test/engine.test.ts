@@ -37,7 +37,7 @@ describe('lighting presets keep the specified setups (builder.md 5.3)', () => {
     expect(kinds('SOFT').slice(0, 3)).toEqual(['ambient', 'hemisphere', 'directional']);
     expect(kinds('NIGHT').slice(0, 3)).toEqual(['hemisphere', 'directional', 'directional']);
     const studioKey = LIGHTING.STUDIO[1];
-    expect(studioKey && studioKey.kind === 'directional' && studioKey.position).toEqual([2, 3, -4]);
+    expect(studioKey && studioKey.kind === 'directional' && studioKey.position).toEqual([3.5, 3, -2.5]);
     const coral = LIGHTING.NIGHT[2];
     expect(coral && coral.kind === 'directional' && coral.color).toBe(0xff7a59);
   });

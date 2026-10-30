@@ -62,7 +62,6 @@ export const queryKeys = {
   content: (key: string) => ['content', key] as const,
   faqs: ['faqs'] as const,
   reviews: ['reviews'] as const,
-  builder: ['builder'] as const,
   emailTemplates: ['email-templates'] as const,
   whatsappTemplates: ['whatsapp-templates'] as const,
   emailLog: (filters?: object) => (filters ? (['email-log', filters] as const) : (['email-log'] as const)),

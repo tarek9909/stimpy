@@ -35,7 +35,7 @@ import {
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CameraView, FallbackReason, LightingPreset, Tier } from '../types';
-import { coverCrop } from '../lib/coverCrop';
+import { analyzeArt, type ArtFit } from '../lib/artFit';
 import { FrameTimeSampler, frameVerdict, nextLowerTier, type FrameStats } from '../lib/frameSampler';
 import { LruCache } from '../lib/lru';
 import { anisotropyFor, pixelRatioFor } from '../lib/mode';
@@ -157,6 +157,17 @@ declare global {
 
 const now = () => performance.now();
 
+// Near-black fabric reflects almost no diffuse light and renders as a flat silhouette: a small lift keeps its folds
+// visible and barely changes lighter colours.
+const FABRIC_LIFT = 0.03;
+function fabricColor(hex: string): Color {
+  const color = new Color().set(hex);
+  color.r += FABRIC_LIFT;
+  color.g += FABRIC_LIFT;
+  color.b += FABRIC_LIFT;
+  return color;
+}
+
 function loadImage(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -174,6 +185,28 @@ function loadArtImage(art: EngineArt): Promise<HTMLImageElement> {
     if (art.fallbackUrl && art.fallbackUrl !== art.url) return loadImage(art.fallbackUrl);
     throw e;
   });
+}
+
+const ANALYSIS_SIZE = 160;
+
+/** Reads a small copy of the image. If its pixels cannot be read, the whole image is still fitted on the panel. */
+function fitFor(img: HTMLImageElement, width: number, height: number, panelAspect: number): ArtFit {
+  const scale = Math.min(1, ANALYSIS_SIZE / Math.max(width, height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  try {
+    if (!context) throw new Error('no 2d context');
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return analyzeArt(context.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height, panelAspect);
+  } catch {
+    const aspect = width / height;
+    const wider = aspect > panelAspect;
+    const w = wider ? 1 : aspect / panelAspect;
+    const h = wider ? panelAspect / aspect : 1;
+    return { source: { x: 0, y: 0, w: 1, h: 1 }, place: { x: (1 - w) / 2, y: (1 - h) / 2, w, h }, fill: null };
+  }
 }
 
 class NetworkError extends Error {}
@@ -364,7 +397,7 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
   for (const m of parts.fabrics) {
     m.roughness = 0.9;
     m.metalness = 0;
-    m.color.set(opts.tint);
+    m.color.copy(fabricColor(opts.tint));
   }
   let tintAnim: { from: Color; to: Color; start: number } | null = null;
 
@@ -383,6 +416,7 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
     breakOnPurpose: opts.breakShader === true,
   });
   const uniforms: PanelUniforms = swapMat.uniforms;
+  uniforms.uBase.value.copy(fabricColor(opts.tint));
   const panel = parts.panel;
   const originalPanelMaterial = panel.material;
   let panelMaterial: MeshStandardMaterial = swapMat.material;
@@ -432,25 +466,38 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
   let disposed = false;
 
   function makeTexture(art: EngineArt, img: HTMLImageElement): TexEntry {
-    let source: HTMLImageElement | HTMLCanvasElement = img;
-    let w = img.naturalWidth || img.width;
-    let h = img.naturalHeight || img.height;
-    const longSide = Math.max(w, h);
-    let scale = longSide > MAX_TEXTURE_LONG_SIDE ? MAX_TEXTURE_LONG_SIDE / longSide : 1;
-    if (tier === 'low' && w * scale > LOW_TIER_TEXTURE_WIDTH) scale = LOW_TIER_TEXTURE_WIDTH / w;
-    if (scale < 1) {
-      const c = document.createElement('canvas');
-      c.width = Math.max(1, Math.round(w * scale));
-      c.height = Math.max(1, Math.round(h * scale));
-      c.getContext('2d')?.drawImage(img, 0, 0, c.width, c.height);
-      source = c;
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    const fit = fitFor(img, w, h, model.panelAspect);
+    // The panel canvas keeps the image's own resolution, within the limits for this device.
+    let panelWidth = (w * fit.source.w) / fit.place.w;
+    const longSide = Math.max(panelWidth, panelWidth / model.panelAspect);
+    if (longSide > MAX_TEXTURE_LONG_SIDE) panelWidth *= MAX_TEXTURE_LONG_SIDE / longSide;
+    if (tier === 'low' && panelWidth > LOW_TIER_TEXTURE_WIDTH) panelWidth = LOW_TIER_TEXTURE_WIDTH;
+    const source = document.createElement('canvas');
+    source.width = Math.max(1, Math.round(panelWidth));
+    source.height = Math.max(1, Math.round(panelWidth / model.panelAspect));
+    const context = source.getContext('2d');
+    if (context) {
+      if (fit.fill) {
+        context.fillStyle = fit.fill;
+        context.fillRect(0, 0, source.width, source.height);
+      }
+      context.drawImage(
+        img,
+        fit.source.x * w,
+        fit.source.y * h,
+        fit.source.w * w,
+        fit.source.h * h,
+        fit.place.x * source.width,
+        fit.place.y * source.height,
+        fit.place.w * source.width,
+        fit.place.h * source.height,
+      );
     }
-    const aw = art.width ?? w;
-    const ah = art.height ?? h;
-    w = aw;
-    h = ah;
     const tex = new Texture(source);
     tex.colorSpace = SRGBColorSpace;
+    tex.premultiplyAlpha = true; // keeps the edges of transparent designs free of dark fringes
     tex.flipY = false; // the panel UVs follow the glTF convention (origin top-left)
     tex.generateMipmaps = true;
     tex.minFilter = LinearMipmapLinearFilter;
@@ -458,11 +505,6 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
     tex.wrapS = ClampToEdgeWrapping;
     tex.wrapT = ClampToEdgeWrapping;
     tex.anisotropy = anisotropyFor(tier, maxAniso);
-    const crop = coverCrop(w, h, model.panelAspect);
-    if (crop.needed) {
-      tex.repeat.set(crop.repeatX, crop.repeatY);
-      tex.offset.set(crop.offsetX, crop.offsetY);
-    }
     tex.updateMatrix();
     tex.needsUpdate = true;
     return { texture: tex, id: art.id };
@@ -768,6 +810,7 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
     if (tintAnim) {
       const k = Math.min(1, (t - tintAnim.start) / COLOR_FADE_MS);
       for (const m of parts.fabrics) m.color.lerpColors(tintAnim.from, tintAnim.to, k);
+      uniforms.uBase.value.lerpColors(tintAnim.from, tintAnim.to, k);
       if (k >= 1) tintAnim = null;
       else animating = true;
     }
@@ -955,9 +998,10 @@ export async function createEngine(opts: EngineOptions): Promise<EngineHandle> {
     showArt,
     preload,
     setTint(hex, animate = true) {
-      const to = new Color().set(hex);
+      const to = fabricColor(hex);
       if (!animate || reduced || parts.fabrics.length === 0) {
         for (const m of parts.fabrics) m.color.copy(to);
+        uniforms.uBase.value.copy(to);
         tintAnim = null;
       } else {
         const from = (parts.fabrics[0] as MeshStandardMaterial).color.clone();
