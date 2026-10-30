@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { HOODIE_RATIO, PriceTag, RichText } from '@stimpy/ui';
 import type { HoodieDetail, Pack, Stimpie } from '@stimpy/api-client';
 import { Gallery, type GalleryImage } from '@/components/Gallery';
-import { browserApi } from '@/lib/api-browser';
-import { fetchApiAllPages } from '@/lib/pagination';
 import { useFreshData } from '@/lib/useFreshData';
 import { initialState, parsePreset, type ComposerPreset } from './composer';
 import { PackComposer } from './PackComposer';
@@ -64,13 +62,8 @@ export function HoodieConfigurator({ hoodie, packs, stimpies, estimateText }: Ho
 
   const initial = useMemo<Fresh>(() => ({ hoodie, stimpies }), [hoodie, stimpies]);
   const { data } = useFreshData<Fresh>(initial, async (signal) => {
-    const api = browserApi();
-    const [h, stimpies] = await Promise.all([
-      api.GET('/api/v1/products/hoodies/{slug}', { params: { path: { slug: hoodie.slug } }, cache: 'no-store', signal }),
-      fetchApiAllPages((page, pageSize) => api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'true', page, pageSize } }, cache: 'no-store', signal })),
-    ]);
-    if (!h.data) throw new Error('empty response');
-    return { hoodie: h.data, stimpies };
+    const { refreshHoodieInventory } = await import('./refreshHoodieInventory');
+    return refreshHoodieInventory(hoodie.slug, signal);
   });
 
   // Same starting colour as the composer, so the server-rendered first photo (the LCP image) does not change.

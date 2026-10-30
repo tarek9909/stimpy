@@ -8,7 +8,6 @@ import { Builder, type BuilderCartItem, type BuilderCartSummary, type BuilderDat
 import { CART_FULL_TEXT, useAddToCart } from '@/features/cart/useAddToCart';
 import { track } from '@/lib/track';
 import { readOverrides, type BuilderOverrides } from './overrides';
-import { browserApi } from '@/lib/api-browser';
 import { toBuilderHoodie } from './data';
 import { CampaignHoodieStage } from './CampaignHoodieStage';
 
@@ -45,6 +44,7 @@ export function BuilderClient({ data, share, source }: { data: BuilderData; shar
   const refreshInventory = async (): Promise<BuilderHoodie | null> => {
     const slug = data.config.hoodie?.slug;
     if (!slug) return null;
+    const { browserApi } = await import('@/lib/api-browser');
     const { data: fresh } = await browserApi().GET('/api/v1/products/hoodies/{slug}', {
       params: { path: { slug } },
       cache: 'no-store',
