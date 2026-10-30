@@ -38,6 +38,7 @@ The biggest risk throughout has been real proof of the zip swap, not how the bud
 11. **Retargeting and Advantage+ audience.** Off this month and deferred to next month (reasons below).
 12. **ChatGPT audit 1, assessed then applied.** Mostly right. Accepted: Purchase optimization, a matched website/WhatsApp test through Nov 27, separate review dates, a fuller ledger, loss limit, and the how-to-order post on launch day. Rejected: lifetime budgets, and changing the owner's spoken lines.
 13. **ChatGPT audit 2, assessed then applied.** Mostly right. Accepted: Rule 4 same-cutoff, delayed-decision and paused-route rules, full paid tracking, ledger by Nov 12, fixes to wording. Changed: $5 daily floor instead of its $4.96, and no reliance on a $30 campaign limit. Its 35% success figure was rejected and stayed at about 30%.
+14. **Third outside review, assessed then applied.** It caught a mistake: the spending-limit paragraph had been deleted by the previous update, and is now restored. Also added: a wider Nov 8 shot list, new ad text with cash on delivery on both routes, one challenger at a time from Dec 3, a simpler delayed-allocation rule, full payable total before confirming WhatsApp orders, a log of why chats don't order, and an optional 5-8 buyer check.
 
 ## Key decisions and why
 
