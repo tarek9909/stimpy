@@ -1,15 +1,22 @@
 import { campaignImages } from '@/lib/campaign-images';
 
-// Matches the garment in the existing campaign crop, leaving its printed panel unchanged.
+// Traced from the 809px campaign crop; the inner cutout leaves its printed panel unchanged.
 const GARMENT = [
-  'M 1318 7 C 1360 0 1510 2 1554 16',
-  'L 1596 91 C 1627 111 1660 128 1687 158',
-  'C 1729 207 1776 333 1808 438',
-  'C 1830 514 1821 621 1772 672 L 1725 714 L 1674 679',
-  'L 1650 772 C 1553 791 1313 791 1208 773 L 1187 674 L 1139 711',
-  'C 1092 703 1051 671 1034 640 C 1005 588 1009 519 1025 468',
-  'C 1051 369 1092 270 1135 209 C 1166 166 1198 145 1241 124',
-  'L 1283 95 Z M 1268 199 H 1591 V 671 H 1268 Z',
+  'M419 30  L434 30  L524 48  L550 56  L562 62  L570 70  L573 81  L574 95',
+  'L585 127  L589 133  L589 143  L585 149  L589 149  L588 152  L590 151  L590 153',
+  'L632 172  L652 186  L674 208  L697 240  L703 244  L703 247  L710 261  L715 267',
+  'L760 361  L765 376  L770 384  L784 418  L799 460  L809 511  L808 549  L805 572',
+  'L796 613  L779 660  L764 687  L761 690  L755 691  L750 696  L729 733  L725 733',
+  'L713 727  L702 725  L701 723  L693 723  L689 721  L674 720  L662 724  L659 722',
+  'L654 732  L649 757  L644 770  L644 775  L642 776  L620 773  L580 764  L518 756',
+  'L420 752  L316 757  L254 765  L221 773  L206 774  L204 771  L195 726  L191 717',
+  'L178 717  L172 720  L159 722  L152 726  L141 727  L131 732  L125 731  L122 722',
+  'L115 713  L108 698  L100 690  L94 689  L89 684  L88 679  L81 669  L72 650',
+  'L63 624  L51 572  L46 532  L46 505  L52 469  L64 430  L91 365  L129 288',
+  'L131 287  L138 271  L153 247  L154 242  L159 239  L159 237  L163 234  L179 212',
+  'L185 207  L185 205  L212 180  L239 164  L272 151  L265 141  L265 134  L271 125',
+  'L272 119  L283 95  L288 73  L296 63  L310 55  L332 48  Z  M283 210',
+  'H570 V657 H283 Z',
 ].join(' ');
 
 /** Campaign photograph for the bundled catalog, with a colour preview matching the Builder. */
@@ -24,9 +31,9 @@ export function CampaignHoodiePhoto() {
           width={image.width} height={image.height} fetchPriority="high" decoding="async"
           className="absolute inset-0 h-full w-full object-contain" />
       </picture>
-      <svg aria-hidden="true" viewBox="1000 0 809 809" preserveAspectRatio="none"
+      <svg aria-hidden="true" viewBox="0 0 809 809" preserveAspectRatio="none"
         className="pointer-events-none absolute inset-0 h-full w-full"
-        style={{ mixBlendMode: 'screen', opacity: 0.82, filter: 'blur(1px)' }}>
+        style={{ mixBlendMode: 'screen', opacity: 0.82 }}>
         <path d={GARMENT} fill="var(--hoodie-preview-color)" fillRule="evenodd" />
       </svg>
     </>
