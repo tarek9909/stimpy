@@ -265,7 +265,7 @@ function BuilderEditor({ server, colours, stimpies, hoodies, sizes }: { server: 
           </Disclosure>
 
           <Disclosure title="Colours" defaultOpen summary={`${activeIds.length} ${activeIds.length === 1 ? 'colour' : 'colours'} assigned to this hoodie`}>
-            <p className="text-body-sm text-fg-muted">The preview lets you switch among this hoodie&apos;s assigned colours for the 3D model. Model and Stimpie textures are managed in code. The controls below configure each colour&apos;s 2D images; tint and fabric texture are edited in Products &rarr; Options.</p>
+            <p className="text-body-sm text-fg-muted">The storefront preview adjusts its campaign hoodie photo with the Builder tint (or the colour value when no tint is set). Edit the tint in Products &rarr; Options. The controls below configure each colour&apos;s flat 2D image and Stimpie placement.</p>
             <ColourCards form={form} colours={colours} update={updateColour} copyAll={copyAll} samples={samples} errors={clientErrors} setBusy={setBusy} />
           </Disclosure>
         </div>

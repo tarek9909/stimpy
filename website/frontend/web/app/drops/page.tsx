@@ -29,7 +29,7 @@ export default async function DropsPage() {
 
   return (
     <>
-      <Section tone="white" heading="Drops" headingLevel={1} className={live ? '!pb-0' : undefined}>
+      <Section tone="cream" heading="Drops" headingLevel={1} className="store-drops-intro !pb-8 !pt-10 md:!pb-10 md:!pt-14">
         {nothingAnnounced ? (
           <EmptyState
             icon={<Sparkles width={32} height={32} />}
@@ -50,14 +50,14 @@ export default async function DropsPage() {
             text="The next one is below."
           />
         ) : (
-          <p className="max-w-prose text-lead text-fg-muted">New collections. Fresh perspectives. Find the Stimpie that feels like you.</p>
+          <p className="max-w-prose text-lead text-fg-muted">Limited releases. New perspectives. Find the Stimpie that feels like you.</p>
         )}
       </Section>
 
       {live ? <CurrentDropBanner drop={live} timeZone={tz} /> : null}
 
       {upcoming.length > 0 ? (
-        <Section tone="white" heading="Upcoming" zipIn zipFrom="black">
+        <Section tone="white" heading="Upcoming" eyebrow="Mark your calendar" className="store-drops-upcoming !pt-14 md:!pt-20" zipIn zipFrom="black">
           <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {upcoming.map((d) => (
               <li key={d.id}>
@@ -67,12 +67,12 @@ export default async function DropsPage() {
           </ul>
         </Section>
       ) : !nothingAnnounced ? (
-        <Section tone="white" heading="Upcoming">
+        <Section tone="white" heading="Upcoming" eyebrow="Mark your calendar" className="store-drops-upcoming">
           <EmptyState title="Nothing scheduled yet" text="Future drop announcements will appear here." />
         </Section>
       ) : null}
 
-      <Section tone="cream" heading="Archive">
+      <Section tone="cream" heading="Archive" eyebrow="A look back" className="store-drops-archive">
         {archive.length === 0 ? (
           <EmptyState title="Past drops will appear here." />
         ) : (

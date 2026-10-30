@@ -104,7 +104,7 @@ export interface BuilderProps {
   /** Optional host-owned expanded preview, connected to the current selection and pack rules. */
   renderPreviewAction?: (context: BuilderPreviewContext) => ReactNode;
   /** Host override for the 2D garment scene (for example, a photo-based campaign mockup). */
-  render2DStage?: (context: { color: JoinedColor; stimpie: BuilderStimpie }) => ReactNode;
+  render2DStage?: (context: { color: JoinedColor; stimpie: BuilderStimpie | null }) => ReactNode;
   /** Aspect ratio for the preview frame. Defaults to the standard 4:5 hoodie cutout. */
   stageAspect?: string;
   className?: string;
@@ -284,6 +284,7 @@ export function Builder({
   const color = joined.find((c) => c.id === selection.colorId) ?? visibleColors[0] ?? null;
   const stimpie = stimpieById(stimpies, selection.previewId) ?? stimpies[0] ?? null;
   const pack = packById(packs, selection.packId);
+  const stageStimpie = compact || pack ? stimpie : null;
 
   // ----- stock and price -----
   const soldOutIds = useMemo(() => new Set(joined.filter((c) => colorSoldOut(hoodie, c.id)).map((c) => c.id)), [joined, hoodie]);
@@ -294,8 +295,8 @@ export function Builder({
   // ----- 2D / 3D props -----
   const cache = useRef<DecodedImageCache | null>(null);
   if (!cache.current) cache.current = new DecodedImageCache();
-  const idx = stimpie ? stimpies.findIndex((s) => s.id === stimpie.id) : -1;
-  const neighbours = [stimpies[idx - 1], stimpies[idx + 1]].filter((s): s is NonNullable<typeof s> => !!s);
+  const idx = stageStimpie ? stimpies.findIndex((s) => s.id === stageStimpie.id) : -1;
+  const neighbours = stageStimpie ? [stimpies[idx - 1], stimpies[idx + 1]].filter((s): s is NonNullable<typeof s> => !!s) : [];
   const inView = useInView(rootRef, '200px', compact);
   const stage2dColor = color
     ? {
@@ -306,9 +307,9 @@ export function Builder({
         alt: `${color.name} Stimpy hoodie, back view`,
       }
     : null;
-  const stage2dArt = stimpie ? { key: stimpie.id, src: stimpie.artworkUrl, alt: `${stimpie.name} Stimpie` } : null;
-  const engineArt = stimpie ? engineArtFor(stimpie, config.stimpieTextures) : null;
-  const label3d = `3D preview of a ${color?.name ?? ''} Stimpy hoodie${stimpie ? ` with the ${stimpie.name} Stimpie on the back` : ''}. Drag to rotate.`;
+  const stage2dArt = stageStimpie ? { key: stageStimpie.id, src: stageStimpie.artworkUrl, alt: `${stageStimpie.name} Stimpie` } : null;
+  const engineArt = stageStimpie ? engineArtFor(stageStimpie, config.stimpieTextures) : null;
+  const label3d = `3D preview of a ${color?.name ?? ''} Stimpy hoodie${stageStimpie ? ` with the ${stageStimpie.name} Stimpie on the back` : ''}. Drag to rotate.`;
   const tier: Tier = env?.tierVerdict.tier ?? decision?.tier ?? 'mid';
   const sim = typeof throttleSimulator === 'object' ? throttleSimulator : undefined;
   const extraFrameMs = sim?.extraFrameMs ?? (throttleSimulator === 'low-tier' ? 30 : 0);
@@ -485,7 +486,7 @@ export function Builder({
     const at = selection.slots.indexOf(id);
     return at >= 0 && selection.slots.length > 1 ? at + 1 : null;
   };
-  const selectedIds = selection.slots.length > 0 ? selection.slots.filter((s): s is number => s !== null) : selection.previewId !== null ? [selection.previewId] : [];
+  const selectedIds = !compact && !pack ? [] : selection.slots.length > 0 ? selection.slots.filter((s): s is number => s !== null) : selection.previewId !== null ? [selection.previewId] : [];
   // Other selected Stimpies stay focusable; clicking one focuses its numbered slot instead of duplicating it.
   const disabledIds = useMemo(() => {
     const out = new Set<number>();
@@ -526,7 +527,7 @@ export function Builder({
         <div className="mx-auto w-full" style={{ maxWidth: compact ? undefined : 560 }}>
           <div
             role="group"
-            aria-label={`Preview: ${color?.name ?? ''} Stimpy hoodie${stimpie ? ` with the ${stimpie.name} Stimpie` : ''}`}
+            aria-label={`Preview: ${color?.name ?? ''} Stimpy hoodie${stageStimpie ? ` with the ${stageStimpie.name} Stimpie` : ''}`}
             data-builder-frame
             className={compact ? 'relative mx-auto w-full max-w-[336px] bg-cream md:max-w-[384px]' : 'relative w-full bg-cream'}
             style={{ aspectRatio: stageAspect }}
@@ -540,7 +541,7 @@ export function Builder({
               }}
               aria-hidden={show3d && threeReady ? true : undefined}
             >
-              {render2DStage && color && stimpie ? render2DStage({ color, stimpie }) : (
+              {render2DStage && color ? render2DStage({ color, stimpie: stageStimpie }) : (
                 <BuilderStage2D
                   color={stage2dColor}
                   art={stage2dArt}

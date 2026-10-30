@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useOptionalToast } from '@stimpy/ui';
 import { Builder, type BuilderCartItem, type BuilderCartSummary, type BuilderData, type BuilderHoodie, type ShareParams } from '@stimpy/builder';
 import { CART_FULL_TEXT, useAddToCart } from '@/features/cart/useAddToCart';
 import { track } from '@/lib/track';
-import { readOverrides, type BuilderOverrides } from './overrides';
 import { toBuilderHoodie } from './data';
 import { CampaignHoodieStage } from './CampaignHoodieStage';
 
@@ -16,9 +14,6 @@ import { CampaignHoodieStage } from './CampaignHoodieStage';
 export function BuilderClient({ data, share, source }: { data: BuilderData; share: ShareParams; source: string }) {
   const add = useAddToCart();
   const toast = useOptionalToast();
-  // Test overrides are read after mount so the server HTML is identical for every URL.
-  const [overrides, setOverrides] = useState<BuilderOverrides>({ force3d: false, breakShader: false, extraFrameMs: 0 });
-  useEffect(() => setOverrides(readOverrides(window.location.search)), []);
 
   const onAddToCart = (item: BuilderCartItem, summary: BuilderCartSummary) => {
     const result = add({ item, ui: summary }, 'builder');
@@ -50,10 +45,6 @@ export function BuilderClient({ data, share, source }: { data: BuilderData; shar
       stageAspect="1 / 1"
       hrefs={{ sizeGuide: '/help?tab=size' }}
       track={track}
-      force3d={overrides.force3d}
-      debug3d={!!overrides.force3d}
-      breakShader={overrides.breakShader}
-      throttleSimulator={overrides.extraFrameMs ? { extraFrameMs: overrides.extraFrameMs } : undefined}
     />
   );
 }

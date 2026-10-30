@@ -36,7 +36,7 @@ export function twoDimensionalBuilderConfig(config: BuilderConfig): BuilderConfi
     defaultView: '2D',
     model3d: null,
     stimpieTextures: [],
-    colors: storefront.colors.map((color) => ({ ...color, tint: null, texture3d: null })),
+    colors: storefront.colors.map((color) => ({ ...color, texture3d: null })),
   };
 }
 

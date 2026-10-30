@@ -54,7 +54,7 @@ function ColourCard({
         <span className="mt-1 flex flex-wrap items-center gap-2">
           <span aria-hidden="true" className="inline-block h-4 w-4 rounded-full border border-ink/30" style={{ backgroundColor: colour.hex }} />
           <StatusChip ok={ready2d} okText="2D ready" missingText={missing} />
-          <span className="text-body-sm text-fg-muted">{colour.builderTint ? '3D uses tint' : '3D tint not set'}</span>
+          <span className="text-body-sm text-fg-muted">{colour.builderTint ? 'Photo tint set' : 'Uses colour value'}</span>
           {!colour.active ? <Pill tone="neutral" size="sm">Hidden</Pill> : null}
         </span>
       }
@@ -98,9 +98,9 @@ function ColourCard({
 
         <dl className="grid grid-cols-1 gap-2 rounded-md bg-cream p-3 text-body-sm sm:grid-cols-2">
           <div>
-            <dt className="font-medium">Tint (3D)</dt>
+            <dt className="font-medium">Storefront photo tint</dt>
             <dd className="flex items-center gap-2">
-              {colour.builderTint ? <><span aria-hidden="true" className="inline-block h-5 w-5 rounded-full border border-ink/30" style={{ backgroundColor: colour.builderTint }} /><span className="font-mono">{colour.builderTint}</span></> : 'Not set'}
+              {colour.builderTint ? <><span aria-hidden="true" className="inline-block h-5 w-5 rounded-full border border-ink/30" style={{ backgroundColor: colour.builderTint }} /><span className="font-mono">{colour.builderTint}</span></> : `Uses ${colour.hex.toUpperCase()}`}
             </dd>
           </div>
           <div>

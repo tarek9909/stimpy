@@ -104,7 +104,16 @@ export function BuilderStage2D({
 
   const artKey = art?.key;
   useEffect(() => {
-    if (!art || art.key === targetArtRef.current?.key) return;
+    if (!art) {
+      if (!targetArtRef.current && !shownArtRef.current) return;
+      targetArtRef.current = null;
+      artToken.current += 1;
+      running.current?.cancel();
+      running.current = null;
+      commitArt(null, null);
+      return;
+    }
+    if (art.key === targetArtRef.current?.key) return;
     targetArtRef.current = art;
     const token = ++artToken.current;
     // Rapid swapping: finish the running swap instantly (its end state), then start from there. Latest wins.

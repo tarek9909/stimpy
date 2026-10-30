@@ -479,9 +479,13 @@ html {
 /* Featured Drop Band Redesign */
 .store-drop-band {
   position: relative;
-  padding-block: 56px;
   background: #ffffff;
   overflow: hidden;
+}
+
+/* Keep the featured drop's tighter rhythm above the storefront's generic section spacing. */
+.storefront #main-content > section.store-drop-band {
+  padding-block: 56px;
 }
 
 .store-drop-showcase {
@@ -510,11 +514,16 @@ html {
 
 .store-drop-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 64px;
   align-items: center;
   position: relative;
   z-index: 1;
+}
+
+.store-drop-art-col,
+.store-drop-content-col {
+  min-width: 0;
 }
 
 /* Left: Artwork Frame */
@@ -822,9 +831,9 @@ html {
   }
 }
 
-@media (max-width: 768px) {
-  .store-drop-band {
-    padding-block: 28px;
+@media (max-width: 900px) {
+  .storefront #main-content > section.store-drop-band {
+    padding-block: 36px;
   }
   .store-drop-showcase {
     padding: 30px 20px;
@@ -854,6 +863,18 @@ html {
   }
   .store-drop-perks {
     justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-drop-pulse-ring {
+    animation: none;
+  }
+  .store-drop-art-frame,
+  .store-drop-art-inner img,
+  .store-drop-cta,
+  .store-drop-cta-arrow {
+    transition: none;
   }
 }
 
@@ -1638,6 +1659,257 @@ html {
   .store-preview-dialog > div:last-child > :is(button, a) { min-height: 42px; font-size: 12px; padding-block: 10px; }
 }
 
+/* Drops — limited-run editorial showcase */
+.store-drops-intro .container > header {
+  margin-bottom: 10px;
+}
+.store-drops-intro .container > header h1 {
+  font-size: clamp(2.5rem, 3.8vw, 3.75rem);
+  font-weight: 700;
+  line-height: 1;
+}
+.store-drops-intro .container > p {
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.store-drops-feature {
+  padding-block: 0 72px !important;
+}
+.store-drops-showcase {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 88px);
+  overflow: hidden;
+  padding: clamp(28px, 4.5vw, 64px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 6% 100%, rgba(255, 122, 89, 0.15), transparent 38%),
+    linear-gradient(145deg, #171717, #0d0d0d 70%);
+  color: #fff;
+  box-shadow: 0 24px 64px -36px rgba(17, 17, 17, 0.4);
+}
+.store-drops-art-col {
+  width: 100%;
+  max-width: 500px;
+  justify-self: center;
+}
+.store-drops-artwork {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: #080808;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.35);
+}
+.store-drops-artwork > div:first-child {
+  background: #080808;
+}
+.store-drops-art-image img {
+  object-fit: contain;
+}
+.store-drops-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.store-drops-overline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.store-drops-overline > span:first-child {
+  border-radius: 999px;
+}
+.store-drops-edition {
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.store-drops-title {
+  max-width: 10ch;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.35rem, 3.8vw, 4.25rem);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.99;
+}
+.store-drops-description {
+  max-width: 40rem;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(0.95rem, 1vw, 1.1rem);
+  line-height: 1.7;
+}
+.store-drops-stock {
+  margin-top: 18px;
+  color: #ffe0d6;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.store-drops-timer-panel {
+  width: 100%;
+  max-width: 440px;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+}
+.store-drops-timer-label {
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.store-drops-countdown > div {
+  gap: 8px;
+  align-items: flex-start;
+  color: #fff;
+}
+.store-drops-countdown > div > span:first-child {
+  display: none;
+}
+.store-drops-countdown [role="timer"] {
+  width: 100%;
+}
+.store-drops-countdown [role="timer"] time {
+  gap: clamp(2px, 0.45vw, 8px);
+  justify-content: space-between;
+}
+.store-drops-countdown [role="timer"] .text-display,
+.store-drops-countdown [role="timer"] .text-h1 {
+  font-size: clamp(1.85rem, 3.3vw, 3.35rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+}
+.store-drops-countdown [role="timer"] .min-w-16,
+.store-drops-countdown [role="timer"] .min-w-20 {
+  min-width: clamp(2.05rem, 4vw, 3.55rem);
+}
+.store-drops-countdown [role="timer"] .text-caption {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.store-drops-enter {
+  margin-top: 24px;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+.store-drops-upcoming .container > header,
+.store-drops-archive .container > header {
+  margin-bottom: 28px;
+}
+.store-drops-upcoming .container > header > p:first-child,
+.store-drops-archive .container > header > p:first-child {
+  margin-bottom: 7px;
+  color: #74706b;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.store-drops-card,
+.store-drops-archive-card {
+  height: 100%;
+  border-color: #e7e1d8 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px -20px rgba(17, 17, 17, 0.5);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.store-drops-card:hover,
+.store-drops-archive-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 30px -22px rgba(17, 17, 17, 0.65);
+}
+.store-drops-card > div:first-child,
+.store-drops-archive-card > div:first-child {
+  background: #eee8df;
+}
+.store-drops-card > div:last-child,
+.store-drops-archive-card > div:last-child {
+  gap: 12px;
+  padding: 20px;
+}
+.store-drops-card h3 a,
+.store-drops-archive-card h3 a {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.store-drops-archive-card > div:first-child {
+  filter: grayscale(0.65);
+}
+@media (max-width: 767px) {
+  .store-drops-intro .container > header h1 {
+    font-size: 2.35rem;
+  }
+  .store-drops-feature {
+    padding-block: 0 48px !important;
+  }
+  .store-drops-showcase {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    padding: 18px;
+    border-radius: 16px;
+  }
+  .store-drops-art-col {
+    max-width: 400px;
+  }
+  .store-drops-overline {
+    gap: 9px;
+    margin-bottom: 16px;
+  }
+  .store-drops-edition {
+    font-size: 0.6rem;
+  }
+  .store-drops-title {
+    font-size: clamp(2.25rem, 11vw, 3.25rem);
+  }
+  .store-drops-description {
+    margin-top: 14px;
+  }
+  .store-drops-timer-panel {
+    margin-top: 20px;
+    padding: 15px;
+  }
+  .store-drops-countdown [role="timer"] .text-display,
+  .store-drops-countdown [role="timer"] .text-h1 {
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+  }
+  .store-drops-countdown [role="timer"] .min-w-16,
+  .store-drops-countdown [role="timer"] .min-w-20 {
+    min-width: clamp(1.8rem, 7vw, 2.45rem);
+  }
+  .store-drops-card > div:last-child,
+  .store-drops-archive-card > div:last-child {
+    gap: 10px;
+    padding: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-drops-card,
+  .store-drops-archive-card {
+    transition: none;
+  }
+  .store-drops-card:hover,
+  .store-drops-archive-card:hover {
+    transform: none;
+  }
+}
+
 @media (min-width: 1600px) {
   .store-hero { height: 680px; }
 }
@@ -1677,6 +1949,7 @@ html {
   .storefront .text-h1 { font-size: 30px; }
   .storefront .text-h2 { font-size: 26px; }
   .storefront #main-content > section:not(.store-hero), .store-section { padding-block: 48px; }
+  .storefront #main-content > section.store-drop-band { padding-block: 28px; }
   .store-hero { height: min(650px, calc(100svh - 140px)); min-height: 570px; }
   .store-hero-inner { align-items: start; }
   .store-hero-copy { width: 100%; padding-top: 20px; }

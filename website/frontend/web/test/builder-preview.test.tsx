@@ -73,7 +73,7 @@ describe('customer 3D preview', () => {
     mocks.GET.mockResolvedValueOnce({ data: { ...config, model3d: null, effectiveMode: '2D' } });
     const view = setup();
     await view.findByText('2D preview');
-    // The 2D poster (campaign photo stage) stays visible.
+    // The configured per-colour 2D garment stays visible.
     expect(document.querySelector('.store-preview-poster')).toHaveStyle({ visibility: 'visible' });
     expect(view.queryByText('Loading 3D preview')).not.toBeInTheDocument();
     fireEvent.click(view.getByRole('button', { name: 'Retry 3D' }));

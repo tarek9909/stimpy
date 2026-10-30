@@ -105,7 +105,7 @@ function ColorDialog({ color, onClose }: { color: AdminColor | null; onClose: ()
         <TextField name="name" label="Name" required maxLength={120} autoComplete="off" />
         <ColorField name="hex" label="Colour" hint="The colour of the hoodie as shown on the website." />
         <ImageListField name="images" label="Hoodie photos" onBusyChange={setUploading} />
-        <ColorField name="builderTint" label="Builder tint" optional hint="Used for the 3D hoodie. This is the only place it is edited." />
+        <ColorField name="builderTint" label="Builder tint" optional hint="Used to color-adjust the hoodie photo in the storefront Builder. If empty, the colour value above is used." />
         <BuilderTexture onBusyChange={setUploading} />
         <SwitchField name="active" label="Enable this colour" description="Available on the hoodies that offer it. Hiding keeps its variants and order history." />
       </AdminForm>
