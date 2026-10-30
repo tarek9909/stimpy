@@ -51,7 +51,7 @@ export function StimpieActions({
   const sharedLinks = (
     <div className="flex flex-col gap-3">
       <Button
-        href={`/builder?stimpie=${encodeURIComponent(stimpie.slug)}`}
+        href={`/builder?mode=stimpie-only&stimpie=${encodeURIComponent(stimpie.slug)}`}
         variant="secondary"
         size="lg"
         fullWidth

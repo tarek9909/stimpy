@@ -149,7 +149,12 @@ export function applyStockProblems(lines: readonly CartLine[], problems: readonl
     const line = next[p.itemIndex];
     if (!line) continue;
     if (p.available > 0) {
-      const lowered = line.item.qty - (p.requested - p.available);
+      const stimpiePackQty = line.item.kind === 'stimpie_pack' && p.kind === 'STIMPIE'
+        ? line.item.stimpies.find((stimpie) => stimpie.stimpieId === p.stimpieId)?.qty ?? 0
+        : 0;
+      const lowered = stimpiePackQty > 0
+        ? Math.min(line.item.qty, Math.floor(p.available / stimpiePackQty))
+        : line.item.qty - (p.requested - p.available);
       if (lowered >= 1) {
         next[p.itemIndex] = {
           ...line,

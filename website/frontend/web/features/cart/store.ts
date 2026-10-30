@@ -60,6 +60,12 @@ function normalizeItem(item: CartItem): CartItem | null {
     if (stimpieIds.length !== item.stimpieIds.length || stimpieIds.length === 0) return null;
     return { ...item, stimpieIds, qty };
   }
+  if (item.kind === 'stimpie_pack') {
+    if (item.stimpies.length === 0 || item.stimpies.some((s) => !Number.isInteger(s.stimpieId) || s.stimpieId <= 0 || !Number.isInteger(s.qty) || s.qty <= 0)) return null;
+    if (new Set(item.stimpies.map((s) => s.stimpieId)).size !== item.stimpies.length) return null;
+    if (item.stimpies.reduce((total, stimpie) => total + stimpie.qty, 0) > 1_000_000) return null;
+    return { ...item, stimpies: item.stimpies.map((s) => ({ stimpieId: s.stimpieId, qty: s.qty })), qty };
+  }
   return { ...item, qty };
 }
 

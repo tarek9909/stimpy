@@ -9,17 +9,19 @@ let restore: () => void = () => undefined;
 beforeEach(() => forceDesktop());
 afterEach(() => restore());
 
-const STIMPIE = { id: 9, slug: 'the-void', name: 'THE VOID', type: 'CORE', priceCents: 1000, story: '', images: [], artworkUrl: 'x', artworkWidth: null, artworkHeight: null, drop: null, status: 'AVAILABLE', remaining: null, purchasable: true };
+const STIMPIE = { id: 9, slug: 'the-void', name: 'THE VOID', type: 'CORE', priceCents: 1200, story: '', images: [], artworkUrl: 'x', artworkWidth: null, artworkHeight: null, drop: null, status: 'AVAILABLE', remaining: null, purchasable: true };
+const SECOND_STIMPIE = { ...STIMPIE, id: 11, slug: 'neon-koi', name: 'NEON KOI', artworkUrl: 'y' };
 const SOLD = { ...STIMPIE, id: 10, slug: 'static', name: 'THE STATIC', status: 'SOLD_OUT', purchasable: false };
+const STIMPIE_OFFER = { id: 12, slug: 'seven-stimpies', name: 'Seven Stimpies', description: '', type: 'STIMPIE_ONLY', stimpieCount: 7, eligibleStimpieIds: [9, 11], priceCents: 2800, compareAtPriceCents: null, badge: null };
 
-function setup(post: (req: Request) => Response | Promise<Response>) {
+function setup(post: (req: Request) => Response | Promise<Response>, options: { stimpies?: unknown[]; packs?: unknown[] } = {}) {
   const stub = stubFetch({
     'GET /api/v1/admin/orders/counts': () => json({ ALL: 0, NEW: 0, CONFIRMED: 0, PACKED: 0, OUT_FOR_DELIVERY: 0, DELIVERED: 0, CANCELLED: 0, RETURNED: 0 }),
     'GET /api/v1/admin/orders': () => json(emptyPage()),
     'GET /api/v1/admin/areas': () => json(emptyPage([{ id: 1, name: 'Beirut', feeCents: null, estDays: null, active: true }], 100)),
     'GET /api/v1/products/hoodies': () => json({ items: [], page: 1, pageSize: 100, total: 0 }),
-    'GET /api/v1/products/stimpies': () => json({ items: [STIMPIE, SOLD], page: 1, pageSize: 100, total: 2 }),
-    'GET /api/v1/packs': () => json({ items: [], page: 1, pageSize: 100, total: 0 }),
+    'GET /api/v1/products/stimpies': () => json({ items: options.stimpies ?? [STIMPIE, SOLD], page: 1, pageSize: 100, total: (options.stimpies ?? [STIMPIE, SOLD]).length }),
+    'GET /api/v1/packs': () => json({ items: options.packs ?? [], page: 1, pageSize: 100, total: (options.packs ?? []).length }),
     'GET /api/v1/delivery/fees': () => json({ defaultFeeCents: 300, areas: [], estimateText: '2-3 working days' }),
     'POST /api/v1/admin/orders': post,
   });
@@ -49,7 +51,7 @@ function fillValid() {
   set('customer.phone', '03 123 456');
   set('delivery.areaName', 'Beirut');
   set('delivery.address', 'Hamra street 5');
-  fireEvent.click(screen.getByRole('radio', { name: 'Extra Stimpie' }));
+  fireEvent.click(screen.getByRole('radio', { name: 'Single Stimpie' }));
 }
 
 describe('manual order form', () => {
@@ -64,7 +66,7 @@ describe('manual order form', () => {
   it('disables sold-out Stimpies with the text "Sold out"', async () => {
     setup(() => json({}));
     await screen.findByRole('heading', { name: 'New order' });
-    fireEvent.click(screen.getByRole('radio', { name: 'Extra Stimpie' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Single Stimpie' }));
     const option = await screen.findByRole('option', { name: 'THE STATIC (Sold out)' });
     expect(option).toBeDisabled();
   });
@@ -109,7 +111,7 @@ describe('manual order form', () => {
     fillValid();
     await screen.findByRole('option', { name: 'THE VOID' });
     fireEvent.change(screen.getByRole('combobox', { name: /^Stimpie/ }), { target: { value: '9' } });
-    expect(screen.getByTestId('order-estimate')).toHaveTextContent('$13.00');
+    expect(screen.getByTestId('order-estimate')).toHaveTextContent('$15.00');
     fireEvent.click(screen.getByRole('button', { name: 'Create order' }));
     expect(await screen.findByText('Created order page')).toBeInTheDocument();
     await waitFor(() => expect(body).not.toBeNull());
@@ -132,5 +134,36 @@ describe('manual order form', () => {
     fireEvent.change(screen.getByRole('combobox', { name: /^Stimpie/ }), { target: { value: '9' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create order' }));
     expect((await screen.findAllByText('That does not look like a Lebanese phone number.')).length).toBeGreaterThan(0);
+  });
+
+  it('creates a Stimpie-only offer order with repeated designs compacted and no hoodie fields', async () => {
+    let body: Record<string, unknown> | null = null;
+    setup(async (req) => {
+      body = (await req.json()) as Record<string, unknown>;
+      return json(makeOrder({ id: 43, number: 'STP-1044' }), 201);
+    }, { stimpies: [STIMPIE, SECOND_STIMPIE], packs: [STIMPIE_OFFER] });
+    await screen.findByRole('heading', { name: 'New order' });
+    fillValid();
+    const line = screen.getByTestId('order-line-0');
+    fireEvent.click(within(line).getByRole('radio', { name: 'Stimpies only' }));
+    fireEvent.change(within(line).getByRole('combobox', { name: /^Stimpie-only offer/ }), { target: { value: '12' } });
+    fireEvent.click(within(line).getByLabelText('THE VOID'));
+    fireEvent.change(within(line).getByRole('spinbutton', { name: 'Quantity of THE VOID' }), { target: { value: '3' } });
+    fireEvent.click(within(line).getByLabelText('NEON KOI'));
+    fireEvent.change(within(line).getByRole('spinbutton', { name: 'Quantity of NEON KOI' }), { target: { value: '4' } });
+    fireEvent.click(within(line).getByRole('button', { name: 'Increase quantity' }));
+
+    expect(within(line).queryByLabelText('Hoodie')).toBeNull();
+    expect(screen.getByTestId('order-estimate')).toHaveTextContent('$59.00');
+    fireEvent.click(screen.getByRole('button', { name: 'Create order' }));
+    expect(await screen.findByText('Created order page')).toBeInTheDocument();
+    await waitFor(() => expect(body).not.toBeNull());
+    expect(body).toMatchObject({
+      items: [{ kind: 'stimpie_pack', packId: 12, stimpies: [{ stimpieId: 9, qty: 3 }, { stimpieId: 11, qty: 4 }], qty: 2 }],
+    });
+    const item = (body as unknown as { items: Array<Record<string, unknown>> }).items[0]!;
+    expect(item).not.toHaveProperty('hoodieId');
+    expect(item).not.toHaveProperty('colorId');
+    expect(item).not.toHaveProperty('sizeId');
   });
 });

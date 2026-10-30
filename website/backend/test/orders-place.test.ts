@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { useTestApp } from './helpers/app';
-import { buildWorld, createArea, createDrop, createStimpie } from './helpers/fixtures';
+import { buildWorld, createArea, createDrop, createPack, createStimpie } from './helpers/fixtures';
 import { freezeTime } from './helpers/clock';
 import { assertStockInvariants, deepKeys, hoodieItem, orderBody, packItem, phoneN, placeInput, stimpieItem, variantOf } from './helpers/orders';
 import { AppError } from '../src/lib/errors';
-import { placeOrder } from '../src/services/orders';
+import { changeStatus, placeOrder } from '../src/services/orders';
+import { placedOrderResponse } from '../src/modules/orders/service';
 import type { CartItemInput } from '../src/services/pricing';
 
 const t = useTestApp();
@@ -49,7 +50,7 @@ describe('placeOrder: the happy path writes everything in one go', () => {
     expect(o.items).toHaveLength(2);
     const pack = o.items.find((i) => i.kind === 'PACK')!;
     expect(pack.name).toBe(w.packs.one.name);
-    expect(pack.detail).toEqual({ hoodie: 'Stimpy Hoodie', color: 'Black', size: 'M', stimpies: [w.core[0]!.name] });
+    expect(pack.detail).toEqual({ hoodie: 'Stimpy Hoodie', color: 'Black', size: 'M', stimpies: [w.core[0]!.name], stimpieQuantities: [{ name: w.core[0]!.name, qty: 1 }] });
     expect(pack.unitCostCents).toBe(1700);
     // stock lines: pack -> variant + stimpie; extra -> limited stimpie x2
     expect(o.stockLines).toHaveLength(3);
@@ -254,6 +255,142 @@ describe('PRICE_CHANGED and NOT_PURCHASABLE reserve nothing', () => {
 });
 
 describe('pack rules', () => {
+  it('places Stimpie-only bundles with repeated designs, compact snapshots, and no hoodie stock/cost', async () => {
+    const w = await buildWorld(t.prisma);
+    const offer = await createPack(t.prisma, {
+      type: 'STIMPIE_ONLY',
+      name: 'Three Stimpies',
+      slug: 'stimpie-three',
+      stimpieCount: 3,
+      eligibleStimpieIds: [w.core[0]!.id],
+      priceCents: 2700,
+    });
+    const result = await placeOrder(t.ctx, placeInput(w, [{
+      kind: 'stimpie_pack',
+      packId: offer.id,
+      stimpies: [{ stimpieId: w.core[0]!.id, qty: 3 }],
+      qty: 2,
+    }]));
+    const order = await t.prisma.order.findUniqueOrThrow({ where: { id: result.orderId }, include: { items: true, stockLines: true } });
+    const variant = await variantOf(t.prisma, w);
+    const stimpie = await t.prisma.stimpie.findUniqueOrThrow({ where: { id: w.core[0]!.id } });
+    expect(order.subtotalCents).toBe(5400);
+    expect(order.costCents).toBe(3600);
+    expect(order.items[0]).toMatchObject({
+      kind: 'STIMPIE_PACK',
+      name: 'Three Stimpies',
+      qty: 2,
+      unitPriceCents: 2700,
+      unitCostCents: 1800,
+      detail: {
+        hoodie: null,
+        color: null,
+        size: null,
+        stimpies: [w.core[0]!.name],
+        stimpieQuantities: [{ name: w.core[0]!.name, qty: 3 }],
+      },
+    });
+    expect(order.stockLines).toHaveLength(1);
+    expect(order.stockLines[0]).toMatchObject({ itemType: 'STIMPIE', stimpieId: w.core[0]!.id, qty: 6 });
+    expect(stimpie.reserved).toBe(6);
+    expect(variant.reserved).toBe(0);
+    const publicOrder = await placedOrderResponse(t.ctx, result.orderId);
+    expect(publicOrder.order.items[0]).toMatchObject({
+      kind: 'STIMPIE_PACK',
+      details: {
+        hoodie: null,
+        stimpies: [w.core[0]!.name],
+        stimpieQuantities: [{ name: w.core[0]!.name, qty: 3 }],
+        hoodieImage: null,
+        stimpieImages: [{ name: w.core[0]!.name, imageUrl: w.core[0]!.artworkUrl }],
+      },
+    });
+    await t.prisma.pack.update({ where: { id: offer.id }, data: { type: 'HOODIE_SET', name: 'Renamed offer', priceCents: 1 } });
+    const snapshot = await t.prisma.orderItem.findUniqueOrThrow({ where: { id: order.items[0]!.id } });
+    expect(snapshot).toMatchObject({ kind: 'STIMPIE_PACK', name: 'Three Stimpies', unitPriceCents: 2700, unitCostCents: 1800 });
+  });
+
+  it('requires unique eligible designs whose compact quantities total the offer count', async () => {
+    const w = await buildWorld(t.prisma);
+    const offer = await createPack(t.prisma, { type: 'STIMPIE_ONLY', stimpieCount: 4, eligibleStimpieIds: [w.core[0]!.id] });
+    const mismatch = await errorOf(placeOrder(t.ctx, placeInput(w, [{ kind: 'stimpie_pack', packId: offer.id, stimpies: [{ stimpieId: w.core[0]!.id, qty: 3 }], qty: 1 }])));
+    expect(mismatch.fields).toHaveProperty(['items.0.stimpies']);
+    const ineligible = await errorOf(placeOrder(t.ctx, placeInput(w, [{ kind: 'stimpie_pack', packId: offer.id, stimpies: [{ stimpieId: w.core[1]!.id, qty: 4 }], qty: 1 }])));
+    expect(ineligible.fields).toHaveProperty(['items.0.stimpies.0.stimpieId']);
+    const duplicate = await errorOf(placeOrder(t.ctx, placeInput(w, [{ kind: 'stimpie_pack', packId: offer.id, stimpies: [{ stimpieId: w.core[0]!.id, qty: 2 }, { stimpieId: w.core[0]!.id, qty: 2 }], qty: 1 }])));
+    expect(duplicate.fields).toHaveProperty(['items.0.stimpies.1.stimpieId']);
+  });
+
+  it('rejects a Stimpie-only pack sent through the hoodie-set cart kind', async () => {
+    const w = await buildWorld(t.prisma);
+    const offer = await createPack(t.prisma, { type: 'STIMPIE_ONLY', stimpieCount: 1 });
+    const err = await errorOf(placeOrder(t.ctx, placeInput(w, [{ ...packItem(w, [w.core[0]!.id]), packId: offer.id } as CartItemInput])));
+    expect(err.fields).toHaveProperty(['items.0.packId']);
+  });
+
+  it('enforces eligibleStimpieIds for hoodie-set packs too', async () => {
+    const w = await buildWorld(t.prisma);
+    const offer = await createPack(t.prisma, { stimpieCount: 1, eligibleStimpieIds: [w.core[0]!.id] });
+    const selection = { ...(packItem(w, [w.core[1]!.id]) as Extract<CartItemInput, { kind: 'pack' }>), packId: offer.id };
+    const err = await errorOf(placeOrder(t.ctx, placeInput(w, [selection])));
+    expect(err.fields).toHaveProperty(['items.0.stimpieIds.0']);
+    expect(await t.prisma.order.count()).toBe(0);
+    expect(offer.type).toBe('HOODIE_SET');
+  });
+
+  it('reports inactive, upcoming, and ended selected Stimpies as not purchasable', async () => {
+    const w = await buildWorld(t.prisma);
+    freezeTime('2026-10-14T10:00:00Z');
+    const upcomingDrop = await createDrop(t.prisma, { slug: 'offer-upcoming', startsAt: new Date('2026-10-20T00:00:00Z') });
+    const endedDrop = await createDrop(t.prisma, { slug: 'offer-ended', startsAt: new Date('2026-10-01T00:00:00Z'), endedAt: new Date('2026-10-10T00:00:00Z') });
+    const hidden = await createStimpie(t.prisma, { active: false });
+    const upcoming = await createStimpie(t.prisma, { dropId: upcomingDrop.id });
+    const ended = await createStimpie(t.prisma, { dropId: endedDrop.id });
+    const offer = await createPack(t.prisma, { type: 'STIMPIE_ONLY', stimpieCount: 1 });
+    const items = [hidden, upcoming, ended].map((stimpie) => ({
+      kind: 'stimpie_pack' as const,
+      packId: offer.id,
+      stimpies: [{ stimpieId: stimpie.id, qty: 1 }],
+      qty: 1,
+    }));
+    const err = await errorOf(placeOrder(t.ctx, placeInput(w, items)));
+    expect(err.code).toBe('NOT_PURCHASABLE');
+    expect(err.details!.items).toMatchObject([
+      { kind: 'STIMPIE', stimpieId: hidden.id, itemIndex: 0, reason: 'INACTIVE' },
+      { kind: 'STIMPIE', stimpieId: upcoming.id, itemIndex: 1, reason: 'DROP_NOT_STARTED' },
+      { kind: 'STIMPIE', stimpieId: ended.id, itemIndex: 2, reason: 'DROP_ENDED' },
+    ]);
+  });
+
+  it('uses exact selected-unit availability and releases/restocks Stimpie-only bundle stock through order transitions', async () => {
+    const w = await buildWorld(t.prisma);
+    const stimpieId = w.core[0]!.id;
+    const offer = await createPack(t.prisma, { type: 'STIMPIE_ONLY', stimpieCount: 3, eligibleStimpieIds: [stimpieId], priceCents: 2700 });
+    await t.prisma.stimpie.update({ where: { id: stimpieId }, data: { quantity: 1 } });
+    const soldOutLine = { kind: 'stimpie_pack' as const, packId: offer.id, stimpies: [{ stimpieId, qty: 3 }], qty: 1 };
+    const soldOut = await errorOf(placeOrder(t.ctx, placeInput(w, [soldOutLine, soldOutLine])));
+    expect(soldOut.code).toBe('SOLD_OUT');
+    expect(soldOut.details!.items).toEqual([{ kind: 'STIMPIE', stimpieId, itemIndex: 0, name: w.core[0]!.name, requested: 6, available: 1 }]);
+    await t.prisma.stimpie.update({ where: { id: stimpieId }, data: { quantity: 20 } });
+
+    const selection = { kind: 'stimpie_pack' as const, packId: offer.id, stimpies: [{ stimpieId, qty: 3 }], qty: 2 };
+    const cancelled = await placeOrder(t.ctx, placeInput(w, [selection], { i: 1 }));
+    expect((await t.prisma.stimpie.findUniqueOrThrow({ where: { id: stimpieId } })).reserved).toBe(6);
+    await changeStatus(t.ctx, { orderId: cancelled.orderId, to: 'CANCELLED', userId: null });
+    expect(await t.prisma.orderStockLine.findFirstOrThrow({ where: { orderId: cancelled.orderId } })).toMatchObject({ state: 'RELEASED', qty: 6 });
+    expect(await t.prisma.stimpie.findUniqueOrThrow({ where: { id: stimpieId } })).toMatchObject({ quantity: 20, reserved: 0 });
+
+    const returned = await placeOrder(t.ctx, placeInput(w, [selection], { i: 2 }));
+    await changeStatus(t.ctx, { orderId: returned.orderId, to: 'CONFIRMED', userId: null });
+    await changeStatus(t.ctx, { orderId: returned.orderId, to: 'PACKED', userId: null });
+    await changeStatus(t.ctx, { orderId: returned.orderId, to: 'OUT_FOR_DELIVERY', userId: null, deliveryNumber: 'D-12345' });
+    await changeStatus(t.ctx, { orderId: returned.orderId, to: 'DELIVERED', userId: null });
+    expect(await t.prisma.stimpie.findUniqueOrThrow({ where: { id: stimpieId } })).toMatchObject({ quantity: 14, reserved: 0 });
+    await changeStatus(t.ctx, { orderId: returned.orderId, to: 'RETURNED', userId: null });
+    expect(await t.prisma.orderStockLine.findFirstOrThrow({ where: { orderId: returned.orderId } })).toMatchObject({ state: 'RESTOCKED', qty: 6 });
+    expect(await t.prisma.stimpie.findUniqueOrThrow({ where: { id: stimpieId } })).toMatchObject({ quantity: 20, reserved: 0 });
+  });
+
   it('needs exactly stimpieCount Stimpies', async () => {
     const w = await buildWorld(t.prisma);
     const one = await errorOf(placeOrder(t.ctx, placeInput(w, [{ ...packItem(w, [w.core[0]!.id, w.core[1]!.id]), packId: w.packs.one.id } as CartItemInput])));

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render } from '@testing-library/react';
-import type { Drop } from '@stimpy/api-client';
+import { fireEvent, render, within } from '@testing-library/react';
+import type { Drop, Pack } from '@stimpy/api-client';
 import { StoreHero, usesDefaultCampaign } from '@/components/StoreHero';
 import { HomeCommerce, PackTile } from '@/features/home/HomeCommerce';
 import { HomeHowItWorks } from '@/features/home/HomeHowItWorks';
@@ -84,6 +84,24 @@ describe('storefront commerce previews', () => {
     const view = render(<HomeCommerce packs={[]} hoodieSlug={null} extraCents={0} minExtra={null} drop={null} coreStimpies={[]} />);
     expect(view.getByRole('link', {name: 'Shop the hoodie'})).toHaveAttribute('href','/shop');
     expect(view.queryByRole('list', {name:'Core Stimpies'})).not.toBeInTheDocument();
+  });
+  it('shows the first five Stimpie-only offers in catalog order with prices and a quantity-builder link', () => {
+    const offers: Pack[] = Array.from({ length: 6 }, (_, index) => {
+      const count = [10, 1, 2, 3, 7, 5][index]!;
+      return { id: index + 10, type: 'STIMPIE_ONLY', eligibleStimpieIds: null, slug: `offer-${count}`, name: `${count} Stimpies`, description: '', stimpieCount: count,
+        priceCents: 1000 * count, compareAtPriceCents: null, badge: null };
+    });
+    const view = render(<HomeCommerce packs={[...packs, ...offers]} hoodieSlug="stimpy-hoodie" extraCents={0} minExtra={null} drop={null} coreStimpies={[]} allStimpies={[stimpie()]} />);
+    const section = view.getByTestId('stimpie-only-offers');
+    expect(section.querySelectorAll('li')).toHaveLength(5);
+    expect(section.textContent).toContain('10 Stimpies');
+    expect(section.textContent).toContain('$100');
+    expect(section.textContent).not.toContain('5 Stimpies');
+    expect(view.getByRole('link', { name: 'See all offers' })).toHaveAttribute('href', '/shop/stimpie-packs');
+    expect(within(section).getAllByRole('link', { name: 'Choose this offer' })[0]).toHaveAttribute('href', '/shop/stimpie-packs?pack=offer-10');
+    const hoodieList = view.getByRole('heading', { name: 'One hoodie. Your kind of set.' }).closest('section');
+    expect(hoodieList?.textContent).toContain('Hoodie + 2 Stimpies');
+    expect(hoodieList?.textContent).not.toContain('10 Stimpies');
   });
   it('keeps product detail links and full artwork in the server preview', () => {
     const view = render(<HomeCommerce packs={[]} hoodieSlug={null} extraCents={0} minExtra={1000} drop={null} coreStimpies={[stimpie()]} />);

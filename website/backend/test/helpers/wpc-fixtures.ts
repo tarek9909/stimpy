@@ -5,14 +5,16 @@ import type { Customer, Order, OrderSource, OrderStatus, PrismaClient } from '@p
  * Totals are derived from the items so tests can hand-compute expected figures.
  */
 export type FixtureItem = {
-  kind?: 'PACK' | 'HOODIE' | 'STIMPIE';
+  kind?: 'PACK' | 'STIMPIE_PACK' | 'HOODIE' | 'STIMPIE';
   name: string;
   qty?: number;
   unitPriceCents: number;
   unitCostCents: number;
-  detail?: { hoodie?: string | null; color?: string | null; size?: string | null; stimpies?: string[] };
+  detail?: { hoodie?: string | null; color?: string | null; size?: string | null; stimpies?: string[]; stimpieQuantities?: { name: string; qty: number }[] };
   /** Stimpie ids this item holds (one stock line per id, qty = item qty), state SOLD for delivered orders. */
   stimpieIds?: number[];
+  /** Compact Stimpie selection for a bundle: per-bundle qty, multiplied by `qty` for the stock line. */
+  stimpieQuantities?: { stimpieId: number; qty: number }[];
 };
 
 export type FixtureOrder = {
@@ -114,9 +116,10 @@ export async function makeOrder(prisma: PrismaClient, o: FixtureOrder = {}): Pro
   });
   const state = o.status === 'DELIVERED' ? 'SOLD' : o.status === 'CANCELLED' ? 'RELEASED' : 'RESERVED';
   for (const [idx, item] of items.entries()) {
-    for (const stimpieId of item.stimpieIds ?? []) {
+    const needs = item.stimpieQuantities ?? (item.stimpieIds ?? []).map((stimpieId) => ({ stimpieId, qty: item.qty ?? 1 }));
+    for (const need of needs) {
       await prisma.orderStockLine.create({
-        data: { orderId: order.id, orderItemId: order.items[idx]!.id, itemType: 'STIMPIE', stimpieId, qty: item.qty ?? 1, state },
+        data: { orderId: order.id, orderItemId: order.items[idx]!.id, itemType: 'STIMPIE', stimpieId: need.stimpieId, qty: need.qty * (item.stimpieQuantities ? item.qty ?? 1 : 1), state },
       });
     }
   }

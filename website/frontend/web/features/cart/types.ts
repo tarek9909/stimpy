@@ -12,6 +12,8 @@ export interface CartLineStimpie {
   name: string;
   artworkUrl: string;
   type: 'CORE' | 'LIMITED';
+  /** Number of this design inside one Stimpies-only offer. */
+  qty?: number;
 }
 
 export interface CartLineUi {

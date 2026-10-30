@@ -2,6 +2,7 @@ import { CART_MAX_QTY, CART_MIN_QTY, type CartItem, type CartLine } from './type
 
 /** Contract limit: `stimpieIds` holds 1 to 5 ids. */
 const PACK_MAX_STIMPIES = 5;
+const STIMPIE_ONLY_OFFER_MAX_STIMPIES = 1_000_000;
 
 /** Clamp to the contract range 1..10. */
 export function clampQty(n: number): number {
@@ -22,6 +23,8 @@ export function itemKey(item: CartItem): string {
   switch (item.kind) {
     case 'pack':
       return `pack:${item.packId}:${item.hoodieId}:${item.colorId}:${item.sizeId}:${[...item.stimpieIds].sort((a, b) => a - b).join(',')}`;
+    case 'stimpie_pack':
+      return `stimpie_pack:${item.packId}:${[...item.stimpies].sort((a, b) => a.stimpieId - b.stimpieId).map((s) => `${s.stimpieId}x${s.qty}`).join(',')}`;
     case 'hoodie':
       return `hoodie:${item.hoodieId}:${item.colorId}:${item.sizeId}`;
     case 'stimpie':
@@ -41,6 +44,8 @@ export function stimpieUnitsInCart(lines: readonly CartLine[], stimpieId: number
     const { item } = line;
     if (item.kind === 'pack') {
       if (item.stimpieIds.includes(stimpieId)) total += item.qty;
+    } else if (item.kind === 'stimpie_pack') {
+      total += (item.stimpies.find((s) => s.stimpieId === stimpieId)?.qty ?? 0) * item.qty;
     } else if (item.kind === 'stimpie' && item.stimpieId === stimpieId) {
       total += item.qty;
     }
@@ -83,6 +88,19 @@ export function isCartItem(value: unknown): value is CartItem {
       );
     case 'hoodie':
       return int(v.hoodieId) && int(v.colorId) && int(v.sizeId);
+    case 'stimpie_pack': {
+      if (!int(v.packId) || !Array.isArray(v.stimpies) || v.stimpies.length === 0) return false;
+      const seen = new Set<number>();
+      let total = 0;
+      for (const raw of v.stimpies) {
+        if (typeof raw !== 'object' || raw === null) return false;
+        const entry = raw as Record<string, unknown>;
+        if (!int(entry.stimpieId) || !int(entry.qty) || seen.has(entry.stimpieId)) return false;
+        seen.add(entry.stimpieId);
+        total += entry.qty;
+      }
+      return total > 0 && total <= STIMPIE_ONLY_OFFER_MAX_STIMPIES;
+    }
     case 'stimpie':
       return int(v.stimpieId);
     default:
@@ -98,6 +116,8 @@ export function contractItem(item: CartItem): CartItem {
   switch (item.kind) {
     case 'pack':
       return { kind: 'pack', packId: item.packId, hoodieId: item.hoodieId, colorId: item.colorId, sizeId: item.sizeId, stimpieIds: [...item.stimpieIds], qty: item.qty };
+    case 'stimpie_pack':
+      return { kind: 'stimpie_pack', packId: item.packId, stimpies: item.stimpies.map((s) => ({ stimpieId: s.stimpieId, qty: s.qty })), qty: item.qty };
     case 'hoodie':
       return { kind: 'hoodie', hoodieId: item.hoodieId, colorId: item.colorId, sizeId: item.sizeId, qty: item.qty };
     case 'stimpie':

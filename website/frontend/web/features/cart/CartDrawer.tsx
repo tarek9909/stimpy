@@ -47,7 +47,7 @@ export function CartDrawer() {
   }, [pathname]);
 
   // Validate when it opens, and again (debounced 500 ms) whenever quantities or lines change while open.
-  const signature = lines.map((l) => `${l.lineId}:${l.item.qty}`).join('|');
+  const signature = lines.map((l) => `${l.lineId}:${JSON.stringify(l.item)}`).join('|');
   useEffect(() => {
     if (!open || lines.length === 0) return;
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -145,7 +145,7 @@ export function CartDrawer() {
           <EmptyState
             icon={<ShoppingBag width={32} height={32} />}
             title="Your cart is empty."
-            text="Add a hoodie and a Stimpie or two."
+            text="Add a hoodie, a Stimpie, or a Stimpie-only set."
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <Button href="/shop" variant="dark" onClick={() => cartStore.getState().closeDrawer()}>

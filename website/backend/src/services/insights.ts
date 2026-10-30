@@ -182,6 +182,12 @@ export async function productInsights(ctx: AppContext, range: DateRange): Promis
         extraUnits += it.qty;
         continue;
       }
+      if (it.kind === 'STIMPIE_PACK') {
+        const set = packOrders.get(it.name) ?? new Set<number>();
+        set.add(o.id);
+        packOrders.set(it.name, set);
+        continue;
+      }
       hoodieUnits += it.qty; // a pack and a hoodie-only line each carry exactly one hoodie
       if (it.kind === 'PACK') {
         const set = packOrders.get(it.name) ?? new Set<number>();

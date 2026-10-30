@@ -14,7 +14,7 @@ import {
   selectionReducer,
   type Selection,
 } from '../src';
-import { PACKS, data } from './fixtures';
+import { PACKS, STIMPIE_ONLY_PACK, data } from './fixtures';
 
 const d = data();
 const colors = joinColors(d.colors, d.config);
@@ -32,7 +32,7 @@ describe('default pack (builder.md 10.1)', () => {
 describe('initial selection and share link', () => {
   it('defaults: first usable colour, first purchasable Stimpie in slot 1, popular pack, slot 2 focused', () => {
     const s = initialSelection(ctx);
-    expect(s).toEqual({ colorId: 1, packId: 2, slots: [1, null], focus: 1, previewId: 1 });
+    expect(s).toEqual({ colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, null], focus: 1, previewId: 1 });
   });
   it('applies a valid share link and ignores invalid values silently', () => {
     const s = initialSelection({ ...ctx, share: parseShareParams({ color: '2', stimpie: 'stimpie-2', pack: 'hoodie-1' }) });
@@ -50,7 +50,18 @@ describe('initial selection and share link', () => {
     expect(s.slots).toEqual([1, 4]);
     expect(initialSelection({ ...ctx, share: parseShareParams({ pack: 'hoodie-only' }) }).packId).toBeNull();
     // the same Stimpie in both slots is not allowed
-    expect(initialSelection({ ...ctx, share: parseShareParams({ stimpie: 'stimpie-1', stimpie2: 'stimpie-1' }) }).slots).toEqual([1, null]);
+    expect(initialSelection({ ...ctx, share: parseShareParams({ mode: 'hoodie-set', stimpie: 'stimpie-1', stimpie2: 'stimpie-1' }) }).slots).toEqual([1, null]);
+  });
+  it('a Stimpie entry URL keeps Stimpie-only intent and does not create hoodie slots', () => {
+    const packs = [...PACKS, STIMPIE_ONLY_PACK];
+    const selected = initialSelection({ ...ctx, packs, share: parseShareParams({ stimpie: 'stimpie-1' }) });
+    expect(selected).toMatchObject({ purchaseMode: 'STIMPIE_ONLY', packId: 3, slots: [], previewId: 1 });
+    expect(defaultPackId(packs)).toBe(2);
+  });
+  it('an explicit Stimpie-only share restores offers with more than two designs and repeated slugs', () => {
+    const share = parseShareParams({ mode: 'stimpie-only', pack: 'stimpie-10', stimpies: 'stimpie-1:3,stimpie-2:1,stimpie-4:2' });
+    expect(share.stimpies).toEqual(['stimpie-1', 'stimpie-1', 'stimpie-1', 'stimpie-2', 'stimpie-4', 'stimpie-4']);
+    expect(initialSelection({ ...ctx, packs: [...PACKS, STIMPIE_ONLY_PACK], share })).toMatchObject({ purchaseMode: 'STIMPIE_ONLY', packId: 3, previewId: 1 });
   });
 });
 
@@ -93,7 +104,7 @@ describe('slot flow (builder.md 10.2)', () => {
 });
 
 describe('stock, price and the add-to-cart matrix (builder.md 10.5)', () => {
-  const sel: Selection = { colorId: 1, packId: 2, slots: [1, 2], focus: 0, previewId: 1 };
+  const sel: Selection = { colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, 2], focus: 0, previewId: 1 };
   const args = { packs: d.packs, stimpies: d.stimpies, hoodie: d.hoodie };
   it('a colour with no in-stock size is sold out', () => {
     expect(colorSoldOut(d.hoodie, 2)).toBe(true);
@@ -103,8 +114,8 @@ describe('stock, price and the add-to-cart matrix (builder.md 10.5)', () => {
   it('running price is the pack priceCents, hoodie only uses the hoodie priceCents', () => {
     expect(runningPriceCents(sel, d.packs, d.hoodie)).toBe(4500);
     expect(runningPriceCents({ ...sel, packId: 1, slots: [1] }, d.packs, d.hoodie)).toBe(3500);
-    expect(runningPriceCents({ ...sel, packId: null, slots: [] }, d.packs, d.hoodie)).toBe(2500);
-    expect(runningPriceCents({ ...sel, packId: null, slots: [] }, d.packs, null)).toBeNull();
+    expect(runningPriceCents({ ...sel, purchaseMode: 'HOODIE_ONLY', packId: null, slots: [] }, d.packs, d.hoodie)).toBe(2500);
+    expect(runningPriceCents({ ...sel, purchaseMode: 'HOODIE_ONLY', packId: null, slots: [] }, d.packs, null)).toBeNull();
   });
   it('ok when everything is filled and purchasable', () => {
     expect(evaluateAdd({ selection: sel, ...args })).toMatchObject({ ok: true, issue: null });
@@ -124,7 +135,7 @@ describe('stock, price and the add-to-cart matrix (builder.md 10.5)', () => {
     });
   });
   it('hoodie only needs no Stimpies, even with a sold-out one on the stage', () => {
-    expect(evaluateAdd({ selection: { ...sel, packId: null, slots: [], previewId: 3 }, ...args }).ok).toBe(true);
+    expect(evaluateAdd({ selection: { ...sel, purchaseMode: 'HOODIE_ONLY', packId: null, slots: [], previewId: 3 }, ...args }).ok).toBe(true);
   });
   it('no hoodie data: the purchase is not possible', () => {
     expect(evaluateAdd({ selection: sel, packs: d.packs, stimpies: d.stimpies, hoodie: null }).issue).toBe('NO_HOODIE');
@@ -133,21 +144,21 @@ describe('stock, price and the add-to-cart matrix (builder.md 10.5)', () => {
 
 describe('cart item shape (checkout-and-order-flow 1.1)', () => {
   it('pack: { kind, packId, hoodieId, colorId, sizeId, stimpieIds, qty: 1 }', () => {
-    const item = buildCartItem({ selection: { colorId: 1, packId: 2, slots: [1, 2], focus: 0, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 });
+    const item = buildCartItem({ selection: { colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, 2], focus: 0, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 });
     expect(item).toEqual({ kind: 'pack', packId: 2, hoodieId: 7, colorId: 1, sizeId: 11, stimpieIds: [1, 2], qty: 1 });
   });
   it('hoodie: { kind, hoodieId, colorId, sizeId, qty: 1 } with no other keys', () => {
-    const item = buildCartItem({ selection: { colorId: 1, packId: null, slots: [], focus: 0, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 });
+    const item = buildCartItem({ selection: { colorId: 1, purchaseMode: 'HOODIE_ONLY', packId: null, slots: [], focus: 0, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 });
     expect(item).toEqual({ kind: 'hoodie', hoodieId: 7, colorId: 1, sizeId: 11, qty: 1 });
     expect(Object.keys(item ?? {}).sort()).toEqual(['colorId', 'hoodieId', 'kind', 'qty', 'sizeId']);
   });
   it('refuses an incomplete or duplicated pack', () => {
-    expect(buildCartItem({ selection: { colorId: 1, packId: 2, slots: [1, null], focus: 1, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 })).toBeNull();
-    expect(buildCartItem({ selection: { colorId: 1, packId: 2, slots: [1, 1], focus: 1, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 })).toBeNull();
+    expect(buildCartItem({ selection: { colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, null], focus: 1, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 })).toBeNull();
+    expect(buildCartItem({ selection: { colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, 1], focus: 1, previewId: 1 }, packs: d.packs, hoodieId: 7, sizeId: 11 })).toBeNull();
   });
   it('summary carries display data for the drawer', () => {
     const s = buildCartSummary({
-      selection: { colorId: 1, packId: 2, slots: [1, 2], focus: 0, previewId: 1 },
+      selection: { colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, 2], focus: 0, previewId: 1 },
       packs: d.packs,
       stimpies: d.stimpies,
       hoodie: d.hoodie!,
@@ -163,7 +174,7 @@ describe('live announcement', () => {
   it('"Black selected. Hoodie plus 2 Stimpies, $45."', () => {
     const text = liveAnnouncement({
       color: colors[0]!,
-      selection: { colorId: 1, packId: 2, slots: [1, 2], focus: 0, previewId: 1 },
+      selection: { colorId: 1, purchaseMode: 'HOODIE_SET', packId: 2, slots: [1, 2], focus: 0, previewId: 1 },
       packs: d.packs,
       hoodie: d.hoodie,
       stimpie: d.stimpies[0]!,

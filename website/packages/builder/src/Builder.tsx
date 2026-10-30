@@ -31,7 +31,7 @@ import type {
 } from './types';
 import { BuilderStage2D } from './BuilderStage2D';
 import { BuilderCanvas3D, Canvas3DBoundary, type Canvas3DHandle } from './BuilderCanvas3D';
-import { Controls3D, ColorSwatchRow, ModeToggle, PackSelector, SizeSheet, StimpieCarousel, BuilderStaticFallback } from './parts';
+import { Controls3D, ColorSwatchRow, ModeToggle, PackSelector, SizeSheet, SlotChips, StimpieCarousel, BuilderStaticFallback } from './parts';
 import { useInView, useReducedMotion } from './hooks';
 import { DecodedImageCache } from './lib/images';
 import {
@@ -52,6 +52,7 @@ import {
   colorSoldOut,
   evaluateAdd,
   initialSelection,
+  packAllowsStimpie,
   packById,
   runningPriceCents,
   selectionReducer,
@@ -284,13 +285,14 @@ export function Builder({
   const color = joined.find((c) => c.id === selection.colorId) ?? visibleColors[0] ?? null;
   const stimpie = stimpieById(stimpies, selection.previewId) ?? stimpies[0] ?? null;
   const pack = packById(packs, selection.packId);
-  const stageStimpie = compact || pack ? stimpie : null;
+  const stageStimpie = compact || selection.purchaseMode !== 'HOODIE_ONLY' ? stimpie : null;
 
   // ----- stock and price -----
   const soldOutIds = useMemo(() => new Set(joined.filter((c) => colorSoldOut(hoodie, c.id)).map((c) => c.id)), [joined, hoodie]);
   const priceCents = runningPriceCents(selection, packs, hoodie);
   const addState = evaluateAdd({ selection, packs, stimpies, hoodie });
-  const purchase = !!onAddToCart && !compact && !!hoodie;
+  const stimpieOnly = selection.purchaseMode === 'STIMPIE_ONLY';
+  const purchase = !!onAddToCart && !compact && !stimpieOnly && !!hoodie;
 
   // ----- 2D / 3D props -----
   const cache = useRef<DecodedImageCache | null>(null);
@@ -341,18 +343,19 @@ export function Builder({
   // ----- share link: keep the URL in sync (no history entry per click) -----
   useEffect(() => {
     if (!syncUrl || !color || !stimpie) return;
-    const first = pack ? stimpieById(stimpies, selection.slots[0] ?? null) : stimpie;
-    const second = pack && pack.stimpieCount > 1 ? stimpieById(stimpies, selection.slots[1] ?? null) : null;
+    const picked = stimpieOnly ? [stimpie] : pack ? selection.slots.flatMap((id) => id === null ? [] : stimpieById(stimpies, id) ?? []) : [stimpie];
     const params = new URLSearchParams(window.location.search); // keep unrelated params (view, UTM, test flags)
     const mine = new URLSearchParams(
       buildShareQuery({
         colorId: color.id,
-        stimpie: first?.slug ?? stimpie.slug,
-        stimpie2: second?.slug ?? null,
-        pack: pack ? pack.slug : packsAll.length > 0 ? 'hoodie-only' : null,
+        stimpie: picked[0]?.slug ?? stimpie.slug,
+        stimpie2: picked[1]?.slug ?? null,
+        stimpies: picked.map((item) => item.slug),
+        pack: pack?.slug ?? (selection.purchaseMode === 'HOODIE_ONLY' && packsAll.length > 0 ? 'hoodie-only' : null),
+        mode: selection.purchaseMode === 'HOODIE_ONLY' ? 'hoodie-only' : selection.purchaseMode === 'HOODIE_SET' ? 'hoodie-set' : 'stimpie-only',
       }),
     );
-    for (const k of ['color', 'stimpie', 'stimpie2', 'pack']) {
+    for (const k of ['color', 'stimpie', 'stimpie2', 'stimpies', 'pack', 'mode']) {
       const v = mine.get(k);
       if (v === null) params.delete(k);
       else params.set(k, v);
@@ -363,7 +366,7 @@ export function Builder({
     } catch {
       /* some embedded browsers refuse replaceState: the URL simply is not updated */
     }
-  }, [syncUrl, color, stimpie, pack, packsAll.length, selection.slots, stimpies]);
+  }, [syncUrl, color, stimpie, pack, stimpieOnly, packsAll.length, selection.slots, selection.purchaseMode, stimpies]);
 
   // ----- sticky bar offset for toasts / floating buttons -----
   const sticky = (stickyBar ?? surface === 'page') && purchase;
@@ -411,7 +414,8 @@ export function Builder({
   };
   const onPick = (id: number) => {
     const existingSlot = selection.slots.indexOf(id);
-    if (existingSlot >= 0) dispatch({ type: 'focus', slot: existingSlot });
+    if (stimpieOnly) dispatch({ type: 'pick', stimpieId: id, allowDuplicates: true });
+    else if (existingSlot >= 0) dispatch({ type: 'focus', slot: existingSlot });
     else dispatch({ type: 'pick', stimpieId: id });
     const s = stimpieById(stimpies, id);
     if (s) emit('builder_stimpie_select', { stimpie_slug: s.slug, slot: (existingSlot >= 0 ? existingSlot : selection.focus) + 1, view: view === '3d' ? '3d' : '2d' });
@@ -420,6 +424,10 @@ export function Builder({
     dispatch({ type: 'pack', packId, packs });
     const p = packById(packs, packId);
     emit('builder_pack_select', p ? { pack_slug: p.slug } : { hoodie_only: true });
+  };
+  const onModeSelect = (mode: 'HOODIE_ONLY' | 'HOODIE_SET' | 'STIMPIE_ONLY') => {
+    dispatch({ type: 'mode', mode, packs });
+    emit('builder_pack_select', { purchase_mode: mode.toLowerCase().replaceAll('_', '-') });
   };
   const onToggle = (v: BuilderView) => {
     writeSession(STORAGE_VIEW_KEY, v);
@@ -442,19 +450,24 @@ export function Builder({
   const [inventory, setInventory] = useState<BuilderHoodie | null>(hoodie ?? null);
   const [refreshingInventory, setRefreshingInventory] = useState(false);
   useEffect(() => setInventory(hoodie ?? null), [hoodie]);
-  const finalize = (chosenSize: number) => {
-    if (!hoodie || !color || !onAddToCart) return;
-    const item = buildCartItem({ selection, packs, hoodieId: hoodie.id, sizeId: chosenSize });
+  const finalize = (chosenSize: number | null) => {
+    if (!onAddToCart || (!stimpieOnly && (!hoodie || !color || chosenSize === null))) return;
+    const item = buildCartItem({ selection, packs, hoodieId: hoodie?.id, colorId: color?.id ?? null, sizeId: chosenSize });
     if (!item) return;
-    const sizeLabel = hoodie.sizes.find((s) => s.id === chosenSize)?.label ?? null;
-    const summary = buildCartSummary({ selection, packs, stimpies, hoodie, color, sizeLabel });
+    const sizeLabel = chosenSize !== null ? hoodie?.sizes.find((s) => s.id === chosenSize)?.label ?? null : null;
+    const summary = buildCartSummary({ selection, packs, stimpies, hoodie: hoodie ?? null, color, sizeLabel });
     onAddToCart(item, summary);
-    writeSession(STORAGE_SIZE_KEY, String(chosenSize));
+    if (chosenSize !== null) writeSession(STORAGE_SIZE_KEY, String(chosenSize));
     emit('builder_add_to_cart', { kind: item.kind, pack_slug: pack?.slug ?? null, value_cents: summary.unitPriceCents });
     setSheetOpen(false);
   };
   const onAdd = async () => {
-    if (!addState.ok || !hoodie || refreshingInventory) return;
+    if (!addState.ok || refreshingInventory) return;
+    if (stimpieOnly) {
+      finalize(null);
+      return;
+    }
+    if (!hoodie) return;
     let fresh = inventory ?? hoodie;
     if (refreshInventory) {
       setRefreshingInventory(true);
@@ -483,22 +496,27 @@ export function Builder({
 
   // ----- derived UI -----
   const slotOf = (id: number) => {
+    if (stimpieOnly) return null;
     const at = selection.slots.indexOf(id);
     return at >= 0 && selection.slots.length > 1 ? at + 1 : null;
   };
-  const selectedIds = !compact && !pack ? [] : selection.slots.length > 0 ? selection.slots.filter((s): s is number => s !== null) : selection.previewId !== null ? [selection.previewId] : [];
+  const selectedIds = !compact && selection.purchaseMode === 'HOODIE_ONLY' ? [] : selection.slots.length > 0 ? selection.slots.filter((s): s is number => s !== null) : selection.previewId !== null ? [selection.previewId] : [];
   // Other selected Stimpies stay focusable; clicking one focuses its numbered slot instead of duplicating it.
   const disabledIds = useMemo(() => {
     const out = new Set<number>();
     selection.slots.forEach((id, i) => {
       if (id !== null && i !== selection.focus) out.add(id);
     });
+    if (pack) for (const s of stimpies) if (!packAllowsStimpie(pack, s.id)) out.add(s.id);
     return out;
-  }, [selection.slots, selection.focus]);
+  }, [selection.slots, selection.focus, pack, stimpies]);
 
   const fullHref = hrefs?.fullBuilder
     ? hrefs.fullBuilder({ colorId: color?.id ?? null, stimpie: stimpie?.slug ?? null })
     : `/builder${color && stimpie ? `?${buildShareQuery({ colorId: color.id, stimpie: stimpie.slug })}` : ''}`;
+  const stimpieOnlyHref = pack?.type === 'STIMPIE_ONLY'
+    ? `/shop/stimpie-packs?pack=${encodeURIComponent(pack.slug)}${stimpie ? `&stimpie=${encodeURIComponent(stimpie.slug)}` : ''}`
+    : stimpie ? `/shop/stimpie-packs?mode=stimpie-only&stimpie=${encodeURIComponent(stimpie.slug)}` : '/shop/stimpie-packs';
 
   // ----- static fallback -----
   if (view === 'static' || joined.length === 0 || stimpies.length === 0) {
@@ -624,7 +642,10 @@ export function Builder({
             </div>
           ) : null}
 
-          <p className="mt-2 text-caption text-fg-muted">Preview. Real photos are one tap away.</p>
+          <p className="mt-2 flex flex-wrap items-center gap-2 text-caption text-fg-muted">
+            <span>Preview. Real photos are one tap away.</span>
+            {stimpie ? <Link href={`/shop/stimpie/${stimpie.slug}`} className="font-medium text-ink underline underline-offset-2" onClick={() => emit('builder_see_photos', { target: 'stimpie' })}>See real photos</Link> : null}
+          </p>
 
           {decision?.needsLoadTap && model ? (
             <p className="mt-1 flex flex-wrap items-center gap-2 text-body-sm text-fg-muted" data-builder-load3d>
@@ -660,6 +681,7 @@ export function Builder({
             reducedMotion={reduced}
             eagerCount={compact ? 0 : 4}
           />
+          {!compact ? <SlotChips slots={selection.slots} focus={selection.focus} stimpies={stimpies} onFocus={(slot) => dispatch({ type: 'focus', slot })} /> : null}
           {!compact && pack && pack.stimpieCount > 1 ? <p className="text-caption text-fg-muted">Choose Stimpies in order. Tap a numbered card to replace it.</p> : null}
           {!compact && stimpies.length > 4 ? <p className="text-caption text-fg-muted">Swipe or scroll sideways to browse all Stimpies.</p> : null}
 
@@ -684,7 +706,16 @@ export function Builder({
           </div>
 
           {!compact && (packs.length > 0 || hoodie) ? (
-            <PackSelector packs={packs} selectedPackId={selection.packId} hoodiePriceCents={hoodie?.priceCents ?? null} hoodieCompareAtPriceCents={hoodie?.compareAtPriceCents} onSelect={onPack} />
+            <PackSelector packs={packs} selectedPackId={selection.packId} selectedMode={selection.purchaseMode} hoodiePriceCents={hoodie?.priceCents ?? null} hoodieCompareAtPriceCents={hoodie?.compareAtPriceCents} onSelect={onPack} onModeSelect={onModeSelect} />
+          ) : null}
+
+          {!compact && stimpieOnly ? (
+            <div className="flex flex-col gap-2 rounded-md border border-base bg-white p-4" data-builder-stimpie-only>
+              <p className="text-body-sm text-fg-muted">The hoodie is a preview. This offer contains Stimpies only.</p>
+              <Button href={stimpieOnlyHref} variant="cta" size="lg" fullWidth>
+                {pack ? `Choose ${pack.stimpieCount} Stimpies` : 'Browse Stimpie-only offers'}
+              </Button>
+            </div>
           ) : null}
 
           {compact ? (
@@ -706,7 +737,7 @@ export function Builder({
             >
               <div className="mx-auto flex max-w-[560px] flex-col gap-2 lg:max-w-none">
                 <div className="hidden items-baseline justify-between gap-3 lg:flex">
-                  {priceCents !== null ? <PriceTag cents={priceCents} compareAtCents={(pack?.compareAtPriceCents ?? (selection.packId === null ? hoodie?.compareAtPriceCents : null)) ?? undefined} size="lg" data-builder-price /> : <span />}
+              {priceCents !== null ? <PriceTag cents={priceCents} compareAtCents={(pack?.compareAtPriceCents ?? (selection.packId === null ? hoodie?.compareAtPriceCents : null)) ?? undefined} size="lg" data-builder-price /> : <span />}
                   <span className="text-body-sm text-fg-muted">{pack?.description ?? hoodie?.name ?? ''}</span>
                 </div>
                 <Button
@@ -720,10 +751,8 @@ export function Builder({
                 >
                   {priceCents !== null ? `Add to cart - ${priceLabel}` : 'Add to cart'}
                 </Button>
-                {!addState.hint ? <p className="text-caption text-fg-muted">Pay cash on delivery. Extra Stimpies are bought separately.</p> : null}
-                <Link href={hrefs?.sizeGuide ?? '/help?tab=size'} target="_blank" rel="noopener" className="self-end text-caption font-medium underline">
-                  Size guide
-                </Link>
+                {addState.hint ? <p className="text-caption text-fg-muted" role="status" data-builder-add-hint>{addState.hint}</p> : <p className="text-caption text-fg-muted">{stimpieOnly ? 'Stimpies only. No hoodie is included.' : 'Pay cash on delivery. Extra Stimpies are bought separately.'}</p>}
+                {!stimpieOnly ? <Link href={hrefs?.sizeGuide ?? '/help?tab=size'} target="_blank" rel="noopener" className="self-end text-caption font-medium underline">Size guide</Link> : null}
               </div>
             </div>
           ) : null}
@@ -747,7 +776,7 @@ export function Builder({
       </p>
       {sticky ? <div className="h-24 lg:hidden" aria-hidden="true" /> : null}
 
-      {purchase && hoodie && color ? (
+      {purchase && !stimpieOnly && hoodie && color ? (
         <SizeSheet
           open={sheetOpen}
           onClose={() => setSheetOpen(false)}

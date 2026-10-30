@@ -19,7 +19,7 @@ const T0 = new Date('2026-10-14T10:00:00Z');
 const at = (min: number): Date => new Date(T0.getTime() + min * 60_000);
 const admin = async (): Promise<TestClient> => (await t.adminClient()).client;
 
-async function orderLine(prisma: PrismaClient, stimpieId: number, o: { qty: number; state: 'RESERVED' | 'SOLD' | 'RELEASED'; kind?: 'STIMPIE' | 'PACK'; unit?: number }): Promise<void> {
+async function orderLine(prisma: PrismaClient, stimpieId: number, o: { qty: number; state: 'RESERVED' | 'SOLD' | 'RELEASED'; kind?: 'STIMPIE' | 'STIMPIE_PACK' | 'PACK'; unit?: number }): Promise<void> {
   const customer = await prisma.customer.create({ data: { phone: `+9613${Math.floor(100000 + Math.random() * 899999)}`, whatsapp: '+96103123456', name: 'C' } });
   const order = await prisma.order.create({
     data: {

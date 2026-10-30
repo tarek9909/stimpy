@@ -64,6 +64,8 @@ export function toBuilderPack(p: Pack): BuilderPack {
     slug: p.slug,
     name: p.name,
     description: p.description,
+    type: p.type ?? 'HOODIE_SET',
+    eligibleStimpieIds: p.eligibleStimpieIds ?? null,
     stimpieCount: p.stimpieCount,
     priceCents: p.priceCents,
     compareAtPriceCents: p.compareAtPriceCents,

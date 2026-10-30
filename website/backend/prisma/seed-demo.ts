@@ -36,7 +36,7 @@ export async function seedDemoOrders(ctx: AppContext, count = 30): Promise<numbe
   const { prisma } = ctx;
   const [hoodie, packs, areas, stimpies] = await Promise.all([
     prisma.hoodie.findFirst({ where: { active: true }, include: { variants: { where: { quantity: { gt: 0 } } } } }),
-    prisma.pack.findMany({ where: { active: true }, orderBy: { position: 'asc' } }),
+    prisma.pack.findMany({ where: { active: true, type: 'HOODIE_SET' }, orderBy: { position: 'asc' } }),
     prisma.area.findMany({ where: { active: true } }),
     prisma.stimpie.findMany({ where: { active: true, quantity: { gt: 5 }, OR: [{ dropId: null }, { drop: { endedAt: null, startsAt: { lte: new Date() } } }] } }),
   ]);

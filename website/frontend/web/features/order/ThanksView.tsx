@@ -48,6 +48,9 @@ function OrderNumberCopy({ number }: { number: string }) {
 
 function ItemRow({ item }: { item: OrderItem }) {
   const details = [item.details.hoodie, item.details.color, item.details.size].filter(Boolean).join(' / ');
+  const stimpieDetails = item.details.stimpieQuantities?.length
+    ? item.details.stimpieQuantities.map((entry) => `${entry.qty} × ${entry.name}`).join(', ')
+    : item.details.stimpies.join(', ');
   const hoodieImg = (item.details as any).hoodieImage;
   const stimpieImgs: Array<{ name: string; imageUrl?: string | null }> = (item.details as any).stimpieImages ?? [];
 
@@ -75,7 +78,7 @@ function ItemRow({ item }: { item: OrderItem }) {
             {item.qty > 1 ? <span className="font-normal text-fg-muted"> x {item.qty}</span> : null}
           </p>
           {details ? <p className="text-body-sm text-fg-muted">{details}</p> : null}
-          {item.details.stimpies.length > 0 ? <p className="text-body-sm text-fg-muted">{item.details.stimpies.join(', ')}</p> : null}
+          {stimpieDetails ? <p className="text-body-sm text-fg-muted">{stimpieDetails}</p> : null}
         </div>
       </div>
       <p className="shrink-0 tabular-nums text-body font-medium text-fg">{formatCents(item.lineTotalCents)}</p>

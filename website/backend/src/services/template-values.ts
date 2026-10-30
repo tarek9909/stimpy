@@ -16,15 +16,26 @@ export type ItemForText = {
   detail?: unknown;
 };
 
-type ItemDetail = { hoodie?: string | null; color?: string | null; size?: string | null; stimpies?: string[] | null };
+type ItemDetail = {
+  hoodie?: string | null;
+  color?: string | null;
+  size?: string | null;
+  stimpies?: string[] | null;
+  stimpieQuantities?: { name: string; qty: number }[] | null;
+};
 
-function readDetail(detail: unknown): { hoodie: string | null; color: string | null; size: string | null; stimpies: string[] } {
+function readDetail(detail: unknown): { hoodie: string | null; color: string | null; size: string | null; stimpies: string[]; stimpieQuantities: { name: string; qty: number }[] } {
   const d = (detail && typeof detail === 'object' ? detail : {}) as ItemDetail;
+  const stimpies = Array.isArray(d.stimpies) ? d.stimpies.filter((s): s is string => typeof s === 'string') : [];
+  const stimpieQuantities = Array.isArray(d.stimpieQuantities)
+    ? d.stimpieQuantities.filter((entry) => !!entry && typeof entry.name === 'string' && Number.isInteger(entry.qty) && entry.qty > 0)
+    : stimpies.map((name) => ({ name, qty: 1 }));
   return {
     hoodie: typeof d.hoodie === 'string' && d.hoodie ? d.hoodie : null,
     color: typeof d.color === 'string' && d.color ? d.color : null,
     size: typeof d.size === 'string' && d.size ? d.size : null,
-    stimpies: Array.isArray(d.stimpies) ? d.stimpies.filter((s): s is string => typeof s === 'string') : [],
+    stimpies,
+    stimpieQuantities,
   };
 }
 
@@ -34,7 +45,10 @@ export function formatItemsText(items: ItemForText[]): string {
     .map((it) => {
       const d = readDetail(it.detail);
       const variant = [d.color, d.size].filter(Boolean).join(', ');
-      const stimpies = d.stimpies.filter((s) => s !== it.name).join(', ');
+      const stimpieParts = d.stimpieQuantities.length
+        ? d.stimpieQuantities.map((entry) => `${entry.qty > 1 ? `${entry.qty} x ` : ''}${entry.name}`)
+        : d.stimpies;
+      const stimpies = stimpieParts.filter((s) => s !== it.name).join(', ');
       let inner = variant;
       if (stimpies) inner = inner ? `${inner}: ${stimpies}` : stimpies;
       return `- ${it.name}${inner ? ` (${inner})` : ''} x${it.qty}`;

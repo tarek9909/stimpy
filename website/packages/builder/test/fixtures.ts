@@ -21,9 +21,14 @@ export function stimpie(id: number, over: Partial<BuilderStimpie> = {}): Builder
 }
 
 export const PACKS: BuilderPack[] = [
-  { id: 1, slug: 'hoodie-1', name: 'Hoodie + 1 Stimpie', description: 'One hoodie, one Stimpie.', stimpieCount: 1, priceCents: 3500, badge: null },
-  { id: 2, slug: 'hoodie-2', name: 'Hoodie + 2 Stimpies', description: 'One hoodie, two Stimpies.', stimpieCount: 2, priceCents: 4500, badge: 'Most popular' },
+  { id: 1, slug: 'hoodie-1', name: 'Hoodie + 1 Stimpie', description: 'One hoodie, one Stimpie.', type: 'HOODIE_SET', eligibleStimpieIds: null, stimpieCount: 1, priceCents: 3500, badge: null },
+  { id: 2, slug: 'hoodie-2', name: 'Hoodie + 2 Stimpies', description: 'One hoodie, two Stimpies.', type: 'HOODIE_SET', eligibleStimpieIds: null, stimpieCount: 2, priceCents: 4500, badge: 'Most popular' },
 ];
+
+export const STIMPIE_ONLY_PACK: BuilderPack = {
+  id: 3, slug: 'stimpie-10', name: '10 Stimpies', description: 'Ten designs of your choice.', type: 'STIMPIE_ONLY',
+  eligibleStimpieIds: null, stimpieCount: 10, priceCents: 8500, badge: null,
+};
 
 export function data(over: Partial<BuilderData> = {}): BuilderData {
   return {

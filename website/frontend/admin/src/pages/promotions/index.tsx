@@ -49,9 +49,10 @@ function PromotionList() {
   return <>
     <PageHeader
       title="Promotions"
-      description="Set a sale price for any product, pack, or your entire catalog. Discounts are applied automatically at checkout."
+      description="Create Stimpie-only offers and manage product discounts."
       actions={<Button href="/promotions/new" variant="primary" leftIcon={<Plus size={18} aria-hidden="true" />}>New promotion</Button>}
     />
+    <StimpieOffersPanel />
     <div className="pt-6">
       <DataTable
         caption="Promotions"
@@ -70,6 +71,41 @@ function PromotionList() {
     </div>
     {/* Status changes are explicit. The edit page has the current enabled state and handles this action. */}
   </>;
+}
+
+function StimpieOffersPanel() {
+  const query = usePacks();
+  const f = useFormatters();
+  const offers = (query.data?.items ?? []).filter((pack) => pack.type === 'STIMPIE_ONLY');
+  const columns: Column<(typeof offers)[number]>[] = [
+    { id: 'name', header: 'Offer', priority: 'primary', cell: (pack) => <TextLink href={`/products/packs/${pack.id}`} className="font-medium">{pack.name}</TextLink> },
+    { id: 'count', header: 'Stimpies', numeric: true, cell: (pack) => `${pack.stimpieCount} ${pack.stimpieCount === 1 ? 'Stimpie' : 'Stimpies'}` },
+    { id: 'eligible', header: 'Eligible designs', cell: (pack) => pack.eligibleStimpieIds === null ? 'All designs' : `${pack.eligibleStimpieIds.length} selected` },
+    { id: 'price', header: 'Price', numeric: true, priority: 'primary', cell: (pack) => f.money(pack.priceCents) },
+    { id: 'state', header: 'Visibility', cell: (pack) => pack.active ? 'On website' : 'Hidden' },
+    { id: 'edit', header: 'Manage', mobileLabel: '', cell: (pack) => <Button variant="secondary" size="sm" href={`/products/packs/${pack.id}`}>Edit offer</Button> },
+  ];
+  return <section className="mt-5 rounded-xl border border-base bg-surface-base p-4 sm:p-5" aria-labelledby="stimpie-only-offers">
+    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h2 id="stimpie-only-offers" className="text-h4 font-bold">Stimpie-only offers</h2>
+        <p className="mt-1 max-w-2xl text-body-sm text-fg-muted">Choose the number of Stimpies, eligible designs and total price. A one-Stimpie offer also sets its eligible designs' individual price. These prices do not combine with discounts.</p>
+      </div>
+      <Button href="/products/packs/new?type=STIMPIE_ONLY" variant="secondary" leftIcon={<Plus size={17} aria-hidden="true" />}>New Stimpie-only offer</Button>
+    </div>
+    <DataTable
+      caption="Stimpie-only offers"
+      columns={columns}
+      rows={offers}
+      getRowId={(pack) => pack.id}
+      rowLabel={(pack) => pack.name}
+      loading={query.isPending}
+      refreshing={query.isFetching && !query.isPending}
+      error={query.error}
+      onRetry={() => void query.refetch()}
+      empty={<EmptyState title="No Stimpie-only offers yet" text="Create an offer with any positive Stimpie count and set which designs are eligible." action={<Button href="/products/packs/new?type=STIMPIE_ONLY" variant="primary">Create offer</Button>} />}
+    />
+  </section>;
 }
 
 type ProductChoice = { productType: PromotionTarget['productType']; productId: number; name: string; priceCents: number; active: boolean };
@@ -93,7 +129,7 @@ function PromotionProductPicker({
   const groups: Array<{ type: PromotionTarget['productType']; label: string; rows: ProductChoice[]; loading: boolean; failed: boolean; retry: () => void }> = [
     { type: 'HOODIE', label: 'Hoodies', rows: (hoodies.data?.items ?? []).map((p) => ({ productType: 'HOODIE', productId: p.id, name: p.name, priceCents: p.priceCents, active: p.active })), loading: hoodies.isPending, failed: hoodies.isError, retry: () => void hoodies.refetch() },
     { type: 'STIMPIE', label: 'Stimpies', rows: (stimpies.data?.items ?? []).map((p) => ({ productType: 'STIMPIE', productId: p.id, name: p.name, priceCents: p.priceCents, active: p.active })), loading: stimpies.isPending, failed: stimpies.isError, retry: () => void stimpies.refetch() },
-    { type: 'PACK', label: 'Packs', rows: (packs.data?.items ?? []).map((p) => ({ productType: 'PACK', productId: p.id, name: p.name, priceCents: p.priceCents, active: p.active })), loading: packs.isPending, failed: packs.isError, retry: () => void packs.refetch() },
+    { type: 'PACK', label: 'Hoodie sets', rows: (packs.data?.items ?? []).filter((p) => p.type !== 'STIMPIE_ONLY').map((p) => ({ productType: 'PACK', productId: p.id, name: p.name, priceCents: p.priceCents, active: p.active })), loading: packs.isPending, failed: packs.isError, retry: () => void packs.refetch() },
   ];
   const selected = new Set(value.map(targetKey));
   const catalogReady = groups.every((group) => !group.loading && !group.failed);
@@ -228,14 +264,14 @@ function PromotionEditor({ initial }: { initial: AdminPromotion | null }) {
           <Controller control={form.control} name="allProducts" render={({ field }) => (
             <Checkbox
               label={<span className="font-medium">Apply to all products</span>}
-              description="Includes all hoodies, Stimpies and packs, including products added later."
+              description="Includes current and future products. Stimpie-only offer prices remain fixed."
               checked={field.value}
               onChange={(event) => field.onChange(event.target.checked)}
             />
           )} />
           {!allProducts ? <Controller control={form.control} name="targets" render={({ field, fieldState }) => (
             <PromotionProductPicker value={field.value} onChange={field.onChange} error={fieldState.error?.message} />
-          )} /> : <p className="text-body-sm text-fg-muted">This promotion will include every product and pack in the catalog.</p>}
+          )} /> : <p className="text-body-sm text-fg-muted">This promotion applies to products without a fixed Stimpie-only offer price.</p>}
           <p className="text-body-sm text-fg-muted">If a product matches multiple active promotions, it gets the lowest resulting price.</p>
         </FormSection>
 

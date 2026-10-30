@@ -639,6 +639,13 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "type": {
+            "type": "string",
+            "enum": [
+              "HOODIE_SET",
+              "STIMPIE_ONLY"
+            ]
+          },
           "slug": {
             "type": "string"
           },
@@ -652,6 +659,15 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "eligibleStimpieIds": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
           },
           "priceCents": {
             "type": "integer",
@@ -671,10 +687,12 @@
         },
         "required": [
           "id",
+          "type",
           "slug",
           "name",
           "description",
           "stimpieCount",
+          "eligibleStimpieIds",
           "priceCents",
           "compareAtPriceCents",
           "badge"
@@ -872,6 +890,13 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "type": {
+            "type": "string",
+            "enum": [
+              "HOODIE_SET",
+              "STIMPIE_ONLY"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -885,6 +910,15 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "eligibleStimpieIds": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
           },
           "priceCents": {
             "type": "integer",
@@ -906,10 +940,12 @@
         },
         "required": [
           "id",
+          "type",
           "name",
           "slug",
           "description",
           "stimpieCount",
+          "eligibleStimpieIds",
           "priceCents",
           "badge",
           "active",
@@ -2323,6 +2359,7 @@
             "type": "string",
             "enum": [
               "PACK",
+              "STIMPIE_PACK",
               "HOODIE",
               "STIMPIE"
             ]
@@ -2364,6 +2401,27 @@
                 "type": "array",
                 "items": {
                   "type": "string"
+                }
+              },
+              "stimpieQuantities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "qty": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "qty"
+                  ]
                 }
               },
               "hoodieImage": {
@@ -5806,6 +5864,13 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "type": {
+            "type": "string",
+            "enum": [
+              "HOODIE_SET",
+              "STIMPIE_ONLY"
+            ]
+          },
           "slug": {
             "type": "string"
           },
@@ -5819,6 +5884,15 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "eligibleStimpieIds": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
           },
           "priceCents": {
             "type": "integer",
@@ -5838,10 +5912,12 @@
         },
         "required": [
           "id",
+          "type",
           "slug",
           "name",
           "description",
           "stimpieCount",
+          "eligibleStimpieIds",
           "priceCents",
           "compareAtPriceCents",
           "badge"
@@ -6042,6 +6118,13 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "type": {
+            "type": "string",
+            "enum": [
+              "HOODIE_SET",
+              "STIMPIE_ONLY"
+            ]
+          },
           "name": {
             "type": "string"
           },
@@ -6055,6 +6138,15 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "eligibleStimpieIds": {
+            "nullable": true,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
           },
           "priceCents": {
             "type": "integer",
@@ -6076,10 +6168,12 @@
         },
         "required": [
           "id",
+          "type",
           "name",
           "slug",
           "description",
           "stimpieCount",
+          "eligibleStimpieIds",
           "priceCents",
           "badge",
           "active",
@@ -7540,6 +7634,7 @@
             "type": "string",
             "enum": [
               "PACK",
+              "STIMPIE_PACK",
               "HOODIE",
               "STIMPIE"
             ]
@@ -7581,6 +7676,28 @@
                 "type": "array",
                 "items": {
                   "type": "string"
+                }
+              },
+              "stimpieQuantities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "qty": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "qty"
+                  ],
+                  "additionalProperties": false
                 }
               },
               "hoodieImage": {
@@ -11627,6 +11744,59 @@
                             "kind": {
                               "type": "string",
                               "enum": [
+                                "stimpie_pack"
+                              ]
+                            },
+                            "packId": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 2147483647
+                            },
+                            "stimpies": {
+                              "minItems": 1,
+                              "maxItems": 10000,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "stimpieId": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 2147483647
+                                  },
+                                  "qty": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 1000000
+                                  }
+                                },
+                                "required": [
+                                  "stimpieId",
+                                  "qty"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "qty": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 10
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "packId",
+                            "stimpies",
+                            "qty"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
                                 "hoodie"
                               ]
                             },
@@ -11877,6 +12047,59 @@
                             "colorId",
                             "sizeId",
                             "stimpieIds",
+                            "qty"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "stimpie_pack"
+                              ]
+                            },
+                            "packId": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 2147483647
+                            },
+                            "stimpies": {
+                              "minItems": 1,
+                              "maxItems": 10000,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "stimpieId": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 2147483647
+                                  },
+                                  "qty": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 1000000
+                                  }
+                                },
+                                "required": [
+                                  "stimpieId",
+                                  "qty"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "qty": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 10
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "packId",
+                            "stimpies",
                             "qty"
                           ],
                           "additionalProperties": false
@@ -14934,6 +15157,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "default": "HOODIE_SET",
+                    "type": "string",
+                    "enum": [
+                      "HOODIE_SET",
+                      "STIMPIE_ONLY"
+                    ]
+                  },
                   "name": {
                     "type": "string",
                     "minLength": 1,
@@ -14946,7 +15177,17 @@
                   "stimpieCount": {
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 5
+                    "maximum": 1000000
+                  },
+                  "eligibleStimpieIds": {
+                    "nullable": true,
+                    "maxItems": 10000,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2147483647
+                    }
                   },
                   "priceCents": {
                     "type": "integer",
@@ -15161,6 +15402,13 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "HOODIE_SET",
+                      "STIMPIE_ONLY"
+                    ]
+                  },
                   "name": {
                     "type": "string",
                     "minLength": 1,
@@ -15173,7 +15421,17 @@
                   "stimpieCount": {
                     "type": "integer",
                     "minimum": 1,
-                    "maximum": 5
+                    "maximum": 1000000
+                  },
+                  "eligibleStimpieIds": {
+                    "nullable": true,
+                    "maxItems": 10000,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 2147483647
+                    }
                   },
                   "priceCents": {
                     "type": "integer",
@@ -16468,6 +16726,59 @@
                             "colorId",
                             "sizeId",
                             "stimpieIds",
+                            "qty"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "stimpie_pack"
+                              ]
+                            },
+                            "packId": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 2147483647
+                            },
+                            "stimpies": {
+                              "minItems": 1,
+                              "maxItems": 10000,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "stimpieId": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 2147483647
+                                  },
+                                  "qty": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 1000000
+                                  }
+                                },
+                                "required": [
+                                  "stimpieId",
+                                  "qty"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "qty": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 10
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "packId",
+                            "stimpies",
                             "qty"
                           ],
                           "additionalProperties": false

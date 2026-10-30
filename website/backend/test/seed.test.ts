@@ -26,7 +26,7 @@ describe('seed (data-model section 8)', () => {
     await runSeed(t.ctx, { minimal: true, ...quiet });
     const first = await counts();
     expect(first).toMatchObject({
-      admins: 1, colors: 4, sizes: 6, columns: 4, values: 24, hoodies: 1, variants: 24, packs: 2, areas: 6,
+      admins: 1, colors: 4, sizes: 6, columns: 4, values: 24, hoodies: 1, variants: 24, packs: 7, areas: 6,
       emailTemplates: 7, waTemplates: 5, faqs: 13, settings: 6, counters: 1, stimpies: 0, drops: 0,
     });
     expect(first.content).toBe(6); // announcement, homepage, about, how_it_works, policies, size_chart_howto
@@ -42,6 +42,8 @@ describe('seed (data-model section 8)', () => {
     expect(await verifyPassword(admin.passwordHash, t.config.adminPassword!)).toBe(true);
     expect((await t.prisma.pack.findUniqueOrThrow({ where: { slug: 'hoodie-2-stimpies' } })).priceCents).toBe(4500);
     expect((await t.prisma.pack.findUniqueOrThrow({ where: { slug: 'hoodie-1-stimpie' } })).priceCents).toBe(3500);
+    expect((await t.prisma.pack.findUniqueOrThrow({ where: { slug: 'stimpie-only-1' } })).priceCents).toBe(1200);
+    expect((await t.prisma.pack.findMany({ where: { type: 'STIMPIE_ONLY' }, orderBy: { stimpieCount: 'asc' } })).map((p) => [p.stimpieCount, p.priceCents])).toEqual([[1, 1200], [2, 2000], [3, 2700], [4, 3200], [5, 3800]]);
     const hoodie = await t.prisma.hoodie.findFirstOrThrow();
     expect(hoodie).toMatchObject({ priceCents: 2500, costCents: 1000 });
     expect((await t.prisma.size.findMany({ orderBy: { position: 'asc' } })).map((x) => x.label)).toEqual(['S', 'M', 'L', 'XL', 'XXL', 'XXXL']);

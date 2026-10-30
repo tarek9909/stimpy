@@ -14,6 +14,7 @@ type Props = {
   minExtra: number | null;
   drop: Drop | null;
   coreStimpies: Stimpie[];
+  allStimpies?: Stimpie[];
 };
 
 /** Keep the complete server preview in the HTML, then load its interactive cards shortly before they enter view. */

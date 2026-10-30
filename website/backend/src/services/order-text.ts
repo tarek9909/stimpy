@@ -4,16 +4,23 @@
  */
 import type { OrderItemDetail } from './pricing';
 
-export type TextItem = { name: string; kind: 'PACK' | 'HOODIE' | 'STIMPIE'; qty: number; detail: unknown };
+export type TextItem = { name: string; kind: 'PACK' | 'STIMPIE_PACK' | 'HOODIE' | 'STIMPIE'; qty: number; detail: unknown };
 
 /** Reads an `order_items.detail` JSON column defensively. */
 export function itemDetail(d: unknown): OrderItemDetail {
   const o = (d && typeof d === 'object' ? d : {}) as Partial<OrderItemDetail>;
+  const stimpies = Array.isArray(o.stimpies) ? o.stimpies.filter((s): s is string => typeof s === 'string') : [];
+  const stimpieQuantities = Array.isArray(o.stimpieQuantities)
+    ? o.stimpieQuantities.filter((entry): entry is { name: string; qty: number } =>
+        !!entry && typeof entry === 'object' && typeof entry.name === 'string' && Number.isInteger(entry.qty) && entry.qty > 0,
+      )
+    : stimpies.map((name) => ({ name, qty: 1 }));
   return {
     hoodie: typeof o.hoodie === 'string' ? o.hoodie : null,
     color: typeof o.color === 'string' ? o.color : null,
     size: typeof o.size === 'string' ? o.size : null,
-    stimpies: Array.isArray(o.stimpies) ? o.stimpies.filter((s): s is string => typeof s === 'string') : [],
+    stimpies,
+    stimpieQuantities,
   };
 }
 

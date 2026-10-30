@@ -6,6 +6,7 @@ import { purchaseBlockReason, type PurchaseReason } from './drops';
 import type { ProblemRef, StockNeed, StockRef } from './stock';
 import { mergeNeeds } from './stock';
 import { promotionPriceKey, promotionPriceMap } from './promotions';
+import { packAllowsStimpie, stimpiePriceMap } from './stimpie-offers';
 
 /**
  * PRICING SERVICE (work package B). Turns cart items into priced, validated lines (business-rules section 1),
@@ -19,17 +20,24 @@ import { promotionPriceKey, promotionPriceMap } from './promotions';
 
 export type CartItemInput =
   | { kind: 'pack'; packId: number; hoodieId: number; colorId: number; sizeId: number; stimpieIds: number[]; qty: number }
+  | { kind: 'stimpie_pack'; packId: number; stimpies: { stimpieId: number; qty: number }[]; qty: number }
   | { kind: 'hoodie'; hoodieId: number; colorId: number; sizeId: number; qty: number }
   | { kind: 'stimpie'; stimpieId: number; qty: number };
 
 export type PurchaseProblem = ProblemRef & { itemIndex: number; name: string; reason: PurchaseReason };
 
-export type OrderItemDetail = { hoodie: string | null; color: string | null; size: string | null; stimpies: string[] };
+export type OrderItemDetail = {
+  hoodie: string | null;
+  color: string | null;
+  size: string | null;
+  stimpies: string[];
+  stimpieQuantities: { name: string; qty: number }[];
+};
 
 export type PricedLine = {
   itemIndex: number;
   item: CartItemInput;
-  kind: 'PACK' | 'HOODIE' | 'STIMPIE';
+  kind: 'PACK' | 'STIMPIE_PACK' | 'HOODIE' | 'STIMPIE';
   qty: number;
   name: string;
   unitPriceCents: number;
@@ -56,6 +64,7 @@ export type PricedCart = {
 
 export const MAX_CART_ITEMS = 20;
 export const MAX_ITEM_QTY = 10;
+const MAX_DATABASE_INT = 2_147_483_647;
 
 // ---------------------------------------------------------------- delivery
 
@@ -103,7 +112,10 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
   const stimpieIds: number[] = [];
   for (const it of items) {
     if (it.kind === 'stimpie') stimpieIds.push(it.stimpieId);
-    else {
+    else if (it.kind === 'stimpie_pack') {
+      packIds.push(it.packId);
+      stimpieIds.push(...it.stimpies.map((entry) => entry.stimpieId));
+    } else {
       hoodieIds.push(it.hoodieId);
       colorIds.push(it.colorId);
       sizeIds.push(it.sizeId);
@@ -134,11 +146,10 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
   const variantBy = new Map(variants.map((v) => [`${v.hoodieId}-${v.colorId}-${v.sizeId}`, v]));
 
   const at = now();
-  const promotionPrices = await promotionPriceMap(db, [
+  const [promotionPrices, stimpiePrices] = await Promise.all([promotionPriceMap(db, [
     ...hoodies.map((h) => ({ productType: 'HOODIE' as const, productId: h.id, priceCents: h.priceCents })),
-    ...stimpies.map((s) => ({ productType: 'STIMPIE' as const, productId: s.id, priceCents: s.priceCents })),
-    ...packs.map((p) => ({ productType: 'PACK' as const, productId: p.id, priceCents: p.priceCents })),
-  ], at);
+    ...packs.filter((p) => p.type !== 'STIMPIE_ONLY').map((p) => ({ productType: 'PACK' as const, productId: p.id, priceCents: p.priceCents })),
+  ], at), stimpiePriceMap(db, stimpies, at)]);
   const fields: Record<string, string> = {};
   const lines: PricedLine[] = [];
   const allProblems: PurchaseProblem[] = [];
@@ -151,10 +162,10 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
     let price = 0;
     let cost = 0;
     let name = '';
-    let detail: OrderItemDetail = { hoodie: null, color: null, size: null, stimpies: [] };
+    let detail: OrderItemDetail = { hoodie: null, color: null, size: null, stimpies: [], stimpieQuantities: [] };
     let ok = true;
 
-    const checkStimpie = (id: number, path: string): void => {
+    const checkStimpie = (id: number, path: string, selectedQty = 1): void => {
       const s = stimpieBy.get(id);
       if (!s) {
         fields[path] = 'That Stimpie does not exist.';
@@ -162,8 +173,8 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
         return;
       }
       stimpieNames.push(s.name);
-      cost += s.costCents;
-      needs.push({ itemType: 'STIMPIE', stimpieId: s.id, qty: item.qty });
+      cost += s.costCents * selectedQty;
+      needs.push({ itemType: 'STIMPIE', stimpieId: s.id, qty: item.qty * selectedQty });
       const reason = purchaseBlockReason({ active: s.active, drop: s.drop ? { startsAt: s.drop.startsAt, endsAt: s.drop.endsAt, endedAt: s.drop.endedAt } : null }, at);
       if (reason) problems.push({ kind: 'STIMPIE', stimpieId: s.id, itemIndex: i, name: s.name, reason });
     };
@@ -175,10 +186,59 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
         ok = false;
       } else {
         checkStimpie(item.stimpieId, `${p}.stimpieId`);
-        price = promotionPrices.get(promotionPriceKey('STIMPIE', s.id))?.priceCents ?? s.priceCents;
+        price = stimpiePrices.get(s.id)?.priceCents ?? s.priceCents;
         name = s.name;
-        detail = { hoodie: null, color: null, size: null, stimpies: [s.name] };
+        detail = { hoodie: null, color: null, size: null, stimpies: [s.name], stimpieQuantities: [{ name: s.name, qty: 1 }] };
         cost = s.costCents;
+      }
+    } else if (item.kind === 'stimpie_pack') {
+      const pack = packBy.get(item.packId);
+      if (!pack || pack.type !== 'STIMPIE_ONLY') {
+        fields[`${p}.packId`] = 'That Stimpie-only offer does not exist.';
+        ok = false;
+        item.stimpies.forEach((entry, n) => {
+          if (!stimpieBy.has(entry.stimpieId)) fields[`${p}.stimpies.${n}.stimpieId`] = 'That Stimpie does not exist.';
+        });
+      } else {
+        const count = item.stimpies.reduce((sum, entry) => sum + entry.qty, 0);
+        if (count !== pack.stimpieCount) {
+          fields[`${p}.stimpies`] = `Choose Stimpie quantities that total ${pack.stimpieCount}.`;
+          ok = false;
+        }
+        const seen = new Set<number>();
+        item.stimpies.forEach((entry, n) => {
+          if (seen.has(entry.stimpieId)) {
+            fields[`${p}.stimpies.${n}.stimpieId`] = 'Each Stimpie design must appear only once; use its qty for repeats.';
+            ok = false;
+          }
+          seen.add(entry.stimpieId);
+          const stimpie = stimpieBy.get(entry.stimpieId);
+          if (stimpie && !packAllowsStimpie(pack, entry.stimpieId)) {
+            fields[`${p}.stimpies.${n}.stimpieId`] = 'That Stimpie is not eligible for this offer.';
+            ok = false;
+          }
+          checkStimpie(entry.stimpieId, `${p}.stimpies.${n}.stimpieId`, entry.qty);
+        });
+        if (!pack.active) {
+          const first = item.stimpies[0];
+          const s = first ? stimpieBy.get(first.stimpieId) : undefined;
+          if (s) problems.push({ kind: 'STIMPIE', stimpieId: s.id, itemIndex: i, name: pack.name, reason: 'INACTIVE' });
+        }
+        price = pack.priceCents;
+        name = pack.name;
+        detail = {
+          hoodie: null,
+          color: null,
+          size: null,
+          stimpies: item.stimpies.flatMap(({ stimpieId }) => {
+            const stimpie = stimpieBy.get(stimpieId);
+            return stimpie ? [stimpie.name] : [];
+          }),
+          stimpieQuantities: item.stimpies.flatMap(({ stimpieId, qty }) => {
+            const stimpie = stimpieBy.get(stimpieId);
+            return stimpie ? [{ name: stimpie.name, qty }] : [];
+          }),
+        };
       }
     } else {
       const hoodie = hoodieBy.get(item.hoodieId);
@@ -207,6 +267,9 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
         if (!pack) {
           fields[`${p}.packId`] = 'That pack does not exist.';
           ok = false;
+        } else if (pack.type !== 'HOODIE_SET') {
+          fields[`${p}.packId`] = 'That offer does not include a hoodie.';
+          ok = false;
         } else if (item.stimpieIds.length !== pack.stimpieCount) {
           fields[`${p}.stimpieIds`] = `Choose exactly ${pack.stimpieCount} Stimpie${pack.stimpieCount === 1 ? '' : 's'} for this pack.`;
           ok = false;
@@ -218,6 +281,11 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
               ok = false;
             }
             seen.add(sid);
+            const stimpie = stimpieBy.get(sid);
+            if (pack && stimpie && !packAllowsStimpie(pack, sid)) {
+              fields[`${p}.stimpieIds.${m}`] = 'That Stimpie is not eligible for this offer.';
+              ok = false;
+            }
           });
         }
       }
@@ -228,11 +296,11 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
           item.stimpieIds.forEach((sid, m) => checkStimpie(sid, `${p}.stimpieIds.${m}`));
           price = promotionPrices.get(promotionPriceKey('PACK', pack.id))?.priceCents ?? pack.priceCents;
           name = pack.name;
-          detail = { hoodie: hoodie.name, color: color.name, size: size.label, stimpies: stimpieNames };
+          detail = { hoodie: hoodie.name, color: color.name, size: size.label, stimpies: stimpieNames, stimpieQuantities: stimpieNames.map((name) => ({ name, qty: 1 })) };
         } else {
           price = promotionPrices.get(promotionPriceKey('HOODIE', hoodie.id))?.priceCents ?? hoodie.priceCents;
           name = hoodie.name;
-          detail = { hoodie: hoodie.name, color: color.name, size: size.label, stimpies: [] };
+          detail = { hoodie: hoodie.name, color: color.name, size: size.label, stimpies: [], stimpieQuantities: [] };
         }
         const inactive = !hoodie.active || !color.active || !size.active || (pack ? !pack.active : false);
         if (inactive) {
@@ -254,12 +322,19 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
       }
     }
 
+    if (cost > MAX_DATABASE_INT) {
+      fields[`${p}.stimpies`] = 'The selected Stimpie quantities exceed the maximum supported order cost.';
+      ok = false;
+    } else if (cost * item.qty > MAX_DATABASE_INT) {
+      fields[`${p}.qty`] = 'This quantity exceeds the maximum supported order cost.';
+      ok = false;
+    }
     if (!ok) return;
     allProblems.push(...problems);
     lines.push({
       itemIndex: i,
       item,
-      kind: item.kind === 'pack' ? 'PACK' : item.kind === 'hoodie' ? 'HOODIE' : 'STIMPIE',
+      kind: item.kind === 'pack' ? 'PACK' : item.kind === 'stimpie_pack' ? 'STIMPIE_PACK' : item.kind === 'hoodie' ? 'HOODIE' : 'STIMPIE',
       qty: item.qty,
       name,
       unitPriceCents: price,
@@ -274,6 +349,11 @@ export async function priceCart(ctx: AppContext, db: Db, input: { items: CartIte
   if (Object.keys(fields).length) throw AppError.validation(fields);
 
   const subtotalCents = lines.reduce((sum, l) => sum + l.lineTotalCents, 0);
+  if (subtotalCents > MAX_DATABASE_INT) throw AppError.validation({ items: 'The order subtotal exceeds the maximum supported amount.' });
+  if (subtotalCents + delivery.feeCents > MAX_DATABASE_INT) throw AppError.validation({ items: 'The order total exceeds the maximum supported amount.' });
+  if (lines.reduce((sum, line) => sum + line.unitCostCents * line.qty, 0) > MAX_DATABASE_INT) {
+    throw AppError.validation({ items: 'The order cost exceeds the maximum supported amount.' });
+  }
   const needs = mergeNeeds(lines.flatMap((l) => l.needs.map((n) => ({ ...n, itemIndex: l.itemIndex }))));
   return {
     lines,

@@ -127,18 +127,22 @@ describe('share link (builder.md 11)', () => {
       colorId: 2,
       stimpie: 'the-void',
       stimpie2: 'moth',
+      stimpies: ['the-void', 'moth'],
       pack: 'hoodie-2',
+      mode: null,
       view: '3d',
     });
-    expect(parseShareParams({ color: 'abc', stimpie: '../x', view: 'vr' })).toEqual({ colorId: null, stimpie: null, stimpie2: null, pack: null, view: null });
+    expect(parseShareParams({ color: 'abc', stimpie: '../x', view: 'vr' })).toEqual({ colorId: null, stimpie: null, stimpie2: null, stimpies: [], pack: null, mode: null, view: null });
     expect(parseShareParams({ color: '0' }).colorId).toBeNull();
     expect(parseShareParams({ color: ['5', '6'] }).colorId).toBe(5);
   });
   it('builds a stable query and URL', () => {
     expect(buildShareQuery({ colorId: 2, stimpie: 'the-void', pack: 'hoodie-2' })).toBe('color=2&stimpie=the-void&pack=hoodie-2');
     expect(buildShareUrl('https://x.test/builder', { colorId: 2, stimpie: 'a', stimpie2: 'b', pack: 'p' })).toBe(
-      'https://x.test/builder?color=2&stimpie=a&pack=p&stimpie2=b',
+      'https://x.test/builder?color=2&stimpie=a&stimpie2=b&pack=p',
     );
+    expect(buildShareQuery({ colorId: 1, stimpie: null, pack: 'stimpie-10', stimpies: ['a', 'a', 'b', 'c'], mode: 'stimpie-only' })).toBe('color=1&stimpies=a%3A2%2Cb%3A1%2Cc%3A1&pack=stimpie-10&mode=stimpie-only');
+    expect(parseShareParams({ mode: 'stimpie-only', stimpies: 'a:2,b:1,c:1' }).stimpies).toEqual(['a', 'a', 'b', 'c']);
     expect(buildShareUrl('https://x.test/builder', { colorId: null, stimpie: null })).toBe('https://x.test/builder');
   });
 });

@@ -4,7 +4,10 @@ export interface ShareParams {
   colorId: number | null;
   stimpie: string | null;
   stimpie2: string | null;
+  /** Full ordered selection, including repeated slugs for Stimpies-only offers. */
+  stimpies: string[];
   pack: string | null;
+  mode: 'hoodie-only' | 'hoodie-set' | 'stimpie-only' | null;
   view: BuilderView | null;
 }
 
@@ -26,12 +29,26 @@ export function parseShareParams(raw: Raw): ShareParams {
     const v = one(raw, k)?.trim().toLowerCase();
     return v && SLUG.test(v) ? v : null;
   };
+  const listRaw = one(raw, 'stimpies');
+  const stimpies = listRaw
+    ? listRaw.split(',').flatMap((rawToken) => {
+        const token = rawToken.trim().toLowerCase();
+        const compact = /^([a-z0-9][a-z0-9-]{0,80}):([1-9]\d{0,6})$/.exec(token);
+        if (compact && SLUG.test(compact[1]!)) return Array.from({ length: Math.min(200, Number(compact[2])) }, () => compact[1]!);
+        return SLUG.test(token) ? [token] : [];
+      }).slice(0, 200)
+    : [];
+  const modeRaw = one(raw, 'mode')?.toLowerCase();
   const view = one(raw, 'view')?.toLowerCase();
+  const stimpie = slug('stimpie');
+  const stimpie2 = slug('stimpie2');
   return {
     colorId,
-    stimpie: slug('stimpie'),
-    stimpie2: slug('stimpie2'),
+    stimpie: stimpies[0] ?? stimpie,
+    stimpie2: stimpies[1] ?? stimpie2,
+    stimpies: stimpies.length ? stimpies : [stimpie, stimpie2].filter((v): v is string => !!v),
     pack: slug('pack'),
+    mode: modeRaw === 'hoodie-only' || modeRaw === 'hoodie-set' || modeRaw === 'stimpie-only' ? modeRaw : null,
     view: view === '2d' || view === '3d' ? view : null,
   };
 }
@@ -40,7 +57,10 @@ export interface ShareState {
   colorId: number | null;
   stimpie: string | null;
   stimpie2?: string | null;
+  /** Full ordered selection. Repeated slugs encode multiple units of one design. */
+  stimpies?: readonly string[];
   pack?: string | null;
+  mode?: 'hoodie-only' | 'hoodie-set' | 'stimpie-only' | null;
   view?: BuilderView | null;
 }
 
@@ -48,9 +68,18 @@ export interface ShareState {
 export function buildShareQuery(state: ShareState): string {
   const q = new URLSearchParams();
   if (state.colorId !== null) q.set('color', String(state.colorId));
-  if (state.stimpie) q.set('stimpie', state.stimpie);
+  const stimpies = state.stimpies?.length ? state.stimpies : [state.stimpie, state.stimpie2].filter((v): v is string => !!v);
+  if (stimpies.length > 2 || state.mode === 'stimpie-only') {
+    const counts = new Map<string, number>();
+    for (const slug of stimpies) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    q.set('stimpies', [...counts].map(([slug, qty]) => `${slug}:${qty}`).join(','));
+  }
+  else {
+    if (stimpies[0]) q.set('stimpie', stimpies[0]);
+    if (stimpies[1]) q.set('stimpie2', stimpies[1]);
+  }
   if (state.pack) q.set('pack', state.pack);
-  if (state.stimpie2) q.set('stimpie2', state.stimpie2);
+  if (state.mode) q.set('mode', state.mode);
   if (state.view) q.set('view', state.view);
   return q.toString();
 }

@@ -20,6 +20,7 @@ import {
   isDropStarted,
   type DropState,
 } from '../../services/drops';
+import { stimpiePriceMap } from '../../services/stimpie-offers';
 import { accentHexOf, toPublicStimpie } from '../catalog/mappers';
 import type { DropListQuery, SubscriberListQuery, dropCreateBody, dropUpdateBody } from './schemas';
 import { subscribersCsv } from './csv';
@@ -35,7 +36,7 @@ async function loadDrops(db: Db, where: Prisma.DropWhereInput = {}): Promise<Dro
 
 // ================================================================ public
 
-export function toPublicDrop(row: DropRow, lowStockThreshold: number, at: Date) {
+export function toPublicDrop(row: DropRow, lowStockThreshold: number, at: Date, prices: Awaited<ReturnType<typeof stimpiePriceMap>>) {
   const state = deriveDropState(row, row.stimpies, at);
   const visible = row.stimpies.filter((s) => s.active);
   return {
@@ -51,7 +52,7 @@ export function toPublicDrop(row: DropRow, lowStockThreshold: number, at: Date) 
     teaserImage: row.teaserImage,
     teaserVideo: row.teaserVideo,
     unitsRemaining: state === 'LIVE' ? dropUnitsRemaining(row.stimpies) : null,
-    stimpies: visible.map((s) => toPublicStimpie({ ...s, drop: row }, lowStockThreshold, at)),
+    stimpies: visible.map((s) => toPublicStimpie({ ...s, drop: row }, lowStockThreshold, at, prices.get(s.id))),
   };
 }
 
@@ -64,7 +65,8 @@ export async function listPublicDrops(ctx: AppContext, q: PageQuery) {
   const at = now();
   const threshold = (await ctx.settings.get('orders')).lowStockThreshold;
   const rows = await loadDrops(ctx.prisma);
-  const drops = rows.map((r) => toPublicDrop(r, threshold, at));
+  const prices = await stimpiePriceMap(ctx.prisma, rows.flatMap((row) => row.stimpies), at);
+  const drops = rows.map((r) => toPublicDrop(r, threshold, at, prices));
   const byStart = (a: { startsAt: string }, b: { startsAt: string }): number => Date.parse(a.startsAt) - Date.parse(b.startsAt);
   const live = drops.filter((d) => d.state === 'LIVE').sort((a, b) => byStart(b, a))[0] ?? null; // most recently started
   const upcoming = drops.filter((d) => d.state === 'UPCOMING').sort(byStart);
@@ -83,7 +85,9 @@ export async function listPublicDrops(ctx: AppContext, q: PageQuery) {
 export async function getPublicDrop(ctx: AppContext, slug: string) {
   const row = await ctx.prisma.drop.findUnique({ where: { slug }, include: { stimpies: { orderBy: stimpieOrder } } });
   if (!row) throw AppError.notFound('Drop not found.');
-  return toPublicDrop(row, (await ctx.settings.get('orders')).lowStockThreshold, now());
+  const at = now();
+  const prices = await stimpiePriceMap(ctx.prisma, row.stimpies, at);
+  return toPublicDrop(row, (await ctx.settings.get('orders')).lowStockThreshold, at, prices);
 }
 
 // ---------------------------------------------------------------- subscribe
@@ -195,6 +199,7 @@ async function dropStats(db: Db, rows: DropRow[]): Promise<Map<number, Stats>> {
 
 async function toAdminDrop(ctx: AppContext, row: DropRow, stats: Stats, at: Date) {
   const threshold = (await ctx.settings.get('orders')).lowStockThreshold;
+  const prices = await stimpiePriceMap(ctx.prisma, row.stimpies, at);
   const state = deriveDropState(row, row.stimpies, at);
   const active = row.stimpies.filter((s) => s.active);
   const sum = (pick: (s: Stimpie) => number): number => active.reduce((n, s) => n + pick(s), 0);
@@ -217,7 +222,7 @@ async function toAdminDrop(ctx: AppContext, row: DropRow, stats: Stats, at: Date
     revenueCents: stats.revenueCents,
     sellOutAt: isoOrNull(stats.sellOutAt),
     stimpies: row.stimpies.map((s) => {
-      const { remaining: _r, ...pub } = toPublicStimpie({ ...s, drop: row }, threshold, at);
+      const { remaining: _r, ...pub } = toPublicStimpie({ ...s, drop: row }, threshold, at, prices.get(s.id));
       void _r;
       const st = stats.perStimpie.get(s.id)!;
       return { ...pub, active: s.active, quantity: st.quantity, sold: st.sold, remaining: st.remaining };

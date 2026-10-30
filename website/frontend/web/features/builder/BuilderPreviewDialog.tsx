@@ -27,7 +27,7 @@ const NO_SOLD_OUT_COLORS = new Set<number>();
 export default function BuilderPreviewDialog(props: Props) {
   const color = props.colors.find((item) => item.id === props.colorId) ?? props.colors[0]!;
   const stimpie = props.stimpies.find((item) => item.id === props.stimpieId) ?? props.stimpies[0]!;
-  const fullBuilder = `/builder?color=${encodeURIComponent(color.id)}&stimpie=${encodeURIComponent(stimpie.slug)}`;
+  const fullBuilder = `/builder?color=${encodeURIComponent(color.id)}&mode=stimpie-only&stimpie=${encodeURIComponent(stimpie.slug)}`;
 
   return <Modal open onClose={props.onClose} title="Your Stimpy" size="lg" sheetOnMobile={false}
     className="store-preview-dialog" returnFocusRef={props.returnFocusRef}

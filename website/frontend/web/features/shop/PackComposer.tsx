@@ -23,6 +23,7 @@ import {
   colorSoldOutIds,
   composerReducer,
   initialState,
+  packAllowsStimpie,
   packById,
   requiredStimpies,
   selectionTotalCents,
@@ -73,7 +74,8 @@ export function PackComposer({
   stickyBar = true,
   replaceLine,
 }: PackComposerProps) {
-  const data = useMemo(() => ({ hoodie, packs, stimpies }), [hoodie, packs, stimpies]);
+  const hoodiePacks = useMemo(() => packs.filter((pack) => pack.type !== 'STIMPIE_ONLY'), [packs]);
+  const data = useMemo(() => ({ hoodie, packs: hoodiePacks, stimpies }), [hoodie, hoodiePacks, stimpies]);
   const allLines = useCart((s) => s.lines);
   const cartLines = useMemo(
     () => (replaceLine ? allLines.filter((l) => l.lineId !== replaceLine.lineId) : allLines),
@@ -95,6 +97,7 @@ export function PackComposer({
   const [full, setFull] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pickedPack = packById(hoodiePacks, state.pack);
 
   // Tell the page which colour is chosen (gallery photo).
   useEffect(() => {
@@ -104,30 +107,42 @@ export function PackComposer({
 
   // A chosen Stimpie that is no longer purchasable (refetch on focus): clear it with a notice.
   useEffect(() => {
+    const ineligible = state.stimpieIds.filter((id) => !packAllowsStimpie(pickedPack, id));
     const gone = state.stimpieIds.filter((id) => {
       const s = stimpies.find((x) => x.id === id);
       return !s || !s.purchasable;
     });
-    if (gone.length > 0) {
-      dispatch({ type: 'dropStimpies', ids: gone });
-      setNotice('A Stimpie you picked is no longer available, so we cleared it. Please pick another.');
+    const invalidIds = [...new Set([...ineligible, ...gone])];
+    if (invalidIds.length > 0) {
+      dispatch({ type: 'dropStimpies', ids: invalidIds });
+      setNotice(ineligible.length > 0
+        ? `We removed ${ineligible.length === 1 ? 'a Stimpie' : 'Stimpies'} not included in ${pickedPack?.name ?? 'this offer'}. Pick eligible designs to continue.`
+        : 'A Stimpie you picked is no longer available, so we cleared it. Please pick another.');
     }
-  }, [stimpies, state.stimpieIds]);
+  }, [stimpies, state.stimpieIds, pickedPack]);
 
   useEffect(() => () => {
     if (addedTimer.current) clearTimeout(addedTimer.current);
   }, []);
 
-  const need = requiredStimpies(packs, state.pack);
+  const need = requiredStimpies(hoodiePacks, state.pack);
   const validation = validateComposer(data, state);
   const total = selectionTotalCents(data, state);
   const colors = hoodie.colors.map((c) => ({ id: c.id, name: c.name, hex: c.hex }));
   const soldOutColors = useMemo(() => colorSoldOutIds(hoodie), [hoodie]);
-  const pickedPack = packById(packs, state.pack);
+  function changePack(choice: PackChoice) {
+    const nextPack = packById(hoodiePacks, choice);
+    const removed = state.stimpieIds.filter((id) => !packAllowsStimpie(nextPack, id));
+    dispatch({ type: 'pack', pack: choice, packs: hoodiePacks });
+    setNotice(removed.length > 0
+      ? `We removed ${removed.length === 1 ? 'a Stimpie' : 'Stimpies'} not included in ${nextPack?.name ?? 'this offer'}. Pick eligible designs to continue.`
+      : null);
+    setAdded(false);
+  }
 
   const packOptions: RadioOption[] = [
     { value: HOODIE_ONLY, label: 'Hoodie only', description: 'Wear it plain. Add Stimpies any time.', meta: <PriceTag cents={hoodie.priceCents} compareAtCents={hoodie.compareAtPriceCents ?? undefined} size="sm" /> },
-    ...packs.map((p) => ({
+    ...hoodiePacks.map((p) => ({
       value: packValue(p.id),
       label: (
         <span className="flex flex-wrap items-center gap-2">
@@ -174,7 +189,7 @@ export function PackComposer({
         legend="Choose your set"
         variant="card"
         value={packValue(state.pack)}
-        onChange={(v) => dispatch({ type: 'pack', pack: parseChoice(v), packs })}
+        onChange={(v) => changePack(parseChoice(v))}
         options={packOptions}
       />
 
@@ -209,7 +224,8 @@ export function PackComposer({
           </p>
           <Suspense fallback={<div className="flex min-h-60 items-center justify-center gap-2 text-body-sm text-fg-muted" role="status"><Spinner size="sm" /> Loading Stimpies…</div>}>
             <ComposerStimpies stimpies={stimpies} cartLines={cartLines} selectedIds={state.stimpieIds}
-              onSelect={(stimpieId) => dispatch({ type: 'toggleStimpie', stimpieId, need })} />
+              eligibleStimpieIds={pickedPack?.eligibleStimpieIds ?? null}
+              onSelect={(stimpieId) => dispatch({ type: 'toggleStimpie', stimpieId, need, eligibleStimpieIds: pickedPack?.eligibleStimpieIds ?? null })} />
           </Suspense>
           {notice ? (
             <p role="status" className="text-body-sm font-medium text-fg">

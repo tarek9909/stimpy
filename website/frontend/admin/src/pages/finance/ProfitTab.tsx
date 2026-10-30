@@ -70,13 +70,13 @@ function ProfitBody({ data }: { data: Profit }) {
       </div>
 
       <section aria-labelledby="plan-margins" className="rounded-lg border border-base bg-cream p-4">
-        <h2 id="plan-margins" className="text-h5">Plan margins</h2>
+        <h2 id="plan-margins" className="text-h5">Hoodie-set plan margins</h2>
         <ul className="mt-2 flex flex-col gap-1 text-body tabular-nums">
-          <li>Plan: {f.money(data.planMargins.pack35)} on the $35 pack</li>
-          <li>Plan: {f.money(data.planMargins.pack45)} on the $45 pack</li>
+          <li>Plan: {f.money(data.planMargins.pack35)} on the $35 hoodie set</li>
+          <li>Plan: {f.money(data.planMargins.pack45)} on the $45 hoodie set</li>
           <li className="font-medium">Actual so far: {f.money(avg)} average profit per order ({data.ordersCount} {data.ordersCount === 1 ? 'order' : 'orders'})</li>
         </ul>
-        <p className="mt-2 text-body-sm text-fg-muted">The plan figures are before delivery, packaging and ads. Your average includes expenses and ad spend in this range.</p>
+        <p className="mt-2 text-body-sm text-fg-muted">These plan figures apply to hoodie sets; Stimpie-only offers are not included. They are before delivery, packaging and ads. Your average includes expenses and ad spend in this range.</p>
       </section>
 
       <section aria-labelledby="by-order" className="flex flex-col gap-3">

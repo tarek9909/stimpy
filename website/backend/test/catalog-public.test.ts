@@ -293,9 +293,11 @@ describe('GET /packs', () => {
     const res = await t.client.get('/packs');
     expect(res.status).toBe(200);
     expect(res.header('cache-control')).toBe('public, max-age=30');
-    const list = res.json<Page<{ id: number; slug: string; name: string; description: string; stimpieCount: number; priceCents: number; badge: string | null }>>().items;
+    const list = res.json<Page<{ id: number; type: string; eligibleStimpieIds: number[] | null; slug: string; name: string; description: string; stimpieCount: number; priceCents: number; badge: string | null }>>().items;
     expect(list.map((p) => p.id)).toEqual([w.packs.one.id, w.packs.two.id]);
-    expect(Object.keys(list[0]!).sort()).toEqual(['badge', 'description', 'id', 'name', 'priceCents', 'slug', 'stimpieCount']);
+    expect(Object.keys(list[0]!).sort()).toEqual(['badge', 'description', 'eligibleStimpieIds', 'id', 'name', 'priceCents', 'slug', 'stimpieCount', 'type']);
+    expect(list[0]!.type).toBe('HOODIE_SET');
+    expect(list[0]!.eligibleStimpieIds).toBeNull();
     expect(list[0]!.badge).toBeNull();
     expect(list[1]).toMatchObject({ badge: 'Most popular', stimpieCount: 2, priceCents: 4500 });
   });

@@ -21,7 +21,7 @@ const textButton =
  */
 export function CartLineRow({ line, onEdit }: { line: CartLine; onEdit?: (lineId: string) => void }) {
   const unavailable = line.check.state === 'UNAVAILABLE';
-  const ratio = line.item.kind === 'stimpie' ? STIMPIE_RATIO : HOODIE_RATIO;
+  const ratio = line.item.kind === 'stimpie' || line.item.kind === 'stimpie_pack' ? STIMPIE_RATIO : HOODIE_RATIO;
   const details = lineDetails(line);
   const lineTotal = line.ui.unitPriceCents * line.item.qty;
   const editable = !!onEdit && canEditLine(line);
@@ -35,8 +35,9 @@ export function CartLineRow({ line, onEdit }: { line: CartLine; onEdit?: (lineId
           {line.ui.title}
         </p>
         {details ? <p className="text-body-sm text-fg-muted">{details}</p> : null}
+        {line.item.kind === 'stimpie_pack' ? <p className="text-caption text-fg-muted">Stimpies only · Quantity counts complete sets.</p> : null}
         {line.ui.stimpies.length > 0 ? (
-          <p className="text-body-sm text-fg-muted">{line.ui.stimpies.map((s) => s.name).join(', ')}</p>
+          <p className="text-body-sm text-fg-muted">{line.ui.stimpies.map((s) => `${s.qty && s.qty > 1 ? `${s.qty} × ` : ''}${s.name}`).join(', ')}</p>
         ) : null}
         {line.check.reasons.length > 0 ? (
           <ul className="text-body-sm font-medium text-fg" aria-label="Notices for this item" data-testid="line-notices">
@@ -62,7 +63,7 @@ export function CartLineRow({ line, onEdit }: { line: CartLine; onEdit?: (lineId
             <QuantityStepper
               value={line.item.qty}
               onChange={(q) => cartStore.getState().setQty(line.lineId, q)}
-              label={`Quantity of ${line.ui.title}`}
+              label={line.item.kind === 'stimpie_pack' ? `Number of ${line.ui.title} sets` : `Quantity of ${line.ui.title}`}
             />
           )}
           <div className="flex flex-wrap items-center gap-x-3">

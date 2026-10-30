@@ -132,6 +132,7 @@ export function SoldOutDialog({
   lines,
   onClose,
   onCartChanged,
+  onEditLine,
 }: {
   open: boolean;
   problems: readonly StockProblem[];
@@ -140,6 +141,8 @@ export function SoldOutDialog({
   onClose: () => void;
   /** A swap changed the cart: the page validates again. */
   onCartChanged: () => void;
+  /** Reopen the safe, eligibility-aware editor for a Stimpie-only bundle. */
+  onEditLine?: (lineId: string) => void;
 }) {
   const [data, setData] = useState<AlternativesData | null>(null);
   const [failed, setFailed] = useState(false);
@@ -233,6 +236,8 @@ export function SoldOutDialog({
               data={data}
               resolved={resolved.has(p.itemIndex)}
               onResolved={() => markResolved(p.itemIndex)}
+              onEditLine={onEditLine}
+              onClose={onClose}
             />
           ))
         : !failed
@@ -248,12 +253,16 @@ function ProblemAlternatives({
   data,
   resolved,
   onResolved,
+  onEditLine,
+  onClose,
 }: {
   problem: StockProblem;
   line: CartLine | undefined;
   data: AlternativesData;
   resolved: boolean;
   onResolved: () => void;
+  onEditLine?: (lineId: string) => void;
+  onClose: () => void;
 }) {
   const stimpieAlts = useMemo(() => {
     if (problem.kind !== 'STIMPIE' || !line) return [];
@@ -267,6 +276,15 @@ function ProblemAlternatives({
       <p className="mt-4 text-body font-medium text-fg" role="status">
         Updated.
       </p>
+    );
+  }
+
+  if (line?.item.kind === 'stimpie_pack') {
+    return (
+      <section className="mt-5" aria-label={`Alternatives for ${problem.name}`}>
+        <p className="text-body text-fg-muted">Edit this offer to choose another eligible Stimpie. We&apos;ll check its current stock before you save.</p>
+        {onEditLine ? <Button variant="secondary" className="mt-3" onClick={() => { onClose(); onEditLine(line.lineId); }}>Edit this Stimpie-only set</Button> : null}
+      </section>
     );
   }
 

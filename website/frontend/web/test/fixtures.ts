@@ -45,8 +45,8 @@ export const stimpie = (over: Partial<Stimpie> = {}): Stimpie => ({
 });
 
 export const packs: Pack[] = [
-  { id: 1, slug: 'one', name: 'Hoodie + 1 Stimpie', description: '', stimpieCount: 1, priceCents: 3500, compareAtPriceCents: null, badge: null },
-  { id: 2, slug: 'two', name: 'Hoodie + 2 Stimpies', description: '', stimpieCount: 2, priceCents: 4500, compareAtPriceCents: null, badge: 'Most popular' },
+  { id: 1, type: 'HOODIE_SET', eligibleStimpieIds: null, slug: 'one', name: 'Hoodie + 1 Stimpie', description: '', stimpieCount: 1, priceCents: 3500, compareAtPriceCents: null, badge: null },
+  { id: 2, type: 'HOODIE_SET', eligibleStimpieIds: null, slug: 'two', name: 'Hoodie + 2 Stimpies', description: '', stimpieCount: 2, priceCents: 4500, compareAtPriceCents: null, badge: 'Most popular' },
 ];
 
 export const hoodie = (): HoodieDetail => ({

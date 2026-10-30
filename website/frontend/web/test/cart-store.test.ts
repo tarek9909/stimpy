@@ -56,6 +56,36 @@ describe('cart store', () => {
     expect(b.getState().hydrated).toBe(true);
   });
 
+  it('keeps a Stimpie-only bundle compact through edit, persistence and reload, and does not merge another selection', () => {
+    vi.useFakeTimers();
+    const s = createCartStore();
+    s.getState().hydrate();
+    const first = { kind: 'stimpie_pack' as const, packId: 10, stimpies: [{ stimpieId: 4, qty: 7 }], qty: 1 };
+    const second = { kind: 'stimpie_pack' as const, packId: 10, stimpies: [{ stimpieId: 4, qty: 6 }, { stimpieId: 7, qty: 1 }], qty: 1 };
+    const firstResult = s.getState().add(first, ui({ title: '7 Stimpies', hoodieSlug: null, packSlug: 'stimpies-7', colorName: null, colorHex: null, sizeLabel: null,
+      stimpies: [{ id: 4, slug: 'the-void', name: 'THE VOID', artworkUrl: 'http://x/a.webp', type: 'CORE', qty: 7 }] }));
+    expect(firstResult.ok).toBe(true);
+    s.getState().add(second, ui({ title: '7 Stimpies', hoodieSlug: null, packSlug: 'stimpies-7', colorName: null, colorHex: null, sizeLabel: null,
+      stimpies: [{ id: 4, slug: 'the-void', name: 'THE VOID', artworkUrl: 'http://x/a.webp', type: 'CORE', qty: 6 }, { id: 7, slug: 'night-signal', name: 'NIGHT SIGNAL', artworkUrl: 'http://x/b.webp', type: 'LIMITED', qty: 1 }] }));
+    expect(s.getState().lines).toHaveLength(2);
+    expect(s.getState().lines[0]?.item).toEqual(first);
+    expect(s.getState().lines[0]?.item).not.toHaveProperty('hoodieId');
+
+    const lineId = firstResult.ok ? firstResult.lineId : '';
+    const edited = { kind: 'stimpie_pack' as const, packId: 7, stimpies: [{ stimpieId: 4, qty: 4 }, { stimpieId: 7, qty: 3 }], qty: 1 };
+    s.getState().replaceLine(lineId, edited, ui({ title: '7 Stimpies', hoodieSlug: null, packSlug: 'stimpies-7', colorName: null, colorHex: null, sizeLabel: null,
+      stimpies: [{ id: 4, slug: 'the-void', name: 'THE VOID', artworkUrl: 'http://x/a.webp', type: 'CORE', qty: 4 }, { id: 7, slug: 'night-signal', name: 'NIGHT SIGNAL', artworkUrl: 'http://x/b.webp', type: 'LIMITED', qty: 3 }] }));
+    expect(s.getState().lines).toHaveLength(2);
+    expect(s.getState().lines.find((line) => line.lineId === lineId)?.item).toEqual(edited);
+    vi.advanceTimersByTime(150);
+    vi.useRealTimers();
+
+    const reloaded = createCartStore();
+    reloaded.getState().hydrate();
+    expect(reloaded.getState().lines.map((line) => line.item)).toContainEqual(edited);
+    expect(reloaded.getState().lines.find((line) => line.lineId === lineId)?.ui.stimpies).toMatchObject([{ id: 4, qty: 4 }, { id: 7, qty: 3 }]);
+  });
+
   it('resets on corrupt JSON, unknown version and malformed lines without throwing', () => {
     window.localStorage.setItem(CART_STORAGE_KEY, '{not json');
     const a = createCartStore();

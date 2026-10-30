@@ -128,7 +128,12 @@ function InvoiceCard({ order }: { order: AdminOrder }) {
         </thead>
         <tbody>
           {order.items.map((it) => {
-            const details = [it.details.hoodie, it.details.color, it.details.size, ...it.details.stimpies].filter(Boolean).join(' · ');
+            const stimpieQuantities = (it.details as typeof it.details & { stimpieQuantities?: Array<{ name: string; qty: number }> }).stimpieQuantities;
+            const stimpieDetails = stimpieQuantities?.length
+              ? stimpieQuantities.map((stimpie) => `${stimpie.name}${stimpie.qty > 1 ? ` ×${stimpie.qty}` : ''}`)
+              : it.details.stimpies;
+            const productDetails = it.kind === 'STIMPIE_PACK' ? [] : [it.details.hoodie, it.details.color, it.details.size];
+            const details = [...productDetails, ...stimpieDetails].filter(Boolean).join(' · ');
             return (
               <tr key={it.id} className="break-inside-avoid border-b border-line align-top">
                 <td className="py-2 pr-2">

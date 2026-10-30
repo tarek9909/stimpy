@@ -6,10 +6,13 @@ import type { ShareParams } from './share';
 export const POPULAR_BADGE = 'Most popular';
 /** `?pack=hoodie-only` in a share link restores the "Hoodie only" choice. */
 export const HOODIE_ONLY_SLUG = 'hoodie-only';
+export type PurchaseMode = 'HOODIE_ONLY' | 'HOODIE_SET' | 'STIMPIE_ONLY';
 
 export interface Selection {
   colorId: number | null;
-  /** Pack id, or null for "Hoodie only". */
+  /** Explicit intent remains selected even if that category currently has no active offer. */
+  purchaseMode: PurchaseMode;
+  /** Offer id, or null for hoodie only / a category with no active offer. */
   packId: number | null;
   /** One entry per Stimpie of the pack (empty for hoodie only); null = not chosen yet. */
   slots: (number | null)[];
@@ -21,10 +24,19 @@ export interface Selection {
 
 /** Default pack: the one badged "Most popular", else the highest `stimpieCount`, else hoodie only. */
 export function defaultPackId(packs: readonly BuilderPack[]): number | null {
-  if (packs.length === 0) return null;
-  const popular = packs.find((p) => p.badge === POPULAR_BADGE);
+  const hoodiePacks = packs.filter((p) => p.type !== 'STIMPIE_ONLY');
+  if (hoodiePacks.length === 0) return null;
+  const popular = hoodiePacks.find((p) => p.badge === POPULAR_BADGE);
   if (popular) return popular.id;
-  return [...packs].sort((a, b) => b.stimpieCount - a.stimpieCount)[0]?.id ?? null;
+  return [...hoodiePacks].sort((a, b) => b.stimpieCount - a.stimpieCount)[0]?.id ?? null;
+}
+
+export function defaultStimpiePackId(packs: readonly BuilderPack[]): number | null {
+  return [...packs].filter((p) => p.type === 'STIMPIE_ONLY').sort((a, b) => a.stimpieCount - b.stimpieCount)[0]?.id ?? null;
+}
+
+export function packAllowsStimpie(pack: BuilderPack | null, stimpieId: number): boolean {
+  return !pack || pack.eligibleStimpieIds == null || pack.eligibleStimpieIds.includes(stimpieId);
 }
 
 export function packById(packs: readonly BuilderPack[], id: number | null): BuilderPack | null {
@@ -32,7 +44,9 @@ export function packById(packs: readonly BuilderPack[], id: number | null): Buil
 }
 
 export function slotCount(packs: readonly BuilderPack[], packId: number | null): number {
-  return packById(packs, packId)?.stimpieCount ?? 0;
+  const pack = packById(packs, packId);
+  // The quantity-aware Stimpies-only composer tracks unique designs and counts; it must not create a million UI slots.
+  return pack?.type === 'STIMPIE_ONLY' ? 0 : pack?.stimpieCount ?? 0;
 }
 
 function firstEmpty(slots: readonly (number | null)[], from = 0): number {
@@ -63,24 +77,47 @@ export function initialSelection(a: InitialArgs): Selection {
 
   const bySlug = (slug: string | null | undefined) => (slug ? a.stimpies.find((s) => s.slug === slug) : undefined);
   const shared = bySlug(share?.stimpie ?? null);
-  const first = shared ?? a.stimpies.find((s) => s.purchasable) ?? a.stimpies[0];
-  const previewId = first?.id ?? null;
-
   const sharedPack = share?.pack ? a.packs.find((p) => p.slug === share.pack) : undefined;
-  const packId = sharedPack ? sharedPack.id : share?.pack === HOODIE_ONLY_SLUG && a.packs.length > 0 ? null : defaultPackId(a.packs);
+  const sharedMode = share?.mode ?? null;
+  const stimpieEntry = !!shared && !sharedMode && !sharedPack && share?.pack !== HOODIE_ONLY_SLUG;
+  const mode: PurchaseMode = sharedPack
+    ? sharedPack.type === 'STIMPIE_ONLY' ? 'STIMPIE_ONLY' : 'HOODIE_SET'
+    : sharedMode === 'stimpie-only' || stimpieEntry
+      ? 'STIMPIE_ONLY'
+      : sharedMode === 'hoodie-only' || share?.pack === HOODIE_ONLY_SLUG
+        ? 'HOODIE_ONLY'
+        : sharedMode === 'hoodie-set'
+          ? 'HOODIE_SET'
+          : defaultPackId(a.packs) !== null ? 'HOODIE_SET' : 'HOODIE_ONLY';
+  const packId = sharedPack?.id ?? (mode === 'STIMPIE_ONLY' ? defaultStimpiePackId(a.packs) : mode === 'HOODIE_SET' ? defaultPackId(a.packs) : null);
+  const selectedOffer = packById(a.packs, packId);
+  const first = shared && packAllowsStimpie(selectedOffer, shared.id)
+    ? shared
+    : a.stimpies.find((s) => s.purchasable && packAllowsStimpie(selectedOffer, s.id)) ?? a.stimpies.find((s) => packAllowsStimpie(selectedOffer, s.id)) ?? a.stimpies[0];
+  const previewId = first?.id ?? null;
   const n = slotCount(a.packs, packId);
   const slots: (number | null)[] = Array.from({ length: n }, () => null);
-  if (n > 0) slots[0] = previewId;
-  const second = bySlug(share?.stimpie2 ?? null);
-  if (n > 1 && second && second.id !== slots[0]) slots[1] = second.id;
+  const selectedPack = packById(a.packs, packId);
+  const sharedStimpies = share?.stimpies?.length
+    ? share.stimpies.map((slug) => bySlug(slug)).filter((s): s is BuilderStimpie => !!s)
+    : [bySlug(share?.stimpie ?? null), bySlug(share?.stimpie2 ?? null)].filter((s): s is BuilderStimpie => !!s);
+  const picks = sharedStimpies.length > 0 ? sharedStimpies : previewId === null ? [] : [bySlug(a.stimpies.find((s) => s.id === previewId)?.slug ?? null)].filter((s): s is BuilderStimpie => !!s);
+  let slot = 0;
+  for (const picked of picks) {
+    if (slot >= n) break;
+    if (!packAllowsStimpie(selectedPack, picked.id)) continue;
+    if (selectedPack?.type !== 'STIMPIE_ONLY' && slots.includes(picked.id)) continue;
+    slots[slot++] = picked.id;
+  }
   const empty = firstEmpty(slots);
-  return { colorId, packId, slots, focus: empty >= 0 ? empty : 0, previewId };
+  return { colorId, purchaseMode: mode, packId, slots, focus: empty >= 0 ? empty : 0, previewId };
 }
 
 export type SelectionAction =
   | { type: 'color'; colorId: number }
   | { type: 'pack'; packId: number | null; packs: readonly BuilderPack[] }
-  | { type: 'pick'; stimpieId: number }
+  | { type: 'mode'; mode: PurchaseMode; packs: readonly BuilderPack[] }
+  | { type: 'pick'; stimpieId: number; allowDuplicates?: boolean }
   | { type: 'focus'; slot: number };
 
 /** A card is disabled for the focused slot when another slot already holds it (no duplicates in a pack). */
@@ -104,11 +141,20 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
       if (n > 0 && slots[0] === null && state.previewId !== null && !slots.includes(state.previewId)) slots[0] = state.previewId;
       const empty = firstEmpty(slots);
       const focus = empty >= 0 ? empty : Math.min(state.focus, Math.max(0, n - 1));
-      return { ...state, packId: action.packId, slots, focus };
+      const pack = packById(action.packs, action.packId);
+      return { ...state, purchaseMode: pack?.type === 'STIMPIE_ONLY' ? 'STIMPIE_ONLY' : pack ? 'HOODIE_SET' : 'HOODIE_ONLY', packId: action.packId, slots, focus };
+    }
+    case 'mode': {
+      const packId = action.mode === 'HOODIE_ONLY' ? null : action.mode === 'STIMPIE_ONLY' ? defaultStimpiePackId(action.packs) : defaultPackId(action.packs);
+      const n = slotCount(action.packs, packId);
+      const slots: (number | null)[] = Array.from({ length: n }, (_, i) => state.slots[i] ?? null);
+      if (n > 0 && slots[0] === null && state.previewId !== null && !slots.includes(state.previewId)) slots[0] = state.previewId;
+      const empty = firstEmpty(slots);
+      return { ...state, purchaseMode: action.mode, packId, slots, focus: empty >= 0 ? empty : Math.min(state.focus, Math.max(0, n - 1)) };
     }
     case 'pick': {
       if (state.slots.length === 0) return { ...state, previewId: action.stimpieId };
-      if (!canPick(state, action.stimpieId)) return state;
+      if (!action.allowDuplicates && !canPick(state, action.stimpieId)) return state;
       if (state.slots[state.focus] === action.stimpieId) return { ...state, previewId: action.stimpieId };
       const wasEmpty = state.slots[state.focus] === null;
       const slots = [...state.slots];
@@ -135,10 +181,11 @@ export function colorSoldOut(hoodie: BuilderHoodie | null | undefined, colorId: 
 export function runningPriceCents(sel: Selection, packs: readonly BuilderPack[], hoodie: BuilderHoodie | null | undefined): number | null {
   const pack = packById(packs, sel.packId);
   if (pack) return pack.priceCents;
+  if (sel.purchaseMode === 'STIMPIE_ONLY') return null;
   return hoodie?.priceCents ?? null;
 }
 
-export type AddIssue = 'NO_HOODIE' | 'COLOR_SOLD_OUT' | 'NEED_STIMPIES' | 'STIMPIE_UNAVAILABLE';
+export type AddIssue = 'NO_HOODIE' | 'NO_OFFER' | 'COLOR_SOLD_OUT' | 'NEED_STIMPIES' | 'STIMPIE_UNAVAILABLE';
 
 export interface AddState {
   ok: boolean;
@@ -157,17 +204,19 @@ export function evaluateAdd(args: {
 }): AddState {
   const { selection, packs, stimpies, hoodie } = args;
   const missing = selection.slots.filter((s) => s === null).length;
-  if (!hoodie || selection.colorId === null) return { ok: false, issue: 'NO_HOODIE', hint: null, missing };
-  if (colorSoldOut(hoodie, selection.colorId) || !hoodie.inStock) {
+  const pack = packById(packs, selection.packId);
+  const stimpieOnly = selection.purchaseMode === 'STIMPIE_ONLY';
+  if (stimpieOnly && !pack) return { ok: false, issue: 'NO_OFFER', hint: 'Stimpies-only offers are not available right now.', missing };
+  if (!stimpieOnly && (!hoodie || selection.colorId === null)) return { ok: false, issue: 'NO_HOODIE', hint: null, missing };
+  if (!stimpieOnly && hoodie && selection.colorId !== null && (colorSoldOut(hoodie, selection.colorId) || !hoodie.inStock)) {
     return { ok: false, issue: 'COLOR_SOLD_OUT', hint: 'This colour is sold out. Try another colour.', missing };
   }
-  const pack = packById(packs, selection.packId);
   if (pack) {
     if (missing > 0) {
       return { ok: false, issue: 'NEED_STIMPIES', hint: `Pick ${missing} more Stimpie${missing === 1 ? '' : 's'}`, missing };
     }
     const chosen = selection.slots.flatMap((id) => stimpies.find((s) => s.id === id) ?? []);
-    if (chosen.some((s) => !s.purchasable)) {
+    if (chosen.some((s) => !s.purchasable || !packAllowsStimpie(pack, s.id))) {
       return { ok: false, issue: 'STIMPIE_UNAVAILABLE', hint: 'Choose an available Stimpie', missing };
     }
   }
@@ -178,14 +227,25 @@ export function evaluateAdd(args: {
 export function buildCartItem(args: {
   selection: Selection;
   packs: readonly BuilderPack[];
-  hoodieId: number;
-  sizeId: number;
+  hoodieId?: number;
+  colorId?: number | null;
+  sizeId?: number | null;
 }): import('../types').BuilderCartItem | null {
-  const { selection, packs, hoodieId, sizeId } = args;
-  if (selection.colorId === null) return null;
+  const { selection, packs, hoodieId, colorId = selection.colorId, sizeId } = args;
   const pack = packById(packs, selection.packId);
-  if (!pack) return { kind: 'hoodie', hoodieId, colorId: selection.colorId, sizeId, qty: 1 };
+  if (pack?.type === 'STIMPIE_ONLY') {
+    const ids = selection.slots.filter((s): s is number => s !== null);
+    if (ids.length !== pack.stimpieCount || ids.some((id) => !packAllowsStimpie(pack, id))) return null;
+    const counts = new Map<number, number>();
+    for (const id of ids) counts.set(id, (counts.get(id) ?? 0) + 1);
+    return { kind: 'stimpie_pack', packId: pack.id, stimpies: [...counts].map(([stimpieId, qty]) => ({ stimpieId, qty })), qty: 1 };
+  }
+  if (!pack) {
+    if (hoodieId === undefined || colorId === null || sizeId === undefined || sizeId === null) return null;
+    return { kind: 'hoodie', hoodieId, colorId, sizeId, qty: 1 };
+  }
+  if (hoodieId === undefined || colorId === null || sizeId === undefined || sizeId === null) return null;
   const ids = selection.slots.filter((s): s is number => s !== null);
-  if (ids.length !== pack.stimpieCount || new Set(ids).size !== ids.length) return null;
-  return { kind: 'pack', packId: pack.id, hoodieId, colorId: selection.colorId, sizeId, stimpieIds: ids, qty: 1 };
+  if (ids.length !== pack.stimpieCount || new Set(ids).size !== ids.length || ids.some((id) => !packAllowsStimpie(pack, id))) return null;
+  return { kind: 'pack', packId: pack.id, hoodieId, colorId, sizeId, stimpieIds: ids, qty: 1 };
 }

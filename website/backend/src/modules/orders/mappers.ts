@@ -93,6 +93,7 @@ export function toOrderItem(i: ItemRow): OrderItemDto {
       color: d.color,
       size: d.size,
       stimpies: d.stimpies,
+      stimpieQuantities: d.stimpieQuantities,
       hoodieImage: media.hoodieImage,
       stimpieImages: media.stimpieImages.length > 0 ? media.stimpieImages : undefined,
     },

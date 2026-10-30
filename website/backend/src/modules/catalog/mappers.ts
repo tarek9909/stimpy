@@ -3,6 +3,7 @@ import { jsonStringArray } from '../../lib/db';
 import { iso, isoOrNull } from '../../lib/dates';
 import { availableUnits, stimpieAvailability } from '../../services/drops';
 import type { PromotionPrice } from '../../services/promotions';
+import { eligibleStimpieIds } from '../../services/stimpie-offers';
 
 export type StimpieWithDrop = Stimpie & { drop: Drop | null };
 
@@ -44,10 +45,12 @@ export function toPublicStimpie(row: StimpieWithDrop, lowStockThreshold: number,
 
 export const toPublicPack = (p: Pack) => ({
   id: p.id,
+  type: p.type,
   slug: p.slug,
   name: p.name,
   description: p.description,
   stimpieCount: p.stimpieCount,
+  eligibleStimpieIds: eligibleStimpieIds(p.eligibleStimpieIds),
   priceCents: p.priceCents,
   compareAtPriceCents: null,
   badge: p.badge,
@@ -90,10 +93,12 @@ export const toAdminStimpie = (s: Stimpie) => ({
 
 export const toAdminPack = (p: Pack) => ({
   id: p.id,
+  type: p.type,
   name: p.name,
   slug: p.slug,
   description: p.description,
   stimpieCount: p.stimpieCount,
+  eligibleStimpieIds: eligibleStimpieIds(p.eligibleStimpieIds),
   priceCents: p.priceCents,
   badge: p.badge,
   active: p.active,

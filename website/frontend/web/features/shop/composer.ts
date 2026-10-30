@@ -57,7 +57,11 @@ export interface ComposerData {
 }
 
 export function packById(packs: readonly Pack[], choice: PackChoice): Pack | null {
-  return choice === HOODIE_ONLY ? null : (packs.find((p) => p.id === choice) ?? null);
+  return choice === HOODIE_ONLY ? null : (packs.find((p) => p.id === choice && p.type !== 'STIMPIE_ONLY') ?? null);
+}
+
+export function packAllowsStimpie(pack: Pick<Pack, 'eligibleStimpieIds'> | null, stimpieId: number): boolean {
+  return !pack || pack.eligibleStimpieIds === null || pack.eligibleStimpieIds.includes(stimpieId);
 }
 
 /** Number of Stimpies the choice needs (0 for hoodie only). */
@@ -95,7 +99,7 @@ export function initialState(data: ComposerData, preset: ComposerPreset = {}, ca
     preset.sizeId && hoodie.sizes.some((s) => s.id === preset.sizeId) && variantFor(hoodie, colorId, preset.sizeId)?.inStock
       ? preset.sizeId
       : null;
-  const presetPack = preset.packSlug ? packs.find((p) => p.slug === preset.packSlug) : undefined;
+  const presetPack = preset.packSlug ? packs.find((p) => p.slug === preset.packSlug && p.type !== 'STIMPIE_ONLY') : undefined;
   const wantedStimpies = (preset.stimpieSlugs ?? [])
     .map((slug) => stimpies.find((s) => s.slug === slug))
     .filter((s): s is Stimpie => !!s && stimpieSelectable(s, cartLines));
@@ -103,11 +107,13 @@ export function initialState(data: ComposerData, preset: ComposerPreset = {}, ca
   let pack: PackChoice = HOODIE_ONLY;
   if (presetPack) pack = presetPack.id;
   else if (wantedStimpies.length > 0) {
-    const fit = [...packs].sort((a, b) => a.stimpieCount - b.stimpieCount).find((p) => p.stimpieCount >= wantedStimpies.length);
+    const fit = [...packs].filter((p) => p.type !== 'STIMPIE_ONLY').sort((a, b) => a.stimpieCount - b.stimpieCount)
+      .find((p) => p.stimpieCount >= wantedStimpies.length && wantedStimpies.every((s) => packAllowsStimpie(p, s.id)));
     if (fit) pack = fit.id;
   }
   const need = requiredStimpies(packs, pack);
-  const stimpieIds = Array.from(new Set(wantedStimpies.map((s) => s.id))).slice(0, need);
+  const selectedPack = packById(packs, pack);
+  const stimpieIds = Array.from(new Set(wantedStimpies.filter((s) => packAllowsStimpie(selectedPack, s.id)).map((s) => s.id))).slice(0, need);
   return { pack, colorId, sizeId, stimpieIds };
 }
 
@@ -115,7 +121,7 @@ export type ComposerAction =
   | { type: 'pack'; pack: PackChoice; packs: readonly Pack[] }
   | { type: 'color'; colorId: number; hoodie: HoodieDetail }
   | { type: 'size'; sizeId: number }
-  | { type: 'toggleStimpie'; stimpieId: number; need: number }
+  | { type: 'toggleStimpie'; stimpieId: number; need: number; eligibleStimpieIds?: readonly number[] | null }
   | { type: 'dropStimpies'; ids: number[] }
   | { type: 'reset'; state: ComposerState };
 
@@ -123,7 +129,9 @@ export function composerReducer(state: ComposerState, action: ComposerAction): C
   switch (action.type) {
     case 'pack': {
       const need = requiredStimpies(action.packs, action.pack);
-      return { ...state, pack: action.pack, stimpieIds: state.stimpieIds.slice(0, need) };
+      const selectedPack = packById(action.packs, action.pack);
+      const stimpieIds = state.stimpieIds.filter((id) => packAllowsStimpie(selectedPack, id)).slice(0, need);
+      return { ...state, pack: action.pack, stimpieIds };
     }
     case 'color': {
       // Keep the size only when it is still in stock for the new colour.
@@ -134,6 +142,7 @@ export function composerReducer(state: ComposerState, action: ComposerAction): C
       return { ...state, sizeId: action.sizeId };
     case 'toggleStimpie': {
       if (action.need <= 0) return state;
+      if (action.eligibleStimpieIds !== undefined && action.eligibleStimpieIds !== null && !action.eligibleStimpieIds.includes(action.stimpieId)) return state;
       if (state.stimpieIds.includes(action.stimpieId)) {
         return { ...state, stimpieIds: state.stimpieIds.filter((id) => id !== action.stimpieId) };
       }
@@ -175,7 +184,8 @@ export function validateComposer(data: ComposerData, state: ComposerState): Comp
   if (!variantFor(hoodie, state.colorId, state.sizeId)?.inStock) return fail('SIZE_SOLD_OUT');
   if (need > 0) {
     if (state.stimpieIds.length !== need) return fail('NEED_STIMPIES');
-    const ok = state.stimpieIds.every((id) => stimpies.find((s) => s.id === id)?.purchasable);
+    const selectedPack = packById(packs, state.pack);
+    const ok = state.stimpieIds.every((id) => stimpies.find((s) => s.id === id)?.purchasable && packAllowsStimpie(selectedPack, id));
     if (!ok) return fail('STIMPIE_UNAVAILABLE');
   }
   return { valid: true, issue: null, progressLabel };

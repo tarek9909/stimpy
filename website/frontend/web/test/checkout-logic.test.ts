@@ -241,6 +241,22 @@ describe('cart updates from SOLD_OUT / NOT_PURCHASABLE (4.4)', () => {
     expect(gone[1]?.item.qty).toBe(2);
   });
 
+  it('lowers a repeated Stimpie-only offer by whole bundles using the per-offer design count', () => {
+    const s = createCartStore();
+    s.getState().add(
+      { kind: 'stimpie_pack', packId: 7, stimpies: [{ stimpieId: 9, qty: 3 }, { stimpieId: 4, qty: 4 }], qty: 2 },
+      ui({ title: '7 Stimpies', hoodieSlug: null, packSlug: 'seven', stimpies: [{ id: 9, slug: 'x', name: 'X', artworkUrl: 'x', type: 'CORE', qty: 3 }] }),
+    );
+    const lines = s.getState().lines;
+    const problem: StockProblem = { kind: 'STIMPIE', stimpieId: 9, itemIndex: 0, name: 'X', requested: 6, available: 5 };
+    const lowered = applyStockProblems(lines, [problem]);
+    expect(lowered[0]?.item.qty).toBe(1);
+    expect(lowered[0]?.check.state).toBe('ADJUSTED');
+    const unavailable = applyStockProblems(lines, [{ ...problem, available: 2 }]);
+    expect(unavailable[0]?.item.qty).toBe(2);
+    expect(unavailable[0]?.check.state).toBe('UNAVAILABLE');
+  });
+
   it('NOT_PURCHASABLE reasons use the documented copy', () => {
     const lines = cart().getState().lines;
     const text = (reason: 'INACTIVE' | 'DROP_NOT_STARTED' | 'DROP_ENDED') =>

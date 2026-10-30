@@ -55,7 +55,7 @@ function reviveLine(value: unknown): CartLine | null {
             if (typeof s !== 'object' || s === null) return [];
             const x = s as Record<string, unknown>;
             if (typeof x.id !== 'number' || !isString(x.slug) || !isString(x.name) || !isString(x.artworkUrl)) return [];
-            return [{ id: x.id, slug: x.slug, name: x.name, artworkUrl: x.artworkUrl, type: x.type === 'LIMITED' ? ('LIMITED' as const) : ('CORE' as const) }];
+            return [{ id: x.id, slug: x.slug, name: x.name, artworkUrl: x.artworkUrl, type: x.type === 'LIMITED' ? ('LIMITED' as const) : ('CORE' as const), ...(typeof x.qty === 'number' && Number.isInteger(x.qty) && x.qty > 0 ? { qty: x.qty } : {}) }];
           })
         : [],
       unitPriceCents: ui.unitPriceCents,

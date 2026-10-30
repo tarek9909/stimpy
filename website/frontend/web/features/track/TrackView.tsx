@@ -316,7 +316,9 @@ function TrackResult({ order, business }: { order: TrackedOrder; business: Busin
                     <p className="text-body-sm text-fg-muted">
                       {[item.details.hoodie, item.details.color, item.details.size].filter(Boolean).join(' / ')}
                     </p>
-                    {item.details.stimpies.length > 0 ? <p className="text-body-sm text-fg-muted">{item.details.stimpies.join(', ')}</p> : null}
+                    {item.details.stimpieQuantities?.length
+                      ? <p className="text-body-sm text-fg-muted">{item.details.stimpieQuantities.map((entry) => `${entry.qty} × ${entry.name}`).join(', ')}</p>
+                      : item.details.stimpies.length > 0 ? <p className="text-body-sm text-fg-muted">{item.details.stimpies.join(', ')}</p> : null}
                   </div>
                 </div>
                 <p className="shrink-0 tabular-nums text-body font-medium text-fg">{formatCents(item.lineTotalCents)}</p>

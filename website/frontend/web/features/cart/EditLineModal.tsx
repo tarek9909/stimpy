@@ -7,11 +7,12 @@ import { browserApi } from '@/lib/api-browser';
 import { fetchApiAllPages } from '@/lib/pagination';
 import { PackComposer } from '@/features/shop/PackComposer';
 import type { ComposerPreset } from '@/features/shop/composer';
+import { StimpiePackComposer } from '@/features/shop/StimpiePackComposer';
 import { useCart } from './store';
 import type { CartLine } from './types';
 
 interface Loaded {
-  hoodie: HoodieDetail;
+  hoodie: HoodieDetail | null;
   packs: Pack[];
   stimpies: Stimpie[];
 }
@@ -19,7 +20,7 @@ interface Loaded {
 /** The composer preset that re-creates a cart line (checkout-and-order-flow 1.3: "Edit" re-opens PackComposer pre-filled). */
 export function presetForLine(line: CartLine): ComposerPreset {
   const { item, ui } = line;
-  if (item.kind === 'stimpie') return {};
+  if (item.kind === 'stimpie' || item.kind === 'stimpie_pack') return {};
   return {
     colorId: item.colorId,
     sizeId: item.sizeId,
@@ -30,7 +31,7 @@ export function presetForLine(line: CartLine): ComposerPreset {
 
 /** Can this line be edited with the pack composer? Pack and hoodie lines with a known hoodie page can. */
 export function canEditLine(line: CartLine): boolean {
-  return line.item.kind !== 'stimpie' && !!line.ui.hoodieSlug;
+  return line.item.kind === 'stimpie_pack' || (line.item.kind !== 'stimpie' && !!line.ui.hoodieSlug);
 }
 
 /**
@@ -40,12 +41,13 @@ export function canEditLine(line: CartLine): boolean {
 export function EditLineModal({ lineId, onClose }: { lineId: string | null; onClose: () => void }) {
   const line = useCart((s) => (lineId ? (s.lines.find((l) => l.lineId === lineId) ?? null) : null));
   const slug = line?.ui.hoodieSlug ?? null;
+  const stimpieOnly = line?.item.kind === 'stimpie_pack';
   const [data, setData] = useState<Loaded | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!slug) return;
+    if (!slug && !stimpieOnly) return;
     let cancelled = false;
     setData(null);
     setFailed(false);
@@ -53,13 +55,13 @@ export function EditLineModal({ lineId, onClose }: { lineId: string | null; onCl
     void (async () => {
       try {
         const [h, packs, stimpies] = await Promise.all([
-          api.GET('/api/v1/products/hoodies/{slug}', { params: { path: { slug } }, cache: 'no-store' }),
+          slug ? api.GET('/api/v1/products/hoodies/{slug}', { params: { path: { slug } }, cache: 'no-store' }) : Promise.resolve({ data: undefined }),
           fetchApiAllPages((page, pageSize) => api.GET('/api/v1/packs', { params: { query: { page, pageSize } }, cache: 'no-store' })),
           fetchApiAllPages((page, pageSize) => api.GET('/api/v1/products/stimpies', { params: { query: { includeSoldOut: 'true', page, pageSize } }, cache: 'no-store' })),
         ]);
         if (cancelled) return;
-        if (!h.data) throw new Error('empty');
-        setData({ hoodie: h.data, packs, stimpies });
+        if (slug && !h.data) throw new Error('empty');
+        setData({ hoodie: h.data ?? null, packs, stimpies });
       } catch {
         if (!cancelled) setFailed(true);
       }
@@ -67,7 +69,7 @@ export function EditLineModal({ lineId, onClose }: { lineId: string | null; onCl
     return () => {
       cancelled = true;
     };
-  }, [slug, attempt, lineId]);
+  }, [slug, stimpieOnly, attempt, lineId]);
 
   const preset = useMemo(() => (line ? presetForLine(line) : undefined), [line]);
   const open = lineId !== null && line !== null;
@@ -90,18 +92,32 @@ export function EditLineModal({ lineId, onClose }: { lineId: string | null; onCl
           <Skeleton variant="rect" className="h-32" />
         </SkeletonGroup>
       ) : (
-        <PackComposer
-          // A fresh composer per opened line (its reducer state is initialised once).
-          key={`${line.lineId}:${attempt}`}
-          hoodie={data.hoodie}
-          packs={data.packs}
-          stimpies={data.stimpies}
-          preset={preset}
-          source="product"
-          stickyBar={false}
-          replaceLine={{ lineId: line.lineId, qty: line.item.qty }}
-          onAdded={onClose}
-        />
+        line.item.kind === 'stimpie_pack' ? (
+          <StimpiePackComposer
+            key={`${line.lineId}:${attempt}`}
+            packs={data.packs}
+            stimpies={data.stimpies}
+            preset={{
+              packSlug: line.ui.packSlug,
+              stimpieSlugs: line.ui.stimpies.map((item) => `${item.slug}:${item.qty ?? 1}`),
+            }}
+            replaceLine={{ lineId: line.lineId, qty: line.item.qty }}
+            onAdded={onClose}
+          />
+        ) : data.hoodie ? (
+          <PackComposer
+            // A fresh composer per opened line (its reducer state is initialised once).
+            key={`${line.lineId}:${attempt}`}
+            hoodie={data.hoodie}
+            packs={data.packs}
+            stimpies={data.stimpies}
+            preset={preset}
+            source="product"
+            stickyBar={false}
+            replaceLine={{ lineId: line.lineId, qty: line.item.qty }}
+            onAdded={onClose}
+          />
+        ) : null
       )}
     </Modal>
   );

@@ -229,6 +229,30 @@ export async function runSeed(ctx: AppContext, opts: SeedOptions = {}): Promise<
     create: { name: 'Hoodie + 2 Stimpies', slug: 'hoodie-2-stimpies', description: 'The hoodie and two different Stimpies: two looks from day one.', stimpieCount: 2, priceCents: 4500, badge: 'Two looks', active: true, position: 2 },
     update: {},
   });
+  for (const offer of [
+    { count: 1, priceCents: 1200 },
+    { count: 2, priceCents: 2000 },
+    { count: 3, priceCents: 2700 },
+    { count: 4, priceCents: 3200 },
+    { count: 5, priceCents: 3800 },
+  ]) {
+    const label = `${offer.count} Stimpie${offer.count === 1 ? '' : 's'}`;
+    await prisma.pack.upsert({
+      where: { slug: `stimpie-only-${offer.count}` },
+      create: {
+        type: 'STIMPIE_ONLY',
+        name: label,
+        slug: `stimpie-only-${offer.count}`,
+        description: `Choose ${offer.count} Stimpie${offer.count === 1 ? '' : 's'}. Repeats are allowed.`,
+        stimpieCount: offer.count,
+        priceCents: offer.priceCents,
+        badge: null,
+        active: true,
+        position: offer.count + 2,
+      },
+      update: {},
+    });
+  }
 
   // ---- areas (names only, no fees)
   for (const name of ['Beirut', 'Mount Lebanon', 'North', 'South', 'Bekaa', 'Nabatieh']) {

@@ -1,15 +1,68 @@
 import { useState } from 'react';
 import { useCatalogHoodies, useCatalogStimpies } from './catalog';
+import type { HoodieSummary, Stimpie } from '@stimpy/api-client';
 import type { AdminOrder, AdminOrderSummary } from './api';
 import { useOrder } from './api';
 import { Modal } from '@stimpy/ui';
-import { Eye, Plus } from 'lucide-react';
+import { Eye } from 'lucide-react';
 
 export interface ResolvedMedia {
   hoodieImg: string | null;
   hoodieColor: string | null;
   hoodieSize: string | null;
-  stimpieImgs: Array<{ name: string; url: string | null }>;
+  stimpieImgs: Array<{ name: string; url: string | null; qty?: number }>;
+}
+
+export interface OrderMediaItem {
+  name: string;
+  kind: string;
+  details: {
+    hoodie?: string | null;
+    color?: string | null;
+    size?: string | null;
+    stimpies?: string[];
+    stimpieQuantities?: Array<{ name: string; qty: number }>;
+    hoodieImage?: string | null;
+    stimpieImages?: Array<{ name: string; imageUrl: string | null }>;
+  };
+}
+
+export function resolveOrderMedia(item: OrderMediaItem, stimpieCatalog: Stimpie[], hoodieCatalog: HoodieSummary[]): ResolvedMedia {
+  const d = item.details;
+  let hoodieImg: string | null = item.kind === 'STIMPIE_PACK' ? null : d.hoodieImage ?? null;
+  if (!hoodieImg && item.kind !== 'STIMPIE_PACK' && (d.hoodie || item.kind === 'HOODIE' || item.kind === 'PACK')) {
+    const hoodie = hoodieCatalog.find((h) => !d.hoodie || h.name.toLowerCase() === d.hoodie.toLowerCase()) ?? hoodieCatalog[0];
+    if (hoodie) {
+      const colorMatch = d.color ? hoodie.images?.find((img) => img.toLowerCase().includes(d.color!.toLowerCase())) : null;
+      hoodieImg = colorMatch ?? hoodie.images?.[0] ?? null;
+    }
+  }
+
+  const stimpieImgs: Array<{ name: string; url: string | null; qty?: number }> = [];
+  if (d.stimpieQuantities && d.stimpieQuantities.length > 0) {
+    d.stimpieQuantities.forEach((stimpie) => {
+      const found = stimpieCatalog.find((item) => item.name.trim().toLowerCase() === stimpie.name.trim().toLowerCase() || item.slug === stimpie.name.toLowerCase().replace(/\s+/g, '-'));
+      const media = d.stimpieImages?.find((image) => image.name === stimpie.name);
+      stimpieImgs.push({ name: stimpie.name, qty: stimpie.qty, url: media?.imageUrl ?? found?.artworkUrl ?? found?.images?.[0] ?? null });
+    });
+  } else if (d.stimpieImages && d.stimpieImages.length > 0) {
+    d.stimpieImages.forEach((s) => stimpieImgs.push({ name: s.name, qty: 1, url: s.imageUrl }));
+  } else if (Array.isArray(d.stimpies) && d.stimpies.length > 0) {
+    d.stimpies.forEach((name) => {
+      const found = stimpieCatalog.find((s) => s.name.trim().toLowerCase() === name.trim().toLowerCase() || s.slug === name.toLowerCase().replace(/\s+/g, '-'));
+      stimpieImgs.push({ name, qty: 1, url: found?.artworkUrl ?? found?.images?.[0] ?? null });
+    });
+  } else if (item.kind === 'STIMPIE') {
+    const found = stimpieCatalog.find((s) => s.name.trim().toLowerCase() === item.name.trim().toLowerCase() || s.slug === item.name.toLowerCase().replace(/\s+/g, '-'));
+    stimpieImgs.push({ name: item.name, qty: 1, url: found?.artworkUrl ?? found?.images?.[0] ?? null });
+  }
+
+  return {
+    hoodieImg,
+    hoodieColor: item.kind === 'STIMPIE_PACK' ? null : d.color ?? null,
+    hoodieSize: item.kind === 'STIMPIE_PACK' ? null : d.size ?? null,
+    stimpieImgs,
+  };
 }
 
 /** Hook to resolve high-res hoodie and Stimpie artwork URLs from item details and catalog. */
@@ -17,67 +70,7 @@ export function useOrderMediaResolver() {
   const stimpiesQuery = useCatalogStimpies();
   const hoodiesQuery = useCatalogHoodies();
 
-  const resolveItemMedia = (item: {
-    name: string;
-    kind: string;
-    details: {
-      hoodie?: string | null;
-      color?: string | null;
-      size?: string | null;
-      stimpies?: string[];
-      hoodieImage?: string | null;
-      stimpieImages?: Array<{ name: string; imageUrl: string | null }>;
-    };
-  }): ResolvedMedia => {
-    const d = item.details;
-    const stimpieCatalog = stimpiesQuery.data ?? [];
-    const hoodieCatalog = hoodiesQuery.data ?? [];
-
-    // 1. Resolve Hoodie Image
-    let hoodieImg: string | null = d.hoodieImage ?? null;
-    if (!hoodieImg && (d.hoodie || item.kind === 'HOODIE' || item.kind === 'PACK')) {
-      const hoodie = hoodieCatalog.find((h) => !d.hoodie || h.name.toLowerCase() === d.hoodie.toLowerCase()) ?? hoodieCatalog[0];
-      if (hoodie) {
-        const colorMatch = d.color
-          ? hoodie.images?.find((img) => img.toLowerCase().includes(d.color!.toLowerCase()))
-          : null;
-        hoodieImg = colorMatch ?? hoodie.images?.[0] ?? null;
-      }
-    }
-
-    // 2. Resolve Stimpie Images
-    const stimpieImgs: Array<{ name: string; url: string | null }> = [];
-    if (d.stimpieImages && d.stimpieImages.length > 0) {
-      d.stimpieImages.forEach((s) => {
-        stimpieImgs.push({ name: s.name, url: s.imageUrl });
-      });
-    } else if (Array.isArray(d.stimpies) && d.stimpies.length > 0) {
-      d.stimpies.forEach((name) => {
-        const found = stimpieCatalog.find(
-          (s) => s.name.trim().toLowerCase() === name.trim().toLowerCase() || s.slug === name.toLowerCase().replace(/\s+/g, '-'),
-        );
-        stimpieImgs.push({
-          name,
-          url: found?.artworkUrl ?? found?.images?.[0] ?? null,
-        });
-      });
-    } else if (item.kind === 'STIMPIE') {
-      const found = stimpieCatalog.find(
-        (s) => s.name.trim().toLowerCase() === item.name.trim().toLowerCase() || s.slug === item.name.toLowerCase().replace(/\s+/g, '-'),
-      );
-      stimpieImgs.push({
-        name: item.name,
-        url: found?.artworkUrl ?? found?.images?.[0] ?? null,
-      });
-    }
-
-    return {
-      hoodieImg,
-      hoodieColor: d.color ?? null,
-      hoodieSize: d.size ?? null,
-      stimpieImgs,
-    };
-  };
+  const resolveItemMedia = (item: OrderMediaItem): ResolvedMedia => resolveOrderMedia(item, stimpiesQuery.data ?? [], hoodiesQuery.data ?? []);
 
   return { resolveItemMedia, isLoading: stimpiesQuery.isPending || hoodiesQuery.isPending };
 }
@@ -195,8 +188,8 @@ export function OrderItemMediaThumbs({
               key={idx}
               src={s.url}
               alt={s.name}
-              title={`Stimpie: ${s.name}`}
-              subtitle="Back panel artwork"
+              title={`Stimpie: ${s.name}${(s.qty ?? 1) > 1 ? ` ×${s.qty}` : ''}`}
+              subtitle="Stimpie artwork"
               shape="tarot"
               size={size}
             />
@@ -226,7 +219,7 @@ export function OrderListItemsCell({ order }: { order: AdminOrderSummary }) {
       {items.map((item) => {
         const media = resolveItemMedia(item);
         const detailsText = [media.hoodieColor, media.hoodieSize].filter(Boolean).join(' · ');
-        const stimpieNames = media.stimpieImgs.map((s) => s.name).join(', ');
+        const stimpieNames = media.stimpieImgs.map((s) => `${s.name}${(s.qty ?? 1) > 1 ? ` ×${s.qty}` : ''}`).join(', ');
 
         return (
           <div key={item.id} className="flex items-center gap-2.5">
@@ -258,7 +251,7 @@ export function OrderDetailItemRow({
   const { resolveItemMedia } = useOrderMediaResolver();
   const media = resolveItemMedia(item);
   const d = item.details;
-  const parts = [d.hoodie, d.color, d.size].filter(Boolean).join(', ');
+  const parts = item.kind === 'STIMPIE_PACK' ? '' : [d.hoodie, d.color, d.size].filter(Boolean).join(', ');
 
   return (
     <li className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:justify-between">
@@ -267,15 +260,15 @@ export function OrderDetailItemRow({
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-body text-fg">{item.name}</p>
           {parts ? <p className="text-body-sm text-fg-muted mt-0.5">{parts}</p> : null}
-          {d.stimpies.length > 0 ? (
+          {media.stimpieImgs.length > 0 ? (
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="text-body-xs font-semibold uppercase tracking-wider text-fg-muted">Back panel:</span>
-              {d.stimpies.map((s, idx) => (
+              <span className="text-body-xs font-semibold uppercase tracking-wider text-fg-muted">Stimpies:</span>
+              {media.stimpieImgs.map((s, idx) => (
                 <span
                   key={idx}
                   className="inline-flex items-center rounded bg-surface-muted px-1.5 py-0.5 text-body-xs font-medium text-fg border border-line"
                 >
-                  {s}
+                  {s.name}{(s.qty ?? 1) > 1 ? ` ×${s.qty}` : ''}
                 </span>
               ))}
             </div>

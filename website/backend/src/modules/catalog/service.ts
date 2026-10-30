@@ -1,4 +1,4 @@
-import type { Hoodie, Pack, Prisma, Stimpie } from '@prisma/client';
+import { Prisma, type Hoodie, type Pack, type Stimpie } from '@prisma/client';
 import type { z } from 'zod';
 import type { AppContext } from '../../context';
 import { isUniqueViolation, jsonStringArray, type Db } from '../../lib/db';
@@ -11,6 +11,7 @@ import { escapeLike } from '../../lib/sql-like';
 import { availableUnits, variantAvailability } from '../../services/drops';
 import { syncHoodieVariants } from '../../services/variants';
 import { promotionPriceKey, promotionPriceMap } from '../../services/promotions';
+import { stimpiePriceMap } from '../../services/stimpie-offers';
 import { toColorDto, toSizeDto } from '../options/service';
 import { toAdminHoodie, toAdminPack, toAdminStimpie, toPublicPack, toPublicStimpie } from './mappers';
 import type {
@@ -121,8 +122,8 @@ export async function listPublicStimpies(ctx: AppContext, q: PublicStimpieQuery)
       ctx.prisma.stimpie.findMany({ where, include: { drop: true }, orderBy, ...toSkipTake(q) }),
       ctx.prisma.stimpie.count({ where }),
     ]);
-    const prices = await promotionPriceMap(ctx.prisma, rows.map((s) => ({ productType: 'STIMPIE' as const, productId: s.id, priceCents: s.priceCents })), at);
-    return toPage(rows.map((r) => toPublicStimpie(r, threshold, at, prices.get(promotionPriceKey('STIMPIE', r.id)))), total, q);
+    const prices = await stimpiePriceMap(ctx.prisma, rows, at);
+    return toPage(rows.map((r) => toPublicStimpie(r, threshold, at, prices.get(r.id))), total, q);
   }
 
   // Prisma cannot compare `quantity` against `reserved` in a where clause; apply this stock-derived filter before slicing.
@@ -131,9 +132,9 @@ export async function listPublicStimpies(ctx: AppContext, q: PublicStimpieQuery)
     include: { drop: true },
     orderBy,
   });
-  const prices = await promotionPriceMap(ctx.prisma, rows.map((s) => ({ productType: 'STIMPIE' as const, productId: s.id, priceCents: s.priceCents })), at);
+  const prices = await stimpiePriceMap(ctx.prisma, rows, at);
   const items = rows
-    .map((r) => toPublicStimpie(r, threshold, at, prices.get(promotionPriceKey('STIMPIE', r.id))))
+    .map((r) => toPublicStimpie(r, threshold, at, prices.get(r.id)))
     .filter((s) => s.status !== 'SOLD_OUT');
   const offset = (q.page - 1) * q.pageSize;
   return toPage(items.slice(offset, offset + q.pageSize), items.length, q);
@@ -143,8 +144,8 @@ export async function getPublicStimpie(ctx: AppContext, slug: string) {
   const row = await ctx.prisma.stimpie.findFirst({ where: { slug, active: true }, include: { drop: true } });
   if (!row) throw AppError.notFound('Stimpie not found.');
   const at = now();
-  const prices = await promotionPriceMap(ctx.prisma, [{ productType: 'STIMPIE', productId: row.id, priceCents: row.priceCents }], at);
-  return toPublicStimpie(row, (await ctx.settings.get('orders')).lowStockThreshold, at, prices.get(promotionPriceKey('STIMPIE', row.id)));
+  const prices = await stimpiePriceMap(ctx.prisma, [row], at);
+  return toPublicStimpie(row, (await ctx.settings.get('orders')).lowStockThreshold, at, prices.get(row.id));
 }
 
 export async function listPublicPacks(ctx: AppContext, q: PageQuery) {
@@ -153,7 +154,7 @@ export async function listPublicPacks(ctx: AppContext, q: PageQuery) {
     ctx.prisma.pack.findMany({ where, orderBy: [{ position: 'asc' }, { id: 'asc' }], ...toSkipTake(q) }),
     ctx.prisma.pack.count({ where }),
   ]);
-  const prices = await promotionPriceMap(ctx.prisma, rows.map((p) => ({ productType: 'PACK' as const, productId: p.id, priceCents: p.priceCents })), now());
+  const prices = await promotionPriceMap(ctx.prisma, rows.filter((p) => p.type !== 'STIMPIE_ONLY').map((p) => ({ productType: 'PACK' as const, productId: p.id, priceCents: p.priceCents })), now());
   return toPage(rows.map((p) => ({
     ...toPublicPack(p),
     priceCents: prices.get(promotionPriceKey('PACK', p.id))?.priceCents ?? p.priceCents,
@@ -448,12 +449,19 @@ export async function createPack(ctx: AppContext, input: z.infer<typeof packCrea
     const id = await ctx.prisma.$transaction(async (tx) => {
       const slug = await uniqueSlug(input.name, async (s) => (await tx.pack.count({ where: { slug: s } })) > 0);
       const position = input.position ?? ((await tx.pack.aggregate({ _max: { position: true } }))._max.position ?? 0) + 1;
+      const eligibleStimpieIds = input.eligibleStimpieIds ?? null;
+      if (eligibleStimpieIds && eligibleStimpieIds.length) {
+        const found = await tx.stimpie.count({ where: { id: { in: eligibleStimpieIds } } });
+        if (found !== eligibleStimpieIds.length) throw AppError.validation({ eligibleStimpieIds: 'One or more selected Stimpies no longer exist.' });
+      }
       const row = await tx.pack.create({
         data: {
+          type: input.type,
           name: input.name,
           slug,
           description: input.description ?? '',
           stimpieCount: input.stimpieCount,
+          ...(eligibleStimpieIds !== null ? { eligibleStimpieIds } : {}),
           priceCents: input.priceCents,
           badge: input.badge ?? null,
           active: input.active ?? true,
@@ -472,14 +480,26 @@ export async function createPack(ctx: AppContext, input: z.infer<typeof packCrea
 export async function updatePack(ctx: AppContext, id: number, input: z.infer<typeof packUpdateBody>) {
   try {
     await ctx.prisma.$transaction(async (tx) => {
-      if (!(await tx.pack.findUnique({ where: { id }, select: { id: true } }))) throw AppError.notFound('Pack not found.');
+      const current = await tx.pack.findUnique({ where: { id } });
+      if (!current) throw AppError.notFound('Pack not found.');
+      const effectiveType = input.type ?? current.type;
+      const effectiveCount = input.stimpieCount ?? current.stimpieCount;
+      if (effectiveType === 'HOODIE_SET' && effectiveCount > 5) {
+        throw AppError.validation({ stimpieCount: 'Hoodie sets can contain at most 5 Stimpies.' });
+      }
+      if (input.eligibleStimpieIds && input.eligibleStimpieIds.length) {
+        const found = await tx.stimpie.count({ where: { id: { in: input.eligibleStimpieIds } } });
+        if (found !== input.eligibleStimpieIds.length) throw AppError.validation({ eligibleStimpieIds: 'One or more selected Stimpies no longer exist.' });
+      }
       const slug = input.name === undefined ? undefined : await uniqueSlug(input.name, async (s) => (await tx.pack.count({ where: { slug: s, id: { not: id } } })) > 0);
       await tx.pack.update({
         where: { id },
         data: {
+          ...(input.type !== undefined ? { type: input.type } : {}),
           ...(input.name !== undefined ? { name: input.name, slug } : {}),
           ...(input.description !== undefined ? { description: input.description } : {}),
           ...(input.stimpieCount !== undefined ? { stimpieCount: input.stimpieCount } : {}),
+          ...(input.eligibleStimpieIds !== undefined ? { eligibleStimpieIds: input.eligibleStimpieIds === null ? Prisma.DbNull : input.eligibleStimpieIds } : {}),
           ...(input.priceCents !== undefined ? { priceCents: input.priceCents } : {}),
           ...(input.badge !== undefined ? { badge: input.badge } : {}),
           ...(input.active !== undefined ? { active: input.active } : {}),

@@ -857,6 +857,15 @@ export interface paths {
                             qty: number;
                         } | {
                             /** @enum {string} */
+                            kind: "stimpie_pack";
+                            packId: number;
+                            stimpies: {
+                                stimpieId: number;
+                                qty: number;
+                            }[];
+                            qty: number;
+                        } | {
+                            /** @enum {string} */
                             kind: "hoodie";
                             hoodieId: number;
                             colorId: number;
@@ -952,6 +961,15 @@ export interface paths {
                             colorId: number;
                             sizeId: number;
                             stimpieIds: number[];
+                            qty: number;
+                        } | {
+                            /** @enum {string} */
+                            kind: "stimpie_pack";
+                            packId: number;
+                            stimpies: {
+                                stimpieId: number;
+                                qty: number;
+                            }[];
                             qty: number;
                         } | {
                             /** @enum {string} */
@@ -2873,9 +2891,15 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /**
+                         * @default HOODIE_SET
+                         * @enum {string}
+                         */
+                        type?: "HOODIE_SET" | "STIMPIE_ONLY";
                         name: string;
                         description?: string;
                         stimpieCount: number;
+                        eligibleStimpieIds?: number[] | null;
                         priceCents: number;
                         badge?: string | null;
                         active?: boolean;
@@ -3085,9 +3109,12 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @enum {string} */
+                        type?: "HOODIE_SET" | "STIMPIE_ONLY";
                         name?: string;
                         description?: string;
                         stimpieCount?: number;
+                        eligibleStimpieIds?: number[] | null;
                         priceCents?: number;
                         badge?: string | null;
                         active?: boolean;
@@ -3698,6 +3725,15 @@ export interface paths {
                             colorId: number;
                             sizeId: number;
                             stimpieIds: number[];
+                            qty: number;
+                        } | {
+                            /** @enum {string} */
+                            kind: "stimpie_pack";
+                            packId: number;
+                            stimpies: {
+                                stimpieId: number;
+                                qty: number;
+                            }[];
                             qty: number;
                         } | {
                             /** @enum {string} */
@@ -10931,10 +10967,13 @@ export interface components {
         };
         PackInput: {
             id: number;
+            /** @enum {string} */
+            type: "HOODIE_SET" | "STIMPIE_ONLY";
             slug: string;
             name: string;
             description: string;
             stimpieCount: number;
+            eligibleStimpieIds: number[] | null;
             priceCents: number;
             compareAtPriceCents: number | null;
             badge: string | null;
@@ -10975,10 +11014,13 @@ export interface components {
         };
         AdminPackInput: {
             id: number;
+            /** @enum {string} */
+            type: "HOODIE_SET" | "STIMPIE_ONLY";
             name: string;
             slug: string;
             description: string;
             stimpieCount: number;
+            eligibleStimpieIds: number[] | null;
             priceCents: number;
             badge: string | null;
             active: boolean;
@@ -11269,7 +11311,7 @@ export interface components {
         OrderItemInput: {
             id: number;
             /** @enum {string} */
-            kind: "PACK" | "HOODIE" | "STIMPIE";
+            kind: "PACK" | "STIMPIE_PACK" | "HOODIE" | "STIMPIE";
             name: string;
             qty: number;
             unitPriceCents: number;
@@ -11279,6 +11321,10 @@ export interface components {
                 color: string | null;
                 size: string | null;
                 stimpies: string[];
+                stimpieQuantities?: {
+                    name: string;
+                    qty: number;
+                }[];
                 hoodieImage?: string | null;
                 stimpieImages?: {
                     name: string;
@@ -12013,10 +12059,13 @@ export interface components {
         };
         Pack: {
             id: number;
+            /** @enum {string} */
+            type: "HOODIE_SET" | "STIMPIE_ONLY";
             slug: string;
             name: string;
             description: string;
             stimpieCount: number;
+            eligibleStimpieIds: number[] | null;
             priceCents: number;
             compareAtPriceCents: number | null;
             badge: string | null;
@@ -12057,10 +12106,13 @@ export interface components {
         };
         AdminPack: {
             id: number;
+            /** @enum {string} */
+            type: "HOODIE_SET" | "STIMPIE_ONLY";
             name: string;
             slug: string;
             description: string;
             stimpieCount: number;
+            eligibleStimpieIds: number[] | null;
             priceCents: number;
             badge: string | null;
             active: boolean;
@@ -12351,7 +12403,7 @@ export interface components {
         OrderItem: {
             id: number;
             /** @enum {string} */
-            kind: "PACK" | "HOODIE" | "STIMPIE";
+            kind: "PACK" | "STIMPIE_PACK" | "HOODIE" | "STIMPIE";
             name: string;
             qty: number;
             unitPriceCents: number;
@@ -12361,6 +12413,10 @@ export interface components {
                 color: string | null;
                 size: string | null;
                 stimpies: string[];
+                stimpieQuantities?: {
+                    name: string;
+                    qty: number;
+                }[];
                 hoodieImage?: string | null;
                 stimpieImages?: {
                     name: string;

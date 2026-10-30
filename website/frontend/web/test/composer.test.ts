@@ -62,6 +62,23 @@ describe('PackComposer rules', () => {
     expect(requiredStimpies(packs, 'hoodie')).toBe(0);
   });
 
+  it('drops and rejects Stimpies excluded by the newly selected hoodie offer', () => {
+    const restricted = { ...packs[1]!, id: 3, slug: 'restricted', name: 'Restricted set', eligibleStimpieIds: [4] };
+    const restrictedPacks = [...packs, restricted];
+    const restrictedData = { ...data, packs: restrictedPacks };
+    const fullSelection: ComposerState = { pack: 2, colorId: 1, sizeId: 3, stimpieIds: [4, 7] };
+
+    const changed = composerReducer(fullSelection, { type: 'pack', pack: restricted.id, packs: restrictedPacks });
+    expect(changed.stimpieIds).toEqual([4]);
+    expect(validateComposer(restrictedData, changed)).toMatchObject({ valid: false, issue: 'NEED_STIMPIES' });
+    expect(composerReducer(changed, { type: 'toggleStimpie', stimpieId: 7, need: 2, eligibleStimpieIds: [4] })).toEqual(changed);
+
+    const tampered = { ...changed, stimpieIds: [4, 7] };
+    expect(validateComposer(restrictedData, tampered)).toMatchObject({ valid: false, issue: 'STIMPIE_UNAVAILABLE' });
+    expect(buildCartLine(restrictedData, tampered)).toBeNull();
+    expect(initialState(restrictedData, { packSlug: 'restricted', stimpieSlugs: ['the-void', 'b'] }).stimpieIds).toEqual([4]);
+  });
+
   it('blocks out-of-stock size, and drops the size when the colour changes to one without it', () => {
     expect(validateComposer(data, { pack: 'hoodie', colorId: 1, sizeId: 4, stimpieIds: [] }).issue).toBe('SIZE_SOLD_OUT');
     const s = composerReducer({ pack: 'hoodie', colorId: 1, sizeId: 3, stimpieIds: [] }, { type: 'color', colorId: 2, hoodie: data.hoodie });

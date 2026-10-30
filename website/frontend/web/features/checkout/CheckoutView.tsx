@@ -325,7 +325,7 @@ export function CheckoutView() {
           value_cents: placed.order.totalCents,
           delivery_fee_cents: placed.order.deliveryFeeCents,
           items_count: placed.order.items.reduce((n, i) => n + i.qty, 0),
-          has_pack: placed.order.items.some((i) => i.kind === 'PACK'),
+          has_pack: placed.order.items.some((i) => i.kind === 'PACK' || i.kind === 'STIMPIE_PACK'),
           retry_count: 0,
         });
         // Products only (no delivery fee), with the order number as the id the API also sends to the Conversions API.
@@ -840,6 +840,7 @@ export function CheckoutView() {
         lines={lines}
         onClose={() => setDialog(null)}
         onCartChanged={() => void revalidate()}
+        onEditLine={(lineId) => { setDialog(null); setEditingId(lineId); }}
       />
       <NotPurchasableDialog open={dialog?.kind === 'not_purchasable'} problems={dialog?.kind === 'not_purchasable' ? dialog.problems : []} onClose={() => setDialog(null)} />
       <PriceChangedDialog

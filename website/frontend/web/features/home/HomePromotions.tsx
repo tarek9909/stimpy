@@ -51,7 +51,7 @@ function promotionItems(
       unavailable: !stimpie.purchasable,
       detail: null,
     })),
-    ...packs.map((pack) => ({
+    ...packs.filter((pack) => pack.type !== 'STIMPIE_ONLY').map((pack) => ({
       key: `PACK:${pack.id}`,
       kind: 'Set',
       name: pack.name,

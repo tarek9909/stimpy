@@ -95,10 +95,12 @@ export const hoodieDetailSchema = z
 export const packSchema = z
   .object({
     id: z.number().int(),
+    type: z.enum(['HOODIE_SET', 'STIMPIE_ONLY']),
     slug: z.string(),
     name: z.string(),
     description: z.string(),
     stimpieCount: z.number().int(),
+    eligibleStimpieIds: z.array(z.number().int()).nullable(),
     priceCents: z.number().int(),
     compareAtPriceCents: z.number().int().nullable(),
     badge: z.string().nullable(),
@@ -162,10 +164,12 @@ export const adminStimpieSchema = z
 export const adminPackSchema = z
   .object({
     id: z.number().int(),
+    type: z.enum(['HOODIE_SET', 'STIMPIE_ONLY']),
     name: z.string(),
     slug: z.string(),
     description: z.string(),
     stimpieCount: z.number().int(),
+    eligibleStimpieIds: z.array(z.number().int()).nullable(),
     priceCents: z.number().int(),
     badge: z.string().nullable(),
     active: z.boolean(),
@@ -206,16 +210,32 @@ export const stimpieCreateBody = z.strictObject({
 });
 export const stimpieUpdateBody = stimpieCreateBody.partial();
 
-export const packCreateBody = z.strictObject({
+const packEditableFields = {
+  type: z.enum(['HOODIE_SET', 'STIMPIE_ONLY']),
   name: nameField,
   description: longText.optional(),
-  stimpieCount: z.number().int().min(1).max(5),
+  stimpieCount: z.number().int().min(1).max(1_000_000),
+  eligibleStimpieIds: z.array(z.number().int().min(1).max(2_147_483_647)).max(10_000).refine((ids) => new Set(ids).size === ids.length, 'Choose each eligible Stimpie only once.').nullable().optional(),
   priceCents: centsField,
   badge: z.string().trim().min(1).max(40).nullable().optional(),
   active: z.boolean().optional(),
   position: z.number().int().min(0).optional(),
-});
-export const packUpdateBody = packCreateBody.partial();
+};
+
+function validatePackScope(type: 'HOODIE_SET' | 'STIMPIE_ONLY' | undefined, count: number | undefined, ctx: z.RefinementCtx) {
+  if (type === 'HOODIE_SET' && count !== undefined && count > 5) {
+    ctx.addIssue({ code: 'custom', path: ['stimpieCount'], message: 'Hoodie sets can contain at most 5 Stimpies.' });
+  }
+}
+
+export const packCreateBody = z.strictObject({
+  ...packEditableFields,
+  type: packEditableFields.type.default('HOODIE_SET'),
+}).superRefine((value, ctx) => validatePackScope(value.type, value.stimpieCount, ctx));
+
+export const packUpdateBody = z.strictObject({
+  ...packEditableFields,
+}).partial().superRefine((value, ctx) => validatePackScope(value.type, value.stimpieCount, ctx));
 
 // ---------------------------------------------------------------- admin list queries
 

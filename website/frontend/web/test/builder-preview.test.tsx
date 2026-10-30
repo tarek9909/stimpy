@@ -65,7 +65,7 @@ describe('customer 3D preview', () => {
     fireEvent.click(view.getByRole('button', { name: 'THE VOID' }));
     expect(view.onColorChange).toHaveBeenCalledWith(2);
     expect(view.onStimpieChange).toHaveBeenCalledWith(expect.objectContaining({ id: 4 }));
-    expect(view.getByRole('link', { name: 'Customize & shop' })).toHaveAttribute('href', '/builder?color=1&stimpie=the-void');
+    expect(view.getByRole('link', { name: 'Customize & shop' })).toHaveAttribute('href', '/builder?color=1&mode=stimpie-only&stimpie=the-void');
     fireEvent.click(view.getByRole('button', { name: 'Keep this look' }));
     expect(view.onClose).toHaveBeenCalledOnce();
   });

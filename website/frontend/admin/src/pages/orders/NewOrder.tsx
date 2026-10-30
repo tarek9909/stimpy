@@ -25,15 +25,22 @@ import { useCatalogHoodie, useCatalogHoodies, useCatalogPacks, useCatalogStimpie
 import { SOURCES, SOURCE_LABEL } from './status';
 import type { Pack, Stimpie } from '@stimpy/api-client';
 
-type Kind = 'pack' | 'hoodie' | 'stimpie';
+type Kind = 'hoodie_set' | 'hoodie' | 'stimpie_pack' | 'stimpie';
+
+interface DesignQuantity {
+  stimpieId: string;
+  qty: number;
+}
 
 interface Line {
   kind: Kind;
   packId: string;
+  stimpiePackId: string;
   hoodieId: string;
   colorId: string;
   sizeId: string;
   stimpieIds: string[];
+  stimpies: DesignQuantity[];
   stimpieId: string;
   qty: number;
 }
@@ -47,7 +54,7 @@ interface Values {
   sendEmail: boolean;
 }
 
-const blankLine = (hoodieId = ''): Line => ({ kind: 'pack', packId: '', hoodieId, colorId: '', sizeId: '', stimpieIds: [], stimpieId: '', qty: 1 });
+const blankLine = (): Line => ({ kind: 'hoodie', packId: '', stimpiePackId: '', hoodieId: '', colorId: '', sizeId: '', stimpieIds: [], stimpies: [], stimpieId: '', qty: 1 });
 
 function makeSchema(packs: Pack[]) {
   return z
@@ -69,12 +76,14 @@ function makeSchema(packs: Pack[]) {
       items: z
         .array(
           z.object({
-            kind: z.enum(['pack', 'hoodie', 'stimpie']),
+            kind: z.enum(['hoodie_set', 'hoodie', 'stimpie_pack', 'stimpie']),
             packId: z.string(),
+            stimpiePackId: z.string(),
             hoodieId: z.string(),
             colorId: z.string(),
             sizeId: z.string(),
             stimpieIds: z.array(z.string()),
+            stimpies: z.array(z.object({ stimpieId: z.string(), qty: z.number().int().min(1).max(1_000_000) })),
             stimpieId: z.string(),
             qty: z.number().int().min(1).max(10),
           }),
@@ -89,28 +98,43 @@ function makeSchema(packs: Pack[]) {
         ctx.addIssue({ code: 'custom', path: ['customer', 'whatsapp'], message: 'Enter a WhatsApp number or tick "Same as phone".' });
       }
       v.items.forEach((line, i) => {
-        const need = (field: 'packId' | 'hoodieId' | 'colorId' | 'sizeId' | 'stimpieId', msg: string) => {
+        const need = (field: 'packId' | 'stimpiePackId' | 'hoodieId' | 'colorId' | 'sizeId' | 'stimpieId', msg: string) => {
           if (line[field] === '') ctx.addIssue({ code: 'custom', path: ['items', i, field], message: msg });
         };
         if (line.kind === 'stimpie') {
           need('stimpieId', 'Choose a Stimpie.');
           return;
         }
-        if (line.kind === 'pack') need('packId', 'Choose a pack.');
+        if (line.kind === 'stimpie_pack') {
+          need('stimpiePackId', 'Choose a Stimpie-only offer.');
+          const offer = packs.find((p) => String(p.id) === line.stimpiePackId && p.type === 'STIMPIE_ONLY');
+          if (!offer) return;
+          const selectedIds = line.stimpies.map((item) => item.stimpieId);
+          const selectedCount = line.stimpies.reduce((sum, item) => sum + item.qty, 0);
+          if (selectedIds.length === 0) ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpies'], message: 'Choose at least one Stimpie design.' });
+          if (new Set(selectedIds).size !== selectedIds.length) ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpies'], message: 'Choose each design once and set its quantity.' });
+          if (selectedCount !== offer.stimpieCount) ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpies'], message: `Choose exactly ${offer.stimpieCount} Stimpies across the selected designs.` });
+          if (offer.eligibleStimpieIds !== null && line.stimpies.some((item) => !offer.eligibleStimpieIds!.includes(Number(item.stimpieId)))) {
+            ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpies'], message: 'Choose designs allowed by this offer.' });
+          }
+          return;
+        }
+        if (line.kind === 'hoodie_set') need('packId', 'Choose a hoodie set.');
         need('hoodieId', 'Choose a hoodie.');
         need('colorId', 'Choose a colour.');
         need('sizeId', 'Choose a size.');
-        if (line.kind === 'pack') {
-          const pack = packs.find((p) => String(p.id) === line.packId);
+        if (line.kind === 'hoodie_set') {
+          const pack = packs.find((p) => String(p.id) === line.packId && p.type === 'HOODIE_SET');
           if (pack) {
-            for (let j = 0; j < pack.stimpieCount; j += 1) {
-              if (!line.stimpieIds[j]) ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpieIds', j], message: 'Choose a Stimpie.' });
-            }
-            const chosen = line.stimpieIds.slice(0, pack.stimpieCount).filter(Boolean);
+            const chosen = line.stimpieIds.filter(Boolean);
+            if (chosen.length !== pack.stimpieCount) ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpieIds'], message: `Choose exactly ${pack.stimpieCount} different Stimpies.` });
             if (new Set(chosen).size !== chosen.length) {
               chosen.forEach((id, j) => {
                 if (chosen.indexOf(id) !== j) ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpieIds', j], message: 'Pick different Stimpies: a pack has no repeats.' });
               });
+            }
+            if (pack.eligibleStimpieIds !== null && chosen.some((id) => !pack.eligibleStimpieIds!.includes(Number(id)))) {
+              ctx.addIssue({ code: 'custom', path: ['items', i, 'stimpieIds'], message: 'Choose designs allowed by this pack.' });
             }
           }
         }
@@ -143,7 +167,6 @@ export function NewOrder() {
   const areasQ = useAreas();
   const packs = useMemo(() => packsQ.data ?? [], [packsQ.data]);
   const schema = useMemo(() => makeSchema(packs), [packs]);
-  const defaultHoodieId = hoodiesQ.data?.[0] ? String(hoodiesQ.data[0].id) : '';
 
   const form = useForm<Values>({
     resolver: zodResolver(schema) as never,
@@ -161,15 +184,6 @@ export function NewOrder() {
   const guard = useUnsavedChangesGuard(form.formState.isDirty);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [dialog, setDialog] = useState<{ kind: 'SOLD_OUT' | 'NOT_PURCHASABLE'; problems: Problem[] } | null>(null);
-
-  // Default hoodie into the first line once the catalog has loaded.
-  useEffect(() => {
-    if (!defaultHoodieId) return;
-    fields.forEach((_, i) => {
-      if (!form.getValues(`items.${i}.hoodieId`)) form.setValue(`items.${i}.hoodieId`, defaultHoodieId);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [defaultHoodieId, fields.length]);
 
   // `?customerId=` pre-fills from a customer (also used by "New order for this customer").
   const customerId = Number(search.get('customerId'));
@@ -216,7 +230,8 @@ export function NewOrder() {
     let subtotal = 0;
     items.forEach((l) => {
       let unit = 0;
-      if (l.kind === 'pack') unit = packs.find((p) => String(p.id) === l.packId)?.priceCents ?? 0;
+      if (l.kind === 'hoodie_set') unit = packs.find((p) => String(p.id) === l.packId)?.priceCents ?? 0;
+      else if (l.kind === 'stimpie_pack') unit = packs.find((p) => String(p.id) === l.stimpiePackId)?.priceCents ?? 0;
       else if (l.kind === 'hoodie') unit = hoodies.find((h) => String(h.id) === l.hoodieId)?.priceCents ?? 0;
       else unit = stimpiesQ.data?.find((s) => String(s.id) === l.stimpieId)?.priceCents ?? 0;
       subtotal += unit * (l.qty || 1);
@@ -247,9 +262,11 @@ export function NewOrder() {
         ...(v.delivery.notes.trim() ? { notes: v.delivery.notes.trim() } : {}),
       },
       items: v.items.map((l) =>
-        l.kind === 'pack'
-          ? ({ kind: 'pack' as const, packId: Number(l.packId), hoodieId: Number(l.hoodieId), colorId: Number(l.colorId), sizeId: Number(l.sizeId), stimpieIds: l.stimpieIds.slice(0, packs.find((p) => String(p.id) === l.packId)?.stimpieCount ?? l.stimpieIds.length).map(Number), qty: l.qty })
-          : l.kind === 'hoodie'
+        l.kind === 'hoodie_set'
+          ? ({ kind: 'pack' as const, packId: Number(l.packId), hoodieId: Number(l.hoodieId), colorId: Number(l.colorId), sizeId: Number(l.sizeId), stimpieIds: l.stimpieIds.map(Number), qty: l.qty })
+          : l.kind === 'stimpie_pack'
+            ? ({ kind: 'stimpie_pack' as const, packId: Number(l.stimpiePackId), stimpies: l.stimpies.map((item) => ({ stimpieId: Number(item.stimpieId), qty: item.qty })), qty: l.qty })
+            : l.kind === 'hoodie'
             ? ({ kind: 'hoodie' as const, hoodieId: Number(l.hoodieId), colorId: Number(l.colorId), sizeId: Number(l.sizeId), qty: l.qty })
             : ({ kind: 'stimpie' as const, stimpieId: Number(l.stimpieId), qty: l.qty }),
       ),
@@ -284,9 +301,6 @@ export function NewOrder() {
       throw e;
     }
   };
-
-  const packItem = (key: string) => key;
-  void packItem;
 
   return (
     <>
@@ -338,7 +352,7 @@ export function NewOrder() {
             <LineEditor key={field.id} index={index} packs={packs} problem={problems.find((p) => p.itemIndex === index)} canRemove={fields.length > 1} onRemove={() => remove(index)} />
           ))}
           <div>
-            <Button variant="secondary" leftIcon={<Plus size={18} aria-hidden="true" />} onClick={() => append(blankLine(defaultHoodieId))}>
+            <Button variant="secondary" leftIcon={<Plus size={18} aria-hidden="true" />} onClick={() => append(blankLine())}>
               Add another item
             </Button>
           </div>
@@ -383,7 +397,7 @@ export function NewOrder() {
 
         <section aria-label="Order summary" className="rounded-lg border border-base bg-cream p-4 md:p-6" data-testid="order-estimate">
           <h2 className="text-h5">Summary</h2>
-          <p className="mb-2 text-body-sm text-fg-muted">Estimate: the server sets final prices.</p>
+          <p className="mb-2 text-body-sm text-fg-muted">Uses the configured offer prices; the server validates final prices.</p>
           <dl className="space-y-1 text-body">
             <div className="flex justify-between"><dt>Subtotal</dt><dd className="tabular-nums">{f.money(estimate.subtotal)}</dd></div>
             <div className="flex justify-between"><dt>Delivery fee</dt><dd className="tabular-nums">{f.money(estimate.delivery)}</dd></div>
@@ -476,14 +490,15 @@ function CustomerFinder({ onPick }: { onPick: (c: CustomerHit) => void }) {
 /* ------------------------------------------------------------------------- line editor */
 
 function LineEditor({ index, packs, problem, canRemove, onRemove }: { index: number; packs: Pack[]; problem?: Problem; canRemove: boolean; onRemove: () => void }) {
-  const { control, setValue, getValues, formState } = useFormContext<Values>();
+  const { control, setValue, formState } = useFormContext<Values>();
   const line = useWatch({ control, name: `items.${index}` }) as Line;
   const hoodiesQ = useCatalogHoodies();
   const stimpiesQ = useCatalogStimpies();
   const slug = hoodiesQ.data?.find((h) => String(h.id) === line.hoodieId)?.slug ?? null;
   const detail = useCatalogHoodie(slug);
   const errors = formState.errors.items?.[index];
-  const pack = packs.find((p) => String(p.id) === line.packId);
+  const hoodiePack = packs.find((p) => String(p.id) === line.packId && p.type === 'HOODIE_SET');
+  const stimpiePack = packs.find((p) => String(p.id) === line.stimpiePackId && p.type === 'STIMPIE_ONLY');
   const stimpies = stimpiesQ.data ?? [];
 
   const colorOptions = (detail.data?.colors ?? []).map((c) => {
@@ -520,7 +535,11 @@ function LineEditor({ index, packs, problem, canRemove, onRemove }: { index: num
   ];
 
   const set = <K extends keyof Line>(key: K, value: Line[K]) => setValue(`items.${index}.${key}` as never, value as never, { shouldDirty: true, shouldValidate: formState.isSubmitted });
-  const slots = pack?.stimpieCount ?? 0;
+  const eligibleStimpies = stimpies.filter((stimpie) =>
+    (!hoodiePack || hoodiePack.eligibleStimpieIds === null || hoodiePack.eligibleStimpieIds.includes(stimpie.id)) &&
+    (!stimpiePack || stimpiePack.eligibleStimpieIds === null || stimpiePack.eligibleStimpieIds.includes(stimpie.id)),
+  );
+  const selectedTotal = line.stimpies.reduce((total, item) => total + item.qty, 0);
 
   const err = (path: string): string | null => {
     const parts = path.split('.');
@@ -546,26 +565,38 @@ function LineEditor({ index, packs, problem, canRemove, onRemove }: { index: num
           value={line.kind}
           onChange={(v) => set('kind', v as Kind)}
           options={[
-            { value: 'pack', label: 'Pack' },
+            { value: 'hoodie_set', label: 'Hoodie + Stimpies' },
             { value: 'hoodie', label: 'Hoodie only' },
-            { value: 'stimpie', label: 'Extra Stimpie' },
+            { value: 'stimpie_pack', label: 'Stimpies only' },
+            { value: 'stimpie', label: 'Single Stimpie' },
           ]}
           fullWidth
         />
-        {line.kind === 'pack' ? (
-          <FormField label="Pack" name={`items.${index}.packId`} required error={err('packId')}>
+        {line.kind === 'hoodie_set' ? (
+          <FormField label="Hoodie + Stimpies offer" name={`items.${index}.packId`} required error={err('packId')}>
             <Select
               value={line.packId}
               onChange={(e) => {
                 set('packId', e.target.value);
-                const next = packs.find((p) => String(p.id) === e.target.value);
-                set('stimpieIds', Array.from({ length: next?.stimpieCount ?? 0 }, (_, j) => getValues(`items.${index}.stimpieIds`)?.[j] ?? ''));
+                set('stimpieIds', []);
               }}
-              options={[{ value: '', label: 'Choose a pack' }, ...packs.map((p) => ({ value: String(p.id), label: p.name }))]}
+              options={[{ value: '', label: 'Choose a hoodie set' }, ...packs.filter((p) => p.type === 'HOODIE_SET').map((p) => ({ value: String(p.id), label: `${p.name} · ${p.stimpieCount} Stimpies` }))]}
             />
           </FormField>
         ) : null}
-        {line.kind !== 'stimpie' ? (
+        {line.kind === 'stimpie_pack' ? (
+          <FormField label="Stimpie-only offer" name={`items.${index}.stimpiePackId`} required error={err('stimpiePackId')}>
+            <Select
+              value={line.stimpiePackId}
+              onChange={(e) => {
+                set('stimpiePackId', e.target.value);
+                set('stimpies', []);
+              }}
+              options={[{ value: '', label: 'Choose a Stimpie-only offer' }, ...packs.filter((p) => p.type === 'STIMPIE_ONLY').map((p) => ({ value: String(p.id), label: `${p.name} · ${p.stimpieCount} Stimpies` }))]}
+            />
+          </FormField>
+        ) : null}
+        {line.kind === 'hoodie' || line.kind === 'hoodie_set' ? (
           <>
             <FormField label="Hoodie" name={`items.${index}.hoodieId`} required error={err('hoodieId')}>
               <Select
@@ -595,30 +626,72 @@ function LineEditor({ index, packs, problem, canRemove, onRemove }: { index: num
             </div>
           </>
         ) : null}
-        {line.kind === 'pack'
-          ? Array.from({ length: slots }, (_, j) => (
-              <FormField key={j} label={`Stimpie ${j + 1}`} name={`items.${index}.stimpieIds.${j}`} required error={err(`stimpieIds.${j}`)}>
-                <Select
-                  value={line.stimpieIds[j] ?? ''}
-                  onChange={(e) => {
-                    const next = Array.from({ length: slots }, (_, k) => line.stimpieIds[k] ?? '');
-                    next[j] = e.target.value;
-                    set('stimpieIds', next);
-                  }}
-                  options={stimpieOptions(line.stimpieIds.filter((_, k) => k !== j), line.stimpieIds[j] ?? '')}
-                />
-              </FormField>
-            ))
-          : null}
+        {line.kind === 'hoodie_set' && hoodiePack ? (
+          <fieldset className="flex flex-col gap-1">
+            <legend className="text-body font-medium">Choose {hoodiePack.stimpieCount} different Stimpies</legend>
+            <p className="text-body-sm text-fg-muted">{line.stimpieIds.length} of {hoodiePack.stimpieCount} selected.</p>
+            {eligibleStimpies.filter((stimpie) => stimpie.purchasable).length < hoodiePack.stimpieCount ? <p role="alert" className="text-body-sm text-fg-danger">Not enough eligible Stimpies are currently available to fill this hoodie set.</p> : null}
+            {err('stimpieIds') ? <p role="alert" className="text-body-sm text-fg-danger">{err('stimpieIds')}</p> : null}
+            <div className="max-h-72 divide-y divide-base overflow-y-auto rounded-md border border-base">
+              {eligibleStimpies.map((stimpie) => {
+                const id = String(stimpie.id);
+                const checked = line.stimpieIds.includes(id);
+                return <div key={stimpie.id} className="flex items-center gap-3 px-3">
+                  {stimpie.artworkUrl || stimpie.images?.[0] ? <img src={stimpie.artworkUrl || stimpie.images?.[0] || ''} alt="" className="h-11 w-8 rounded object-cover" loading="lazy" /> : null}
+                  <Checkbox
+                    label={<span className="font-medium">{stimpie.name}{stimpie.status === 'SOLD_OUT' ? <span className="ml-2 text-caption text-fg-muted">Sold out</span> : null}</span>}
+                    checked={checked}
+                    disabled={!stimpie.purchasable && !checked}
+                    onChange={(event) => set('stimpieIds', event.target.checked ? [...line.stimpieIds, id] : line.stimpieIds.filter((value) => value !== id))}
+                    className="min-w-0 flex-1"
+                  />
+                </div>;
+              })}
+              {eligibleStimpies.length === 0 ? <p className="p-3 text-body-sm text-fg-muted">No eligible Stimpies are currently available.</p> : null}
+            </div>
+          </fieldset>
+        ) : null}
+        {line.kind === 'stimpie_pack' && stimpiePack ? (
+          <fieldset className="flex flex-col gap-1">
+            <legend className="text-body font-medium">Choose {stimpiePack.stimpieCount} Stimpies</legend>
+            <p className="text-body-sm text-fg-muted">Set a quantity for each design. Selected: {selectedTotal} of {stimpiePack.stimpieCount}.</p>
+            {err('stimpies') ? <p role="alert" className="text-body-sm text-fg-danger">{err('stimpies')}</p> : null}
+            <div className="max-h-72 divide-y divide-base overflow-y-auto rounded-md border border-base">
+              {eligibleStimpies.map((stimpie) => {
+                const id = String(stimpie.id);
+                const picked = line.stimpies.find((value) => value.stimpieId === id);
+                const unavailable = !stimpie.purchasable;
+                return <div key={stimpie.id} className="flex flex-wrap items-center gap-3 px-3 py-1 sm:flex-nowrap">
+                  {stimpie.artworkUrl || stimpie.images?.[0] ? <img src={stimpie.artworkUrl || stimpie.images?.[0] || ''} alt="" className="h-11 w-8 rounded object-cover" loading="lazy" /> : null}
+                  <Checkbox
+                    label={<span className="font-medium">{stimpie.name}{stimpie.status === 'SOLD_OUT' ? <span className="ml-2 text-caption text-fg-muted">Sold out</span> : unavailable ? <span className="ml-2 text-caption text-fg-muted">Not available</span> : null}</span>}
+                    checked={!!picked}
+                    disabled={unavailable && !picked}
+                    onChange={(event) => set('stimpies', event.target.checked ? [...line.stimpies, { stimpieId: id, qty: 1 }] : line.stimpies.filter((value) => value.stimpieId !== id))}
+                    className="min-w-0 flex-1"
+                  />
+                  {picked ? <label className="flex items-center gap-2 pb-2 text-body-sm">Qty <Input aria-label={`Quantity of ${stimpie.name}`} type="number" min={1} max={stimpiePack.stimpieCount} step={1} value={picked.qty} className="w-20" onChange={(event) => {
+                    const qty = event.target.value === '' ? 0 : Number(event.target.value);
+                    set('stimpies', line.stimpies.map((value) => value.stimpieId === id ? { ...value, qty } : value));
+                  }} /></label> : null}
+                </div>;
+              })}
+              {eligibleStimpies.length === 0 ? <p className="p-3 text-body-sm text-fg-muted">No eligible Stimpies are currently available.</p> : null}
+            </div>
+          </fieldset>
+        ) : null}
         {line.kind === 'stimpie' ? (
           <FormField label="Stimpie" name={`items.${index}.stimpieId`} required error={err('stimpieId')}>
             <Select value={line.stimpieId} onChange={(e) => set('stimpieId', e.target.value)} options={stimpieOptions([], line.stimpieId)} />
           </FormField>
         ) : null}
-        <div className="flex items-center gap-3">
+        {line.kind !== 'stimpie_pack' ? <div className="flex items-center gap-3">
           <span className="text-body font-medium">Quantity</span>
           <QuantityStepper label={`Quantity of item ${index + 1}`} value={line.qty} onChange={(n) => set('qty', n)} />
-        </div>
+        </div> : <div className="flex items-center gap-3">
+          <span className="text-body font-medium">Offer quantity</span>
+          <QuantityStepper label={`Quantity of offer ${index + 1}`} value={line.qty} onChange={(n) => set('qty', n)} />
+        </div>}
         {problem ? (
           <p role="alert" className="text-body-sm font-medium text-fg-danger">
             {problem.name}: {problem.text}

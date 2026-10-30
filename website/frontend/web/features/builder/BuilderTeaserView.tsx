@@ -25,7 +25,7 @@ type Props = {
 
 /** The server poster and enhanced controls share their geometry so activation never shifts the page. */
 export function BuilderTeaserView({ colors, stimpies, color, stimpie, stage, colorRefs, stimpieRefs, selectColor, selectStimpie, handleColorKeys, handleStimpieKeys }: Props) {
-  const fullBuilder = `/builder?color=${encodeURIComponent(color.id)}&stimpie=${encodeURIComponent(stimpie.slug)}`;
+  const fullBuilder = `/builder?color=${encodeURIComponent(color.id)}&mode=stimpie-only&stimpie=${encodeURIComponent(stimpie.slug)}`;
   return (
     <section data-builder="teaser" data-builder-view="2d" aria-label="Builder" className="store-teaser grid grid-cols-1 items-center gap-6 md:grid-cols-2">
       <div className="mx-auto w-full max-w-[384px]">

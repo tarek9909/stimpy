@@ -9,7 +9,7 @@ type Err = { error: { code: string; fields?: Record<string, string>; details: { 
 type Page<T> = { items: T[]; page: number; pageSize: number; total: number };
 type AHoodie = { id: number; name: string; slug: string; description: string; details: string[]; priceCents: number; costCents: number; images: string[]; active: boolean; position: number; available: number; reserved: number };
 type AStimpie = { id: number; name: string; slug: string; type: string; dropId: number | null; priceCents: number; costCents: number; story: string; images: string[]; artworkUrl: string; artworkWidth: number | null; artworkHeight: number | null; active: boolean; position: number; quantity: number; available: number; reserved: number };
-type APack = { id: number; name: string; slug: string; description: string; stimpieCount: number; priceCents: number; badge: string | null; active: boolean; position: number };
+type APack = { id: number; type: 'HOODIE_SET' | 'STIMPIE_ONLY'; eligibleStimpieIds: number[] | null; name: string; slug: string; description: string; stimpieCount: number; priceCents: number; badge: string | null; active: boolean; position: number };
 
 const admin = async (): Promise<TestClient> => (await t.adminClient()).client;
 const ART = 'http://localhost:4000/uploads/2026/10/aaaaaaaaaaaaaaaa.webp';
@@ -275,8 +275,8 @@ describe('/admin/packs', () => {
     const res = await c.post('/admin/packs', { name: 'Hoodie + 3 Stimpies', stimpieCount: 3, priceCents: 5500, badge: 'Best value' });
     expect(res.status).toBe(201);
     const p = res.json<APack>();
-    expect(Object.keys(p).sort()).toEqual(['active', 'badge', 'description', 'id', 'name', 'position', 'priceCents', 'slug', 'stimpieCount']);
-    expect(p).toMatchObject({ slug: 'hoodie-3-stimpies', stimpieCount: 3, priceCents: 5500, badge: 'Best value', active: true, description: '' });
+    expect(Object.keys(p).sort()).toEqual(['active', 'badge', 'description', 'eligibleStimpieIds', 'id', 'name', 'position', 'priceCents', 'slug', 'stimpieCount', 'type']);
+    expect(p).toMatchObject({ type: 'HOODIE_SET', eligibleStimpieIds: null, slug: 'hoodie-3-stimpies', stimpieCount: 3, priceCents: 5500, badge: 'Best value', active: true, description: '' });
     const second = (await c.post('/admin/packs', { name: 'Two', stimpieCount: 2, priceCents: 4500, position: 7 })).json<APack>();
     expect(second.position).toBe(7);
     expect(second.badge).toBeNull();
@@ -297,6 +297,24 @@ describe('/admin/packs', () => {
 
     expect((await c.delete(`/admin/packs/${p.id}`)).status).toBe(204);
     expect((await c.delete(`/admin/packs/${p.id}`)).status).toBe(404);
+  });
+
+  it('configures Stimpie-only counts above five and validates safe type changes and eligibility', async () => {
+    const w = await buildWorld(t.prisma);
+    const c = await admin();
+    const created = await c.post('/admin/packs', {
+      type: 'STIMPIE_ONLY', name: 'Seven Stimpies', stimpieCount: 7, priceCents: 4000, eligibleStimpieIds: [w.core[0]!.id],
+    });
+    expect(created.status).toBe(201);
+    const offer = created.json<APack>();
+    expect(offer).toMatchObject({ type: 'STIMPIE_ONLY', stimpieCount: 7, eligibleStimpieIds: [w.core[0]!.id] });
+    expect((await c.patch(`/admin/packs/${offer.id}`, { stimpieCount: 10 })).json<APack>().stimpieCount).toBe(10);
+    expect((await c.patch(`/admin/packs/${offer.id}`, { stimpieCount: 7 })).json<APack>().stimpieCount).toBe(7);
+    expect((await c.patch(`/admin/packs/${offer.id}`, { type: 'HOODIE_SET' })).json<Err>().error.fields).toHaveProperty('stimpieCount');
+    expect((await c.patch(`/admin/packs/${offer.id}`, { eligibleStimpieIds: [999999] })).json<Err>().error.fields).toHaveProperty('eligibleStimpieIds');
+    const cleared = await c.patch(`/admin/packs/${offer.id}`, { eligibleStimpieIds: null });
+    expect(cleared.json<APack>().eligibleStimpieIds).toBeNull();
+    expect((await c.post('/admin/packs', { type: 'STIMPIE_ONLY', name: 'A Million', stimpieCount: 1_000_000, priceCents: 1 })).status).toBe(201);
   });
 
   it('list includes inactive and filters ?active=; inactive packs are not public', async () => {

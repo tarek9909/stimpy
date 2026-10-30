@@ -89,6 +89,9 @@ export interface BuilderPack {
   slug: string;
   name: string;
   description: string;
+  /** Packs without a type are treated as legacy hoodie sets. */
+  type?: 'HOODIE_SET' | 'STIMPIE_ONLY';
+  eligibleStimpieIds?: readonly number[] | null;
   stimpieCount: number;
   priceCents: number;
   compareAtPriceCents?: number | null;
@@ -139,10 +142,11 @@ export interface JoinedColor {
   placement2d: Placement2d | null;
 }
 
-/** Exactly the `CartItem` of checkout-and-order-flow.md section 1.1 (hoodie and pack kinds). */
+/** Customer purchase payloads. A Stimpie-only Builder purchase never includes hoodie option ids. */
 export type BuilderCartItem =
   | { kind: 'pack'; packId: number; hoodieId: number; colorId: number; sizeId: number; stimpieIds: number[]; qty: 1 }
-  | { kind: 'hoodie'; hoodieId: number; colorId: number; sizeId: number; qty: 1 };
+  | { kind: 'hoodie'; hoodieId: number; colorId: number; sizeId: number; qty: 1 }
+  | { kind: 'stimpie_pack'; packId: number; stimpies: { stimpieId: number; qty: number }[]; qty: 1 };
 
 /** Display data the host cart stores next to the item (names, art URLs, unit price estimate). */
 export interface BuilderCartSummary {
@@ -153,7 +157,7 @@ export interface BuilderCartSummary {
   colorName: string | null;
   colorHex: string | null;
   sizeLabel: string | null;
-  stimpies: { id: number; slug: string; name: string; artworkUrl: string; type: 'CORE' | 'LIMITED' }[];
+  stimpies: { id: number; slug: string; name: string; artworkUrl: string; type: 'CORE' | 'LIMITED'; qty?: number }[];
   unitPriceCents: number;
 }
 

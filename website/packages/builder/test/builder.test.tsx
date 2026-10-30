@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Builder, parseShareParams, type BuilderPreviewContext } from '../src';
-import { data } from './fixtures';
+import { data, PACKS, STIMPIE_ONLY_PACK } from './fixtures';
 
 const flush = async () => {
   await act(async () => {
@@ -68,8 +68,8 @@ describe('Builder (page, 2D)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Preview second Stimpie' }));
     expect(preview.mock.lastCall?.[0].stimpieId).toBe(2);
     fireEvent.click(screen.getByRole('button', { name: 'Preview duplicate' }));
-    expect(preview.mock.lastCall?.[0].stimpieId).toBe(2);
-    expect(within(screen.getByRole('group', { name: 'Pack slots' })).getByRole('button', { name: /In the box/ })).toHaveTextContent('Stimpie 2');
+    expect(preview.mock.lastCall?.[0].stimpieId).toBe(1);
+    expect(within(screen.getByRole('group', { name: 'Pack slots' })).getByRole('button', { name: /On your hoodie/ })).toHaveTextContent('Stimpie 1');
   });
 
   it('carousel: listbox of options, roving tabindex (one tab stop), selected state with aria-selected', () => {
@@ -99,13 +99,13 @@ describe('Builder (page, 2D)', () => {
 
   it('pack selector defaults to "Most popular" and shows names and prices from the packs', () => {
     render(<Builder data={data()} onAddToCart={vi.fn()} />);
-    const packs = screen.getByRole('radiogroup', { name: 'Pack' });
-    const radios = within(packs).getAllByRole('radio');
-    expect(radios).toHaveLength(3); // 1 Stimpie, 2 Stimpies, Hoodie only
-    expect(within(packs).getByRole('radio', { name: /Hoodie \+ 2 Stimpies/ })).toHaveAttribute('aria-checked', 'true');
-    expect(within(packs).getByRole('radio', { name: /Hoodie \+ 2 Stimpies/ })).toHaveTextContent('$45');
-    expect(within(packs).getByRole('radio', { name: /Hoodie only/ })).toHaveTextContent('$25');
-    expect(within(packs).getByText('Most popular')).toBeInTheDocument();
+    const modes = screen.getByRole('radiogroup', { name: 'Purchase type' });
+    expect(within(modes).getAllByRole('radio')).toHaveLength(3);
+    expect(within(modes).getByRole('radio', { name: /Hoodie \+ Stimpies/ })).toHaveAttribute('aria-checked', 'true');
+    const offers = screen.getByRole('radiogroup', { name: 'Choose an offer' });
+    expect(within(offers).getAllByRole('radio')).toHaveLength(2);
+    expect(within(offers).getByRole('radio', { name: /Hoodie \+ 2 Stimpies/ })).toHaveTextContent('$45');
+    expect(screen.getByText('Most popular')).toBeInTheDocument();
   });
 
   it('2-Stimpie pack: slots, "Pick 1 more Stimpie", duplicates disabled, running price from the pack', () => {
@@ -160,7 +160,7 @@ describe('Builder (page, 2D)', () => {
     // L is sold out for Black, M has "only 4 left"
     expect(screen.getByRole('radio', { name: 'L, sold out' })).toBeDisabled();
     expect(screen.getByRole('radio', { name: 'M, only 4 left' })).toBeEnabled();
-    expect(screen.getByRole('link', { name: 'Size guide' })).toHaveAttribute('href', '/help');
+    expect(screen.getAllByRole('link', { name: 'Size guide' })[0]).toHaveAttribute('href', '/help?tab=size');
     const confirm = document.querySelector('[data-builder-confirm-size]') as HTMLButtonElement;
     expect(confirm).toBeDisabled();
     fireEvent.click(screen.getByRole('radio', { name: 'M, only 4 left' }));
@@ -182,6 +182,28 @@ describe('Builder (page, 2D)', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'S' }));
     fireEvent.click(document.querySelector('[data-builder-confirm-size]') as HTMLElement);
     expect(onAdd.mock.calls[0]?.[0]).toEqual({ kind: 'hoodie', hoodieId: 7, colorId: 1, sizeId: 10, qty: 1 });
+  });
+
+  it('a Stimpie entry opens Stimpie-only intent and links to the count-aware composer without hoodie purchase fields', () => {
+    const onAdd = vi.fn();
+    render(<Builder data={data({ packs: [...PACKS, STIMPIE_ONLY_PACK] })} initialShare={parseShareParams({ stimpie: 'stimpie-2' })} onAddToCart={onAdd} />);
+    expect(screen.getByRole('radio', { name: 'Stimpies only' })).toHaveAttribute('aria-checked', 'true');
+    expect(document.querySelector('[data-builder-slots]')).toBeNull();
+    expect(document.querySelector('[data-builder-buy]')).toBeNull();
+    const continueLink = screen.getByRole('link', { name: 'Choose 10 Stimpies' });
+    expect(continueLink).toHaveAttribute('href', '/shop/stimpie-packs?pack=stimpie-10&stimpie=stimpie-2');
+    expect(screen.queryByText('Choose your size')).toBeNull();
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it('switching to Stimpies-only mode never silently selects or adds a hoodie', () => {
+    const onAdd = vi.fn();
+    render(<Builder data={data({ packs: [...PACKS, STIMPIE_ONLY_PACK] })} onAddToCart={onAdd} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Stimpies only' }));
+    expect(screen.getByRole('radio', { name: 'Stimpies only' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('link', { name: 'Choose 10 Stimpies' })).toHaveAttribute('href', expect.stringContaining('pack=stimpie-10'));
+    expect(document.querySelector('[data-builder-buy]')).toBeNull();
+    expect(onAdd).not.toHaveBeenCalled();
   });
 
   it('refreshes stock before opening the size sheet', async () => {
@@ -214,7 +236,8 @@ describe('Builder (page, 2D)', () => {
     expect(option(/Future Stimpie/)).toHaveAttribute('aria-selected', 'true');
     expect(option(/Future Stimpie/)).toHaveAttribute('aria-label', expect.stringContaining('Coming soon'));
     expect(screen.getByRole('link', { name: 'See the upcoming drop' })).toHaveAttribute('href', '/drops/future-drop');
-    expect(screen.getByRole('button', { name: /Add to cart/ })).toBeDisabled();
+    expect(screen.getByRole('link', { name: 'Browse Stimpie-only offers' })).toHaveAttribute('href', expect.stringContaining('/shop/stimpie-packs?mode=stimpie-only'));
+    expect(screen.queryByRole('button', { name: /Add to cart/ })).toBeNull();
   });
 
   it('keeps the URL in sync with replaceState (no history entry) when syncUrl is set', async () => {

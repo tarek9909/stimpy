@@ -93,8 +93,12 @@ export function applyValidation(
       // 0 < available < requested: lower the quantity of the line the server pointed at.
       const target = next[problem.itemIndex];
       if (target) {
-        const reduceBy = problem.requested - problem.available;
-        const newQty = target.item.qty - reduceBy;
+        const stimpiePackQty = target.item.kind === 'stimpie_pack' && problem.kind === 'STIMPIE'
+          ? target.item.stimpies.find((s) => s.stimpieId === problem.stimpieId)?.qty ?? 0
+          : 0;
+        const newQty = stimpiePackQty > 0
+          ? Math.min(target.item.qty, Math.floor(problem.available / stimpiePackQty))
+          : target.item.qty - (problem.requested - problem.available);
         if (newQty < 1) {
           checks.set(problem.itemIndex, {
             state: 'UNAVAILABLE',

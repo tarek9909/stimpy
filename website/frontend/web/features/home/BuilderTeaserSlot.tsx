@@ -67,7 +67,7 @@ function StaticTeaser({ hoodieImage, stimpies }: { hoodieImage: string | null; s
           </div>
         ) : null}
         <Link
-          href={stimpies[0] ? `/builder?stimpie=${encodeURIComponent(stimpies[0].slug)}` : '/builder'}
+          href={stimpies[0] ? `/builder?mode=stimpie-only&stimpie=${encodeURIComponent(stimpies[0].slug)}` : '/builder'}
           data-builder-open-full
           className="inline-flex min-h-11 self-start items-center justify-center rounded-md border border-control bg-white px-5 py-3 text-body font-semibold text-ink underline-offset-4 hover:bg-cream hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >

@@ -35,7 +35,8 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
       ),
     },
     { id: 'price', header: 'Price', numeric: true, priority: 'primary', cell: (p) => f.money(p.priceCents) },
-    { id: 'count', header: 'Stimpies', numeric: true, cell: (p) => `${p.stimpieCount} Stimpies` },
+    { id: 'type', header: 'Type', cell: (p) => p.type === 'STIMPIE_ONLY' ? 'Stimpies only' : 'Hoodie + Stimpies' },
+    { id: 'count', header: 'Stimpies', numeric: true, cell: (p) => `${p.stimpieCount} ${p.stimpieCount === 1 ? 'Stimpie' : 'Stimpies'}` },
     {
       id: 'badge',
       header: 'Badge',
@@ -52,7 +53,7 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
           <ActiveFilter value={view} onChange={onViewChange} />
         </div>
 
-        <div className="flex items-center gap-3 self-end sm:self-auto">
+        <div className="flex flex-wrap items-center justify-end gap-2 self-end sm:self-auto">
           {/* View Switcher */}
           <div className="flex items-center rounded-lg border border-base bg-surface p-0.5">
             <button
@@ -87,13 +88,11 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
             </button>
           </div>
 
-          <Button
-            href="/products/packs/new"
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus size={18} aria-hidden="true" />}
-          >
-            New pack
+          <Button href="/products/packs/new?type=STIMPIE_ONLY" variant="secondary" size="sm" leftIcon={<Sparkles size={17} aria-hidden="true" />}>
+            New Stimpie-only offer
+          </Button>
+          <Button href="/products/packs/new" variant="primary" size="sm" leftIcon={<Plus size={18} aria-hidden="true" />}>
+            New hoodie set
           </Button>
         </div>
       </div>
@@ -124,11 +123,12 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
             return (
               <EmptyState
                 title="No packs yet"
-                text="Packs bundle a hoodie with Stimpies at one price."
+                text="Create hoodie sets or Stimpie-only offers with a configured count and price."
                 action={
-                  <Button href="/products/packs/new" variant="primary">
-                    New pack
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button href="/products/packs/new?type=STIMPIE_ONLY" variant="secondary">New Stimpie-only offer</Button>
+                    <Button href="/products/packs/new" variant="primary">New hoodie set</Button>
+                  </div>
                 }
               />
             );
@@ -151,15 +151,10 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
                     {/* Top: Pack Graphic & Badges */}
                     <div>
                       <div className="relative aspect-[0.68] w-full overflow-hidden rounded-xl border border-line/60 bg-gradient-to-b from-surface via-surface-base to-cream/30 p-3 flex flex-col items-center justify-center">
-                        {/* Top-Left: Badge if any (e.g. "Most popular") or "Bundle" */}
-                        <div className="absolute left-2.5 top-2.5">
-                          {p.badge ? (
-                            <Badge kind="POPULAR" label={p.badge} />
-                          ) : (
-                            <Pill tone="cream" shape="pill" size="sm">
-                              Bundle
-                            </Pill>
-                          )}
+                        {/* Always name the offer type; show the optional merchandising badge below it. */}
+                        <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1">
+                          <Pill tone="cream" shape="pill" size="sm">{p.type === 'STIMPIE_ONLY' ? 'Stimpies only' : 'Hoodie set'}</Pill>
+                          {p.badge ? <Badge kind="POPULAR" label={p.badge} /> : null}
                         </div>
 
                         {/* Top-Right: Active Pill */}
@@ -179,9 +174,7 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
                               <span className="mt-1.5 text-[11px] font-black tracking-tight text-fg">
                                 {p.stimpieCount} {p.stimpieCount === 1 ? 'Stimpie' : 'Stimpies'}
                               </span>
-                              <span className="text-[9px] font-semibold text-fg-muted uppercase tracking-wider">
-                                + 1 Hoodie
-                              </span>
+                              {p.type === 'STIMPIE_ONLY' ? null : <span className="text-[9px] font-semibold text-fg-muted uppercase tracking-wider">+ 1 Hoodie</span>}
                             </div>
                           </div>
                         </div>
@@ -200,7 +193,7 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
                           className="line-clamp-2 min-h-[2.5rem] text-xs font-medium text-fg-muted mt-0.5"
                           title={p.description}
                         >
-                          {p.description || 'Bundle the hoodie with interchangeable Stimpies at a special price.'}
+                          {p.description || (p.type === 'STIMPIE_ONLY' ? 'A Stimpie-only offer with no hoodie.' : 'A hoodie set with interchangeable Stimpies.')}
                         </p>
                       </div>
                     </div>
@@ -216,7 +209,7 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
                         </div>
                         <div className="pl-1">
                           <span className="block text-[10px] font-bold uppercase tracking-wider text-fg-muted">
-                            Included
+                            {p.type === 'STIMPIE_ONLY' ? 'Stimpies' : 'Included'}
                           </span>
                           <span className="block text-base font-black text-fg">
                             {p.stimpieCount} {p.stimpieCount === 1 ? 'Stimpie' : 'Stimpies'}
@@ -239,7 +232,7 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
                         className="mt-2.5 font-semibold"
                         aria-label={`Edit ${p.name}`}
                       >
-                        Edit pack
+                        {p.type === 'STIMPIE_ONLY' ? 'Edit offer' : 'Edit pack'}
                       </Button>
                     </div>
                   </article>
@@ -264,11 +257,12 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
               empty={
                 <EmptyState
                   title="No packs yet"
-                  text="Packs bundle a hoodie with Stimpies at one price."
+                  text="Create hoodie sets or Stimpie-only offers with a configured count and price."
                   action={
-                    <Button href="/products/packs/new" variant="primary">
-                      New pack
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button href="/products/packs/new?type=STIMPIE_ONLY" variant="secondary">New Stimpie-only offer</Button>
+                      <Button href="/products/packs/new" variant="primary">New hoodie set</Button>
+                    </div>
                   }
                 />
               }

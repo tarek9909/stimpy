@@ -131,7 +131,7 @@ function ProductsTab({ range }: { range: DateRange }) {
       {(d: Products) => {
         const ranked = [...d.stimpies].sort((a, b) => b.unitsSold - a.unitsSold || b.revenueCents - a.revenueCents);
         const totalPacks = d.packMix.reduce((s, p) => s + p.orders, 0);
-        const packRows: BarRow[] = d.packMix.map((p) => ({ label: p.packName, value: p.orders, note: `${formatPercent(totalPacks ? p.orders / totalPacks : 0)} of pack orders` }));
+        const packRows: BarRow[] = d.packMix.map((p) => ({ label: p.packName, value: p.orders, note: `${formatPercent(totalPacks ? p.orders / totalPacks : 0)} of bundle and offer orders` }));
         return (
           <div className="flex flex-col gap-4">
             <div className="grid gap-4 lg:grid-cols-2">
@@ -143,12 +143,12 @@ function ProductsTab({ range }: { range: DateRange }) {
                 <HBarChart rows={ranked.map((s) => ({ label: s.name, value: s.unitsSold, note: f.money(s.revenueCents) }))} format={String} limit={10} ariaLabel="Units sold per Stimpie" />
               </ChartCard>
               <div className="flex flex-col gap-4">
-                <ChartCard id="packs" title="Pack mix" caption="Orders per pack." table={<GridTable caption="Pack mix" rows={d.packMix} getId={(p) => p.packName} columns={[
-                  { id: 'n', header: 'Pack', priority: 'primary', cell: (p) => p.packName },
+                <ChartCard id="packs" title="Bundle and offer mix" caption="Orders per configured hoodie set or Stimpie-only offer." table={<GridTable caption="Bundle and offer mix" rows={d.packMix} getId={(p) => p.packName} columns={[
+                  { id: 'n', header: 'Offer', priority: 'primary', cell: (p) => p.packName },
                   { id: 'o', header: 'Orders', numeric: true, cell: (p) => p.orders },
                   { id: 's', header: 'Share', numeric: true, cell: (p) => formatPercent(totalPacks ? p.orders / totalPacks : 0) },
                 ]} />}>
-                  {packRows.length ? <HBarChart rows={packRows} format={String} ariaLabel="Orders per pack" /> : <p className="text-body-sm text-fg-muted">No pack orders in this range.</p>}
+                  {packRows.length ? <HBarChart rows={packRows} format={String} ariaLabel="Orders per configured offer" /> : <p className="text-body-sm text-fg-muted">No bundle or offer orders in this range.</p>}
                 </ChartCard>
                 <Card variant="stat" className="p-4" data-testid="attach-rate">
                   <p className="text-body-sm text-fg-muted">Extra Stimpie attach rate</p>

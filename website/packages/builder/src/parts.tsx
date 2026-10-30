@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { Badge, Button, Modal, STIMPIE_RATIO, cn, formatCents, icons, useUI } from '@stimpy/ui';
 import type { BuilderHoodie, BuilderPack, BuilderSize, BuilderStimpie, JoinedColor } from './types';
+import type { PurchaseMode } from './lib/selection';
 import { stimpieBlockReason } from './lib/join';
 import { colorSoldOut } from './lib/selection';
 
@@ -140,7 +141,7 @@ export function StimpieCarousel({
   useEffect(() => {
     if (previewId !== null) setFocusId(previewId);
   }, [previewId]);
-  const isBlocked = (id: number) => disabledIds.has(id) && !selectedIds.includes(id);
+  const isBlocked = (id: number) => disabledIds.has(id);
 
   // Keep the previewed card in view (never smooth with reduced motion).
   useEffect(() => {
@@ -296,22 +297,31 @@ export interface PackSelectorProps {
   packs: readonly BuilderPack[];
   /** Pack id, or null for hoodie only. */
   selectedPackId: number | null;
+  selectedMode?: PurchaseMode;
   hoodiePriceCents: number | null;
   hoodieCompareAtPriceCents?: number | null;
   onSelect: (packId: number | null) => void;
+  onModeSelect?: (mode: PurchaseMode) => void;
 }
 
-/** Segmented control driven by `GET /packs`, plus "Hoodie only". */
-export function PackSelector({ packs, selectedPackId, hoodiePriceCents, hoodieCompareAtPriceCents, onSelect }: PackSelectorProps) {
-  const sorted = [...packs].sort((a, b) => a.stimpieCount - b.stimpieCount);
-  const options: { id: number | null; name: string; price: number | null; compareAtPrice: number | null; badge: string | null }[] = sorted.map((p) => ({
+/** Explicit purchase intent first, then the API-priced offer within that mode. */
+export function PackSelector({ packs, selectedPackId, selectedMode, hoodiePriceCents, hoodieCompareAtPriceCents, onSelect, onModeSelect }: PackSelectorProps) {
+  const selectedPack = packs.find((p) => p.id === selectedPackId) ?? null;
+  const mode: PurchaseMode = selectedMode ?? (selectedPack?.type === 'STIMPIE_ONLY' ? 'STIMPIE_ONLY' : selectedPack ? 'HOODIE_SET' : 'HOODIE_ONLY');
+  const modeOptions: { id: PurchaseMode; label: string; enabled: boolean }[] = [
+    { id: 'HOODIE_ONLY', label: 'Hoodie only', enabled: hoodiePriceCents !== null },
+    { id: 'HOODIE_SET', label: 'Hoodie + Stimpies', enabled: packs.some((p) => p.type !== 'STIMPIE_ONLY') },
+    { id: 'STIMPIE_ONLY', label: 'Stimpies only', enabled: packs.some((p) => p.type === 'STIMPIE_ONLY') || mode === 'STIMPIE_ONLY' },
+  ];
+  const offers = [...packs].filter((p) => mode === 'STIMPIE_ONLY' ? p.type === 'STIMPIE_ONLY' : p.type !== 'STIMPIE_ONLY')
+    .sort((a, b) => a.stimpieCount - b.stimpieCount || a.priceCents - b.priceCents);
+  const options: { id: number | null; name: string; price: number | null; compareAtPrice: number | null; badge: string | null }[] = offers.map((p) => ({
     id: p.id,
     name: p.name,
     price: p.priceCents,
     compareAtPrice: p.compareAtPriceCents ?? null,
     badge: p.badge,
   }));
-  if (hoodiePriceCents !== null) options.push({ id: null, name: 'Hoodie only', price: hoodiePriceCents, compareAtPrice: hoodieCompareAtPriceCents ?? null, badge: null });
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const idx = Math.max(0, options.findIndex((o) => o.id === selectedPackId));
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -325,38 +335,56 @@ export function PackSelector({ packs, selectedPackId, hoodiePriceCents, hoodieCo
     onSelect(o.id);
     refs.current[next]?.focus();
   };
-  if (options.length === 0) return null;
+  const selectMode = (next: PurchaseMode) => {
+    if (onModeSelect) {
+      onModeSelect(next);
+      return;
+    }
+    if (next === 'HOODIE_ONLY') {
+      onSelect(null);
+      return;
+    }
+    const first = [...packs].filter((p) => next === 'STIMPIE_ONLY' ? p.type === 'STIMPIE_ONLY' : p.type !== 'STIMPIE_ONLY')
+      .sort((a, b) => (next === 'STIMPIE_ONLY' ? a.stimpieCount - b.stimpieCount : b.stimpieCount - a.stimpieCount))[0];
+    if (first) onSelect(first.id);
+  };
   return (
-    <div role="radiogroup" aria-label="Pack" onKeyDown={onKey} className="grid gap-2" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }} data-builder-packs>
-      {options.map((o, i) => {
-        const selected = i === idx;
-        return (
-          <button
-            key={o.id ?? 'hoodie'}
-            ref={(el) => {
-              refs.current[i] = el;
-            }}
-            type="button"
-            role="radio"
-            aria-checked={selected}
-            tabIndex={selected ? 0 : -1}
-            data-pack-slug={o.id === null ? 'hoodie-only' : (packs.find((p) => p.id === o.id)?.slug ?? '')}
-            onClick={() => onSelect(o.id)}
-            className={cn(
-              'flex min-h-tap flex-col items-start justify-center gap-0.5 rounded-md border px-3 py-2 text-left',
-              selected ? 'border-ink bg-ink text-white' : 'border-control bg-white text-ink',
-            )}
-          >
-            <span className="text-body-sm font-medium leading-tight">{o.name}</span>
-            <span className="flex flex-wrap items-center gap-1 text-caption">
-              {o.price !== null ? <><span className="tabular">{formatCents(o.price)}</span>{o.compareAtPrice !== null && o.compareAtPrice > o.price ? <span className="tabular line-through opacity-70">{formatCents(o.compareAtPrice)}</span> : null}</> : null}
-              {o.badge ? (
-                <span className={cn('rounded-full px-2 py-px text-caption font-medium', selected ? 'bg-coral text-ink' : 'bg-cream text-ink')}>{o.badge}</span>
-              ) : null}
-            </span>
+    <div className="flex flex-col gap-3" data-builder-packs>
+      <div role="radiogroup" aria-label="Purchase type" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {modeOptions.map((option) => (
+          <button key={option.id} type="button" role="radio" aria-checked={mode === option.id} aria-disabled={!option.enabled || undefined}
+            disabled={!option.enabled} onClick={() => selectMode(option.id)}
+            className={cn('flex min-h-tap items-center justify-center rounded-md border px-3 py-2 text-center text-body-sm font-medium',
+              mode === option.id ? 'border-ink bg-ink text-white' : 'border-control bg-white text-ink', !option.enabled && 'opacity-50')}>
+            {option.label}
           </button>
-        );
-      })}
+        ))}
+      </div>
+      {mode === 'HOODIE_ONLY' ? (
+        <div className="flex items-center justify-between rounded-md border border-base px-3 py-2 text-body-sm" data-builder-hoodie-only>
+          <span>Hoodie only</span>
+          {hoodiePriceCents !== null ? <span className="font-semibold tabular">{formatCents(hoodiePriceCents)}</span> : null}
+          {hoodieCompareAtPriceCents !== null && hoodieCompareAtPriceCents !== undefined && hoodieCompareAtPriceCents > (hoodiePriceCents ?? 0) ? <span className="sr-only">Was {formatCents(hoodieCompareAtPriceCents)}</span> : null}
+        </div>
+      ) : options.length > 0 ? (
+        <div role="radiogroup" aria-label="Choose an offer" onKeyDown={onKey} className="grid gap-2" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+          {options.map((o, i) => {
+            const selected = i === idx;
+            return (
+              <button key={o.id ?? 'hoodie'} ref={(el) => { refs.current[i] = el; }} type="button" role="radio" aria-checked={selected}
+                tabIndex={selected ? 0 : -1} data-pack-slug={o.id === null ? 'hoodie-only' : (packs.find((p) => p.id === o.id)?.slug ?? '')}
+                onClick={() => onSelect(o.id)}
+                className={cn('flex min-h-tap flex-col items-start justify-center gap-0.5 rounded-md border px-3 py-2 text-left', selected ? 'border-ink bg-ink text-white' : 'border-control bg-white text-ink')}>
+                <span className="text-body-sm font-medium leading-tight">{o.name}</span>
+                <span className="flex flex-wrap items-center gap-1 text-caption">
+                  {o.price !== null ? <><span className="tabular">{formatCents(o.price)}</span>{o.compareAtPrice !== null && o.compareAtPrice > o.price ? <span className="tabular line-through opacity-70">{formatCents(o.compareAtPrice)}</span> : null}</> : null}
+                  {o.badge ? <span className={cn('rounded-full px-2 py-px text-caption font-medium', selected ? 'bg-coral text-ink' : 'bg-cream text-ink')}>{o.badge}</span> : null}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : <p className="text-body-sm text-fg-muted">No offers are available in this category.</p>}
     </div>
   );
 }

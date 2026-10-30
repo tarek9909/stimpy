@@ -34,8 +34,14 @@ enum OrderSource {
 
 enum OrderItemKind {
   PACK
+  STIMPIE_PACK
   HOODIE
   STIMPIE
+}
+
+enum PackType {
+  HOODIE_SET
+  STIMPIE_ONLY
 }
 
 enum StimpieType {
@@ -290,10 +296,12 @@ model Stimpie {
 
 model Pack {
   id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  type         PackType @default(HOODIE_SET)
   name         String   @db.VarChar(120)
   slug         String   @unique @db.VarChar(140)
   description  String   @db.Text
   stimpieCount Int      @map("stimpie_count")
+  eligibleStimpieIds Json? @map("eligible_stimpie_ids")
   priceCents   Int      @map("price_cents")
   badge        String?  @db.VarChar(40)
   active       Boolean  @default(true)

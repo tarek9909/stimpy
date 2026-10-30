@@ -17,8 +17,10 @@ export function liveAnnouncement(args: {
   const { color, selection, packs, hoodie, stimpie } = args;
   const pack = packById(packs, selection.packId);
   const price = pack ? pack.priceCents : (hoodie?.priceCents ?? null);
-  const what = pack ? `Hoodie plus ${pack.stimpieCount} Stimpie${pack.stimpieCount === 1 ? '' : 's'}` : 'Hoodie only';
-  const parts = [`${color?.name ?? 'Hoodie'} selected.`];
+  const what = pack?.type === 'STIMPIE_ONLY'
+    ? `${pack.stimpieCount} Stimpie${pack.stimpieCount === 1 ? '' : 's'} only`
+    : pack ? `Hoodie plus ${pack.stimpieCount} Stimpie${pack.stimpieCount === 1 ? '' : 's'}` : 'Hoodie only';
+  const parts = [pack?.type === 'STIMPIE_ONLY' ? 'Stimpies only selected.' : `${color?.name ?? 'Hoodie'} selected.`];
   if (stimpie) parts.push(`${stimpie.name} on the back.`);
   parts.push(price === null ? `${what}.` : `${what}, ${formatCents(price)}.`);
   return parts.join(' ');
@@ -37,22 +39,40 @@ export function buildCartSummary(args: {
   selection: Selection;
   packs: readonly BuilderPack[];
   stimpies: readonly BuilderStimpie[];
-  hoodie: BuilderHoodie;
-  color: JoinedColor;
+  hoodie: BuilderHoodie | null;
+  color: JoinedColor | null;
   sizeLabel: string | null;
 }): BuilderCartSummary {
   const { selection, packs, stimpies, hoodie, color, sizeLabel } = args;
   const pack = packById(packs, selection.packId);
   const chosen = pack ? selection.slots.flatMap((id) => stimpieById(stimpies, id) ?? []) : [];
+  if (pack?.type === 'STIMPIE_ONLY') {
+    const counts = new Map<number, number>();
+    for (const item of chosen) counts.set(item.id, (counts.get(item.id) ?? 0) + 1);
+    return {
+      title: pack.name,
+      imageUrl: chosen[0]?.artworkUrl ?? null,
+      hoodieSlug: null,
+      packSlug: pack.slug,
+      colorName: null,
+      colorHex: null,
+      sizeLabel: null,
+      stimpies: [...counts].flatMap(([id, qty]) => {
+        const item = stimpieById(stimpies, id);
+        return item ? [{ id: item.id, slug: item.slug, name: item.name, artworkUrl: item.artworkUrl, type: item.type, qty }] : [];
+      }),
+      unitPriceCents: pack.priceCents,
+    };
+  }
   return {
-    title: pack ? pack.name : hoodie.name,
-    imageUrl: color.photo ?? hoodie.images[0] ?? null,
-    hoodieSlug: hoodie.slug,
+    title: pack ? pack.name : hoodie?.name ?? 'Hoodie',
+    imageUrl: color?.photo ?? hoodie?.images[0] ?? null,
+    hoodieSlug: hoodie?.slug ?? null,
     packSlug: pack?.slug ?? null,
-    colorName: color.name,
-    colorHex: color.hex,
+    colorName: color?.name ?? null,
+    colorHex: color?.hex ?? null,
     sizeLabel,
     stimpies: chosen.map((s) => ({ id: s.id, slug: s.slug, name: s.name, artworkUrl: s.artworkUrl, type: s.type })),
-    unitPriceCents: pack ? pack.priceCents : hoodie.priceCents,
+    unitPriceCents: pack ? pack.priceCents : hoodie?.priceCents ?? 0,
   };
 }

@@ -23,6 +23,12 @@ export const cartItemSchema = z.discriminatedUnion('kind', [
     stimpieIds: z.array(id).min(1).max(5),
     qty,
   }),
+  z.strictObject({
+    kind: z.literal('stimpie_pack'),
+    packId: id,
+    stimpies: z.array(z.strictObject({ stimpieId: id, qty: z.number().int().min(1).max(1_000_000) })).min(1).max(10_000),
+    qty,
+  }),
   z.strictObject({ kind: z.literal('hoodie'), hoodieId: id, colorId: id, sizeId: id, qty }),
   z.strictObject({ kind: z.literal('stimpie'), stimpieId: id, qty }),
 ]);
@@ -139,7 +145,7 @@ export const idempotencyHeaders = z.object({
 
 const publicItem = z.object({
   id: z.number().int(),
-  kind: z.enum(['PACK', 'HOODIE', 'STIMPIE']),
+  kind: z.enum(['PACK', 'STIMPIE_PACK', 'HOODIE', 'STIMPIE']),
   name: z.string(),
   qty: z.number().int(),
   unitPriceCents: z.number().int(),
@@ -149,6 +155,7 @@ const publicItem = z.object({
     color: z.string().nullable(),
     size: z.string().nullable(),
     stimpies: z.array(z.string()),
+    stimpieQuantities: z.array(z.object({ name: z.string(), qty: z.number().int().positive() })).optional(),
     hoodieImage: z.string().nullable().optional(),
     stimpieImages: z.array(z.object({ name: z.string(), imageUrl: z.string().nullable() })).optional(),
   }),

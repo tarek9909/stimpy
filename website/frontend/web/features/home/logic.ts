@@ -13,7 +13,7 @@ export function pickCurrentDrop(
 
 /** "Second Stimpie effectively {x}": price of the 2-Stimpie pack minus the 1-Stimpie pack, only when positive. */
 export function secondStimpieExtraCents(packs: readonly Pack[]): number | undefined {
-  const sorted = [...packs].sort((a, b) => a.stimpieCount - b.stimpieCount);
+  const sorted = packs.filter((p) => p.type !== 'STIMPIE_ONLY').sort((a, b) => a.stimpieCount - b.stimpieCount);
   const one = sorted.find((p) => p.stimpieCount === 1);
   const two = sorted.find((p) => p.stimpieCount === 2);
   if (!one || !two) return undefined;

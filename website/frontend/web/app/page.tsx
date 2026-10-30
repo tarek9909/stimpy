@@ -71,10 +71,12 @@ async function HomeSections({ content, hoodies, catalog }: {
   const tz = resolveTimeZone(content.business.timezone);
   const drop = content.homepage.showDropSections ? pickCurrentDrop(featured, overview) : null;
   const hoodie = hoodies[0] ?? null;
-  const orderedPacks = [...packs].sort((a, b) => Number(!!b.badge) - Number(!!a.badge) || a.stimpieCount - b.stimpieCount);
+  const hoodiePacks = packs.filter((pack) => pack.type !== 'STIMPIE_ONLY')
+    .sort((a, b) => Number(!!b.badge) - Number(!!a.badge) || a.stimpieCount - b.stimpieCount);
+  const orderedPacks = [...hoodiePacks, ...packs.filter((pack) => pack.type === 'STIMPIE_ONLY')];
   const purchasable = allStimpies.filter((s) => s.purchasable);
   const commerceProps = { packs: orderedPacks, hoodieSlug: hoodie?.slug ?? null, extraCents: secondStimpieExtraCents(packs) ?? 0,
-    minExtra: purchasable.length ? Math.min(...purchasable.map((s) => s.priceCents)) : null, drop, coreStimpies };
+    minExtra: purchasable.length ? Math.min(...purchasable.map((s) => s.priceCents)) : null, drop, coreStimpies, allStimpies: purchasable };
   const faqPreview = content.faqs.filter((f) => f.showOnHome).slice(0, 5);
   const teaserStimpies = [...coreStimpies, ...allStimpies.filter((s) => s.drop && s.purchasable)].slice(0, 6);
 

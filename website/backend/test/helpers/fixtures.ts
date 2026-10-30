@@ -123,15 +123,17 @@ export function createStimpie(
   });
 }
 
-export function createPack(prisma: PrismaClient, o: Partial<{ name: string; slug: string; stimpieCount: number; priceCents: number; badge: string | null; active: boolean }> = {}): Promise<Pack> {
+export function createPack(prisma: PrismaClient, o: Partial<{ type: 'HOODIE_SET' | 'STIMPIE_ONLY'; name: string; slug: string; stimpieCount: number; eligibleStimpieIds: number[] | null; priceCents: number; badge: string | null; active: boolean }> = {}): Promise<Pack> {
   const n = next();
   const count = o.stimpieCount ?? 1;
   return prisma.pack.create({
     data: {
+      type: o.type ?? 'HOODIE_SET',
       name: o.name ?? `Hoodie + ${count} Stimpie${count > 1 ? 's' : ''}`,
       slug: o.slug ?? `pack-${n}`,
       description: 'Test pack',
       stimpieCount: count,
+      ...(o.eligibleStimpieIds !== undefined ? { eligibleStimpieIds: o.eligibleStimpieIds === null ? undefined : o.eligibleStimpieIds } : {}),
       priceCents: o.priceCents ?? (count === 1 ? 3500 : 4500),
       badge: o.badge ?? null,
       active: o.active ?? true,

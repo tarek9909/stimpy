@@ -44,7 +44,7 @@ export function variantAlternatives(hoodie: HoodieDetail, soldOut: { colorId: nu
   return out.slice(0, limit);
 }
 
-/** Replace `oldId` by `replacement` in a line: inside a pack's `stimpieIds`, or the extra Stimpie itself. */
+/** Replace `oldId` inside a hoodie set or Stimpie-only offer, or replace an individual Stimpie line. */
 export function swapStimpieInLine(line: CartLine, oldId: number, replacement: Stimpie): { item: CartItem; ui: Omit<CartLineUi, 'addedAt'> & { addedAt: string } } | null {
   const picked = { id: replacement.id, slug: replacement.slug, name: replacement.name, artworkUrl: replacement.artworkUrl, type: replacement.type };
   const { item, ui } = line;
@@ -55,6 +55,21 @@ export function swapStimpieInLine(line: CartLine, oldId: number, replacement: St
       item: { ...item, stimpieIds },
       ui: { ...ui, stimpies: ui.stimpies.map((s) => (s.id === oldId ? picked : s)) },
     };
+  }
+  if (item.kind === 'stimpie_pack') {
+    const old = item.stimpies.find((s) => s.stimpieId === oldId);
+    if (!old || oldId === replacement.id) return null;
+    const target = item.stimpies.find((s) => s.stimpieId === replacement.id);
+    const stimpies = item.stimpies.filter((s) => s.stimpieId !== oldId).map((s) => ({ ...s }));
+    if (target) {
+      const merged = stimpies.find((s) => s.stimpieId === replacement.id);
+      if (merged) merged.qty += old.qty;
+    } else stimpies.push({ stimpieId: replacement.id, qty: old.qty });
+    const uiStimpie = ui.stimpies.find((s) => s.id === oldId);
+    const existingUi = ui.stimpies.find((s) => s.id === replacement.id);
+    const nextUi = ui.stimpies.filter((s) => s.id !== oldId && s.id !== replacement.id);
+    nextUi.push({ ...picked, qty: (existingUi?.qty ?? 0) + (uiStimpie?.qty ?? old.qty) });
+    return { item: { ...item, stimpies }, ui: { ...ui, stimpies: nextUi, imageUrl: ui.imageUrl ?? replacement.images[0] ?? replacement.artworkUrl } };
   }
   if (item.kind === 'stimpie' && item.stimpieId === oldId) {
     return {
@@ -74,7 +89,7 @@ export function swapStimpieInLine(line: CartLine, oldId: number, replacement: St
 /** Change a pack or hoodie line to another colour/size of the same hoodie. */
 export function switchVariantInLine(line: CartLine, hoodie: HoodieDetail, choice: VariantChoice): { item: CartItem; ui: Omit<CartLineUi, 'addedAt'> & { addedAt: string } } | null {
   const { item, ui } = line;
-  if (item.kind === 'stimpie') return null;
+  if (item.kind === 'stimpie' || item.kind === 'stimpie_pack') return null;
   const color = hoodie.colors.find((c) => c.id === choice.colorId);
   return {
     item: { ...item, colorId: choice.colorId, sizeId: choice.sizeId },

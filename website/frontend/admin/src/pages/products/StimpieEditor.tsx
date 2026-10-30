@@ -177,7 +177,7 @@ function StimpieForm({ initial, onClose, crumbs }: { initial: AdminStimpie | nul
 
         <FormSection title="Pricing and stock">
           <div className="grid gap-4 sm:grid-cols-2">
-            <MoneyField name="price" label="Price" required />
+            <MoneyField name="price" label="Price" required hint="Base price. An active one-Stimpie offer sets the individual price for its eligible designs." />
             <MoneyField name="cost" label="Cost" required />
           </div>
           {initial ? (
