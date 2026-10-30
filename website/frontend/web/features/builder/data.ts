@@ -26,6 +26,20 @@ export function storefrontBuilderConfig(config: BuilderConfig): BuilderConfig {
   };
 }
 
+/** Customer facing builder surfaces use the image based preview only. */
+export function twoDimensionalBuilderConfig(config: BuilderConfig): BuilderConfig {
+  const storefront = storefrontBuilderConfig(config);
+  return {
+    ...storefront,
+    mode: '2D',
+    effectiveMode: '2D',
+    defaultView: '2D',
+    model3d: null,
+    stimpieTextures: [],
+    colors: storefront.colors.map((color) => ({ ...color, tint: null, texture3d: null })),
+  };
+}
+
 export function toBuilderStimpie(s: Stimpie): BuilderStimpie {
   return {
     id: s.id,
@@ -80,7 +94,7 @@ export function toBuilderData(args: {
 }): BuilderData {
   const hoodieColorIds = args.hoodie ? new Set(args.hoodie.colors.map((color) => color.id)) : null;
   return {
-    config: storefrontBuilderConfig(args.config),
+    config: twoDimensionalBuilderConfig(args.config),
     colors: args.options.colors
       .filter((color) => hoodieColorIds === null || hoodieColorIds.has(color.id))
       .map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: c.images.slice(0, 1) })),
@@ -99,15 +113,7 @@ export function toTeaserData(args: {
 }): BuilderData {
   const hoodieColorIds = args.hoodie ? new Set(args.hoodie.colors.map((color) => color.id)) : null;
   return {
-    config: {
-      ...args.config,
-      mode: '2D',
-      effectiveMode: '2D',
-      defaultView: '2D',
-      model3d: null,
-      stimpieTextures: [],
-      colors: storefrontBuilderConfig(args.config).colors.map((c) => ({ ...c, tint: null, texture3d: null })),
-    },
+    config: twoDimensionalBuilderConfig(args.config),
     colors: args.options.colors
       .filter((color) => hoodieColorIds === null || hoodieColorIds.has(color.id))
       .map((c) => ({ id: c.id, name: c.name, hex: c.hex, position: c.position, images: [] })),

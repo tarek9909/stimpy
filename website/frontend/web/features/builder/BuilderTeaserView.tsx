@@ -1,6 +1,6 @@
-import type { KeyboardEventHandler, ReactNode, Ref, RefObject } from 'react';
+import type { KeyboardEventHandler, ReactNode, RefObject } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Box, Maximize2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type { BuilderData, BuilderStimpie, JoinedColor } from '@stimpy/builder';
 import { joinColors, usable2D } from '@stimpy/builder/src/lib/join';
 import { placementStyle } from '@stimpy/builder/src/lib/placement';
@@ -15,19 +15,16 @@ type Props = {
   color: JoinedColor;
   stimpie: BuilderStimpie;
   stage: ReactNode;
-  preview?: ReactNode;
-  previewTrigger?: Ref<HTMLButtonElement>;
   colorRefs?: RefObject<Map<number, HTMLButtonElement>>;
   stimpieRefs?: RefObject<Map<number, HTMLButtonElement>>;
   selectColor?: (id: number) => void;
   selectStimpie?: (item: BuilderStimpie) => void;
   handleColorKeys?: KeyboardEventHandler<HTMLDivElement>;
   handleStimpieKeys?: KeyboardEventHandler<HTMLDivElement>;
-  openPreview?: () => void;
 };
 
 /** The server poster and enhanced controls share their geometry so activation never shifts the page. */
-export function BuilderTeaserView({ colors, stimpies, color, stimpie, stage, preview, previewTrigger, colorRefs, stimpieRefs, selectColor, selectStimpie, handleColorKeys, handleStimpieKeys, openPreview }: Props) {
+export function BuilderTeaserView({ colors, stimpies, color, stimpie, stage, colorRefs, stimpieRefs, selectColor, selectStimpie, handleColorKeys, handleStimpieKeys }: Props) {
   const fullBuilder = `/builder?color=${encodeURIComponent(color.id)}&stimpie=${encodeURIComponent(stimpie.slug)}`;
   return (
     <section data-builder="teaser" data-builder-view="2d" aria-label="Builder" className="store-teaser grid grid-cols-1 items-center gap-6 md:grid-cols-2">
@@ -40,10 +37,6 @@ export function BuilderTeaserView({ colors, stimpies, color, stimpie, stage, pre
           style={{ aspectRatio: '4 / 5' }}
         >
           {stage}
-          <button ref={previewTrigger} type="button" className="store-preview-trigger" aria-label="Open 3D preview" aria-haspopup="dialog" disabled={!openPreview} onClick={openPreview}>
-            <span className="store-preview-trigger-label"><Box size={16} aria-hidden="true" /> 3D preview</span>
-            <span className="store-preview-expand" title="Open 3D preview"><Maximize2 size={18} aria-hidden="true" /></span>
-          </button>
         </div>
         <div className="store-teaser-caption"><span>{stimpie.name}</span><span>{color.name} hoodie</span></div>
       </div>
@@ -121,7 +114,6 @@ export function BuilderTeaserView({ colors, stimpies, color, stimpie, stage, pre
           Customize this look <ArrowRight size={16} aria-hidden="true" className="ml-3" />
         </Link>
       </div>
-      {preview}
     </section>
   );
 }

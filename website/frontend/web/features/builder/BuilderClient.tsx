@@ -1,29 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { Box, Maximize2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useOptionalToast } from '@stimpy/ui';
-import { Builder, type BuilderCartItem, type BuilderCartSummary, type BuilderData, type BuilderHoodie, type BuilderPreviewContext, type ShareParams } from '@stimpy/builder';
+import { Builder, type BuilderCartItem, type BuilderCartSummary, type BuilderData, type BuilderHoodie, type ShareParams } from '@stimpy/builder';
 import { CART_FULL_TEXT, useAddToCart } from '@/features/cart/useAddToCart';
 import { track } from '@/lib/track';
 import { readOverrides, type BuilderOverrides } from './overrides';
 import { toBuilderHoodie } from './data';
 import { CampaignHoodieStage } from './CampaignHoodieStage';
-
-const BuilderPreviewDialog = dynamic(() => import('./BuilderPreviewDialog'), { ssr: false });
-
-function BuilderPagePreview(preview: BuilderPreviewContext) {
-  const [open, setOpen] = useState(false);
-  const trigger = useRef<HTMLButtonElement>(null);
-  return <>
-    <button ref={trigger} type="button" className="store-builder-preview-trigger" aria-label="Open 3D preview" aria-haspopup="dialog" onClick={() => setOpen(true)}>
-      <Box size={16} aria-hidden="true" /><span>3D preview</span><Maximize2 size={14} aria-hidden="true" />
-    </button>
-    {open ? <BuilderPreviewDialog {...preview} onStimpieChange={(stimpie) => preview.onStimpieChange(stimpie.id)}
-      onClose={() => setOpen(false)} returnFocusRef={trigger} showBuilderLink={false} /> : null}
-  </>;
-}
 
 /**
  * The website's Builder island: the shared `@stimpy/builder` component fed with the server-fetched payloads, wired to
@@ -61,7 +45,7 @@ export function BuilderClient({ data, share, source }: { data: BuilderData; shar
       source={source}
       onAddToCart={onAddToCart}
       refreshInventory={refreshInventory}
-      renderPreviewAction={(preview) => <BuilderPagePreview {...preview} />}
+      renderPreviewAction={() => <span data-layer="preview-chip" className="pointer-events-none absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-ink">2D preview</span>}
       render2DStage={({ color, stimpie }) => <CampaignHoodieStage color={color} stimpie={stimpie} priority />}
       stageAspect="1 / 1"
       hrefs={{ sizeGuide: '/help?tab=size' }}

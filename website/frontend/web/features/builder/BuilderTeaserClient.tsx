@@ -2,13 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import dynamic from 'next/dynamic';
 import { BuilderStage2D } from '@stimpy/builder/src/BuilderStage2D';
 import type { BuilderData, BuilderStimpie, SwapSample } from '@stimpy/builder';
 import { track } from '@/lib/track';
 import { BuilderTeaserView, teaserColors } from './BuilderTeaserView';
-
-const BuilderPreviewDialog = dynamic(() => import('./BuilderPreviewDialog'), { ssr: false });
 
 /** The homepage's small, 2D-only Builder island. It deliberately avoids importing the full 2D/3D Builder. */
 export function BuilderTeaserClient({ data }: { data: BuilderData }) {
@@ -17,8 +14,6 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
   const [colorId, setColorId] = useState<number | null>(colors[0]?.id ?? null);
   const [stimpieId, setStimpieId] = useState<number | null>(stimpies[0]?.id ?? null);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const previewTrigger = useRef<HTMLButtonElement>(null);
   const colorRefs = useRef(new Map<number, HTMLButtonElement>());
   const stimpieRefs = useRef(new Map<number, HTMLButtonElement>());
   const swapCount = useRef(0);
@@ -93,11 +88,8 @@ export function BuilderTeaserClient({ data }: { data: BuilderData }) {
   const stageArt = { key: stimpie.id, src: stimpie.artworkUrl, alt: `${stimpie.name} Stimpie` };
 
   return <BuilderTeaserView colors={colors} stimpies={stimpies} color={color} stimpie={stimpie}
-    colorRefs={colorRefs} stimpieRefs={stimpieRefs} previewTrigger={previewTrigger}
+    colorRefs={colorRefs} stimpieRefs={stimpieRefs}
     selectColor={selectColor} selectStimpie={selectStimpie} handleColorKeys={handleColorKeys} handleStimpieKeys={handleStimpieKeys}
-    openPreview={() => setPreviewOpen(true)}
     stage={<BuilderStage2D color={stageColor} art={stageArt} instant={reducedMotion} active preload={stimpies.slice(0, 2).map((item) => item.artworkUrl)} chip={false} onSwapDone={onSwapDone} />}
-    preview={previewOpen ? <BuilderPreviewDialog colors={colors} stimpies={stimpies} colorId={color.id} stimpieId={stimpie.id}
-      onColorChange={selectColor} onStimpieChange={selectStimpie} onClose={() => setPreviewOpen(false)} returnFocusRef={previewTrigger} /> : null}
   />;
 }
