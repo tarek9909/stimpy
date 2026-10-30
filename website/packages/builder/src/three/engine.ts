@@ -44,7 +44,8 @@ import { ZIP_TOTAL_MS, CROSSFADE_MS, COLOR_FADE_MS, popOffset, zipFrame } from '
 import { LIGHTING, TONE_MAPPING_EXPOSURE } from './lighting';
 import { createSwapPanelMaterial, type PanelUniforms } from './panelMaterial';
 
-export const GLB_TIMEOUT_MS = 15_000;
+/** Gives up only when the download stops moving: on a slow connection the model can take well over 15 s. */
+export const GLB_STALL_TIMEOUT_MS = 20_000;
 export const TEXTURE_CACHE_SIZE = 4;
 export const CONTEXT_RESTORE_MS = 3_000;
 export const MAX_TEXTURE_LONG_SIDE = 2048;
@@ -215,7 +216,7 @@ async function fetchGlb(url: string, sizeHint: number, signal: AbortSignal, onPr
   const ctl = new AbortController();
   const onAbort = () => ctl.abort();
   signal.addEventListener('abort', onAbort);
-  const timer = setTimeout(() => ctl.abort(), GLB_TIMEOUT_MS);
+  let timer = setTimeout(() => ctl.abort(), GLB_STALL_TIMEOUT_MS);
   try {
     let res: Response;
     try {
@@ -243,6 +244,8 @@ async function fetchGlb(url: string, sizeHint: number, signal: AbortSignal, onPr
         if (ctl.signal.aborted) throw new EngineFailure('GLB_FAILED', 'GLB download timed out');
         throw new NetworkError(e instanceof Error ? e.message : 'network error');
       }
+      clearTimeout(timer);
+      timer = setTimeout(() => ctl.abort(), GLB_STALL_TIMEOUT_MS);
       if (step.done) break;
       chunks.push(step.value);
       received += step.value.byteLength;
