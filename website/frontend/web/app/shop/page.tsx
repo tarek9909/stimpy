@@ -10,6 +10,7 @@ import { ShopTabs, StimpieFilters } from '@/features/shop/ShopControls';
 import { activeFilterCount, parseShopParams, shopHref } from '@/features/shop/params';
 import { Layers, Sparkles } from '@/components/icons';
 import { HoodieFeature } from '@/features/shop/HoodieFeature';
+import { CampaignHoodiePhoto, isSeedHoodiePhoto } from '@/features/shop/CampaignHoodiePhoto';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -59,7 +60,12 @@ async function HoodiesPanel() {
   if (hoodies.length === 1) {
     const hoodie = hoodies[0]!;
     const detail = await must(() => getHoodie(hoodie.slug));
-    return <HoodieFeature hoodie={hoodie} detail={detail} />;
+    const campaignColorIds = hoodie.colors.filter((color) => {
+      const selected = detail.colors.find((candidate) => candidate.id === color.id);
+      return isSeedHoodiePhoto(selected?.images[0] ?? detail.images[0] ?? hoodie.images[0] ?? null);
+    }).map((color) => color.id);
+    return <HoodieFeature hoodie={hoodie} detail={detail} campaignColorIds={campaignColorIds}
+      campaignPhoto={campaignColorIds.length > 0 ? <CampaignHoodiePhoto /> : null} />;
   }
   return (
     <div className="mt-6">

@@ -1,25 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ColorSwatches, Media, PriceTag, RichText } from '@stimpy/ui';
 import type { HoodieDetail, HoodieSummary } from '@stimpy/api-client';
 import { ArrowRight } from '@/components/icons';
-import { CampaignHoodiePhoto, isSeedHoodiePhoto } from './CampaignHoodiePhoto';
 
 /** Single-hoodie shop feature with real colour selection and colour-aware product links. */
-export function HoodieFeature({ hoodie, detail }: { hoodie: HoodieSummary; detail: HoodieDetail }) {
+export function HoodieFeature({ hoodie, detail, campaignPhoto, campaignColorIds }: {
+  hoodie: HoodieSummary;
+  detail: HoodieDetail;
+  campaignPhoto: ReactNode;
+  campaignColorIds: number[];
+}) {
   const [colorId, setColorId] = useState<number | null>(hoodie.colors[0]?.id ?? null);
   const color = detail.colors.find((candidate) => candidate.id === colorId) ?? null;
   const selectedSummaryColor = hoodie.colors.find((candidate) => candidate.id === colorId) ?? null;
   const image = color?.images[0] ?? detail.images[0] ?? hoodie.images[0] ?? null;
-  const campaignColor = selectedSummaryColor && isSeedHoodiePhoto(image) ? selectedSummaryColor : null;
+  const campaignColor = selectedSummaryColor && campaignColorIds.includes(selectedSummaryColor.id) ? selectedSummaryColor : null;
   const productHref = `/shop/hoodie/${hoodie.slug}${colorId === null ? '' : `?color=${colorId}`}`;
 
   return (
     <div className="store-hoodie-feature">
       <Link href={productHref} aria-label={`View ${hoodie.name}${selectedSummaryColor ? ` in ${selectedSummaryColor.name}` : ''}`}>
-        {campaignColor ? <CampaignHoodiePhoto color={campaignColor} /> : <Media
+        {campaignColor ? <div data-campaign-hoodie-photo role="img"
+          aria-label={`${campaignColor.name} Stimpy hoodie, back view with THE VOID Stimpie`}
+          className="relative mx-auto aspect-square w-full max-w-[440px] overflow-hidden md:max-w-[580px]"
+          style={{ isolation: 'isolate', '--hoodie-preview-color': campaignColor.hex } as CSSProperties}>
+          {campaignPhoto}
+        </div> : <Media
           key={colorId ?? 'default'}
           src={image}
           alt={`${hoodie.name}${selectedSummaryColor ? `, ${selectedSummaryColor.name}` : ''}, front view`}

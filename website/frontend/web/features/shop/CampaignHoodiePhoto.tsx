@@ -1,6 +1,3 @@
-'use client';
-
-import { useId } from 'react';
 import { campaignImages } from '@/lib/campaign-images';
 
 // Matches the garment in the existing campaign crop, leaving its printed panel unchanged.
@@ -16,18 +13,11 @@ const GARMENT = [
 ].join(' ');
 
 /** Campaign photograph for the bundled catalog, with a colour preview matching the Builder. */
-export function CampaignHoodiePhoto({ color }: { color: { name: string; hex: string } }) {
-  const clip = `shop-hoodie-${useId().replace(/:/g, '')}`;
+export function CampaignHoodiePhoto() {
   const image = campaignImages.builder;
   const sizes = '(min-width: 768px) min(50vw, 580px), min(100vw, 440px)';
   return (
-    <div
-      data-campaign-hoodie-photo
-      role="img"
-      aria-label={`${color.name} Stimpy hoodie, back view with THE VOID Stimpie`}
-      className="relative mx-auto aspect-square w-full max-w-[440px] overflow-hidden md:max-w-[580px]"
-      style={{ isolation: 'isolate' }}
-    >
+    <>
       <picture>
         <source type="image/avif" srcSet={image.avifSrcSet} sizes={sizes} />
         <img src={image.src} srcSet={image.webpSrcSet} sizes={sizes} alt="" aria-hidden="true"
@@ -37,12 +27,9 @@ export function CampaignHoodiePhoto({ color }: { color: { name: string; hex: str
       <svg aria-hidden="true" viewBox="1000 0 809 809" preserveAspectRatio="none"
         className="pointer-events-none absolute inset-0 h-full w-full"
         style={{ mixBlendMode: 'screen', opacity: 0.82, filter: 'blur(1px)' }}>
-        <defs><clipPath id={clip} clipPathUnits="userSpaceOnUse">
-          <path d={GARMENT} fillRule="evenodd" clipRule="evenodd" />
-        </clipPath></defs>
-        <rect x="1000" y="0" width="809" height="809" fill={color.hex} clipPath={`url(#${clip})`} />
+        <path d={GARMENT} fill="var(--hoodie-preview-color)" fillRule="evenodd" />
       </svg>
-    </div>
+    </>
   );
 }
 
