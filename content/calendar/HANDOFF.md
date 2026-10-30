@@ -15,6 +15,27 @@ Written Oct 31, 2026. This explains the work done in the planning chat, what was
 | Clear success: one route reaches at least 5 delivered orders, each costing no more than C | About 30%, about 40% with strong real footage |
 | Clear failure: under 12 delivered orders by Dec 14, or an account restriction | About 50% |
 
+## Final status: stop modifying the plan
+
+The plan is good now and needs no more review edits. More reviews would mostly change wording, and the biggest risks are things no edit can fix. Launch itself still isn't ready, because some of the owner's tasks are still open.
+
+The only edits it should still need are ones real information will force:
+
+| By | What to do | Possible file edit |
+|---|---|---|
+| **Nov 1** | Finish the covers for the Nov 2-10 Reels and set the pre-launch bio | None |
+| **Nov 3** | Get written proof of rights for SABOTAGE and NEON | Without proof, remove both designs everywhere and change "Eleven Stimpies" |
+| **Nov 8** | Do the real swap shoot, using the shot list | Add the new files |
+| **Nov 9** | Confirm real costs, what Meta accepts, and the ad wording | Record C, budgets and limits, the profile setup, and any wording change |
+| **Nov 12** | Place test orders on the website and WhatsApp | Fix anything that fails |
+
+Also worth doing soon:
+
+- **Checkout email:** decide whether to make it optional before the Nov 12 test orders. This is a website code change, not a calendar edit. The recommendation is to make it optional.
+- **`main` branch:** the updated files are only on `docs/stimpy-calendar-handoff`, so merge that branch if they should be on `main`.
+
+The estimate is unchanged at about 30% for clear success, or about 40% with strong footage. The plan is as ready as it can be without real data, so the Nov 8 footage and the real costs are what will move those odds.
+
 ## The business
 
 Stimpy is a new Lebanese streetwear brand: one hoodie with zip-on back panels called Stimpies. Line: "One hoodie. Multiple identities." Instagram: `@stimpy.lb`. Orders come through the website or WhatsApp, paid by cash on delivery.
