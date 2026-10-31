@@ -14,9 +14,10 @@ Each preview shows frames from the start, middle and end of the video, or the po
 |---|---|---|
 | Nov 1 | Finish covers for the Nov 2-10 Reels and set the pre-launch bio | The first Reel posts on Nov 2 |
 | Nov 3 | Have written proof of rights for SABOTAGE and NEON | SABOTAGE first appears on Nov 4. Without proof, remove both from every cover, frame, carousel, poster, video and website choice, including Nov 4, Nov 7, Nov 11, Nov 13, Nov 14, Nov 15, Nov 16, Nov 19, Nov 22 and Nov 24, and change "Eleven Stimpies" |
-| Nov 6 | Review the draft of Arabic Video 1 | Real hands and the zip must appear within 2 seconds |
-| Nov 8 | Film a real 15-20 second hands-on swap and take one swap photo. Also capture: the hoodie worn from front, side and back; the second look on the same person; attachment details and normal movement; the plain hoodie; fabric, stitching and zip close-ups; one hoodie with its two panels together | **No real swap, no ad spend** |
-| Nov 9 | Submit Ad 1 for review; finish domain verification, backup payment and account time zone checks; record each daily budget, spending limit and minimum Meta accepts; record the profile-visit setup you selected; confirm or change the Website and WhatsApp ad text | Ad 1 starts Nov 11, so leave time to fix a rejection |
+| Nov 5-6 | Film a real 15-20 second hands-on swap and take one swap photo. Also capture: the hoodie worn from front, side and back; the second look on the same person; attachment details and normal movement; the plain hoodie; fabric, stitching and zip close-ups; one hoodie with its two panels together | **No real swap, no ad spend** |
+| Nov 7 | Review the draft of Arabic Video 1, using the new footage | Real hands and the zip must appear within 2 seconds |
+| Nov 8 | Reshoot anything that failed the Nov 7 review | Last shoot day. Ad 1 is submitted on Nov 9 |
+| Nov 9 | Submit Ad 1 for review; finish domain verification, backup payment and account time zone checks; confirm Instagram, the Facebook Page and WhatsApp Business are connected in Meta; confirm production has `NEXT_PUBLIC_META_PIXEL_ID`, `NEXT_PUBLIC_APP_ENV=production`, `META_PIXEL_ID` and `META_CAPI_TOKEN` set; record each daily budget, spending limit and minimum Meta accepts; record the profile-visit setup you selected; confirm or change the Website and WhatsApp ad text | Ad 1 starts Nov 11, so leave time to fix a rejection. Without these connections and settings, ads can't reach WhatsApp or tracking stays off |
 | Nov 9 | Confirm live price, delivery fee and who pays it, refusal cost, exchange policy and stock | Write down C for each route, using the rule below |
 | Nov 8-10 | Optional: show the real sample and the Arabic Video 1 draft to 5-8 possible buyers outside the team. Ask what they understood, which two designs they'd wear, and what they object to once they know the delivered price. Ask them to keep it private until launch | Do it before the Nov 10 approval. Friends will be polite, so only act on repeated objections |
 | Nov 10 | Approve the final picture, subtitles and CTA of Arabic Video 1, website and WhatsApp versions | Needed for ad review |
@@ -48,7 +49,7 @@ Checkout currently requires an email address. Decide whether to make it optional
 
 Ads 2 and 4 start at 12:00 PM on Nov 14, only after the test orders pass. Through Nov 27 they are a matched test: same Arabic Video 1 opening, design pair, audience, placements and start time, with only the ending, button and destination changed. Ads 3 and 5 stay off until then.
 
-**One challenger at a time, Dec 3 rule:** on Dec 3, Ad 3 replaces Ad 5, unless Ad 5 has more placed orders than Ad 2. In that case, skip Ad 3 and keep Ad 5. With about six days left, treat the result as a rough signal only.
+**One challenger at a time, Dec 3 rule:** on Dec 3, Ad 3 replaces Ad 5, unless Ad 5 has more placed orders than Ad 2, counting only orders placed from Nov 28 on. In that case, skip Ad 3 and keep Ad 5. With about six days left, treat the result as a rough signal only.
 
 First design pair: IREZUMI to BUBBLEGUM, unless written proof of rights for SABOTAGE is ready.
 
@@ -63,7 +64,7 @@ First design pair: IREZUMI to BUBBLEGUM, unless written proof of rights for SABO
 
 | Campaign | Nov 11-13 | Nov 14-27 | Nov 28-Dec 8 | Total |
 |---|---|---|---|---|
-| Profile visits | $30 ($10/day) | $0 | $0 | $30 |
+| Profile visits | $30 (about $14/day from 8:30 PM Nov 11) | $0 | $0 | $30 |
 | Website | $0 | $154 ($11/day) | $116 ($10.55/day) | $270 |
 | WhatsApp | $0 | $84 ($6/day) | $66 ($6/day) | $150 |
 | **Total** | **$30** | **$238** | **$182** | **$450** |
@@ -78,7 +79,7 @@ First design pair: IREZUMI to BUBBLEGUM, unless written proof of rights for SABO
 
 The $55 share keeps the lower route at $5 a day, because Meta's minimum for this goal may be about $5 and sources disagree. Use the minimum your account shows if it's different.
 
-**Spending limits:** make sure the account has $450 available, because earlier spend may count against its limit. Set account $450; Website $285; WhatsApp $215. Those two are higher than their planned totals so the Nov 28 budget move isn't blocked, and the account limit is the overall cap. Try a $30 limit on Profile visits, but don't depend on it, because guides report a higher minimum that hasn't been confirmed. If Meta rejects it, use the $10 daily budget and Nov 13 end date. Daily budgets can vary, so that isn't a guaranteed $30 cap; check it daily.
+**Spending limits:** make sure the account has $450 available, because earlier spend may count against its limit. Set account $450; Website $285; WhatsApp $215. Those two are higher than their planned totals so the Nov 28 budget move isn't blocked, and the account limit is the overall cap. Try a $30 limit on Profile visits, but don't depend on it, because guides report a higher minimum that hasn't been confirmed. If Meta rejects it, use the $14 daily budget and Nov 13 end date. Daily budgets can vary, so that isn't a guaranteed $30 cap; check it daily.
 
 ### Ad settings
 
@@ -91,7 +92,7 @@ The $55 share keeps the lower route at $5 a day, because Meta's minimum for this
 | Conversion event | None | Purchase | None |
 | Budget optimization and A/B test | Off | Off | Off |
 | Bid strategy | Highest volume, no cost goal | Highest volume, no cost goal | Highest volume, no cost goal |
-| Start | Nov 11, 12:00 AM | Nov 14, 12:00 PM | Nov 14, 12:00 PM |
+| Start | Nov 11, 8:30 PM, with the organic Reel | Nov 14, 12:00 PM | Nov 14, 12:00 PM |
 | End | Nov 13, 11:59 PM | Dec 8, 11:59 PM | Dec 8, 11:59 PM |
 
 All three: original audience, manual placements with only Instagram Feed, Reels and Stories on, all devices, all-day delivery, multi-advertiser ads off, creative enhancements off.
@@ -259,8 +260,8 @@ Covers still needed: real swap, Arabic Videos 1-3, and all Reels from Nov 21 on.
 
 | File or note | Needed by |
 |---|---|
-| Real swap video | Nov 8 |
-| Real swap photo for Ad 3 (image, not a video). Take it at the Nov 8 shoot if possible | Dec 1 |
+| Real swap video | Nov 6, reshoot by Nov 8 |
+| Real swap photo for Ad 3 (image, not a video). Take it at the Nov 5-6 shoot if possible | Dec 1 |
 | Arabic Video 2 with subtitles | Nov 11 |
 | Arabic Video 1, website and WhatsApp versions | Nov 10 |
 | How-to-order carousel, with no prices on the slides | Nov 13 |

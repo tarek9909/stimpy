@@ -6,7 +6,7 @@ Written Oct 31, 2026. This explains the work done in the planning chat, what was
 
 - **The plan is complete. Launch isn't ready.** The calendar, captions, ads, budgets, settings and decision rules are written. The real footage, Arabic videos, rights proof, real costs, live links and test orders are still missing.
 - **Launch:** Saturday, Nov 14, 2026, confirmed by the owner. Teaser posts start Nov 2. Ads run Nov 11-Dec 8, $450 in total.
-- **Next deadlines:** Nov 1 covers and pre-launch bio. Nov 3 written rights proof. Nov 8 real swap shoot. Nov 9 costs and Ads Manager checks.
+- **Next deadlines:** Nov 1 covers and pre-launch bio. Nov 3 written rights proof. Nov 5-6 real swap shoot, with Nov 8 kept for a reshoot. Nov 9 costs and Ads Manager checks.
 - **Advice from the last review:** stop auditing the plan. More reviews now mostly change wording.
 
 | Score (judgment, not a forecast) | Value |
@@ -25,7 +25,7 @@ The only edits it should still need are ones real information will force:
 |---|---|---|
 | **Nov 1** | Finish the covers for the Nov 2-10 Reels and set the pre-launch bio | None |
 | **Nov 3** | Get written proof of rights for SABOTAGE and NEON | Without proof, remove both designs everywhere and change "Eleven Stimpies" |
-| **Nov 8** | Do the real swap shoot, using the shot list | Add the new files |
+| **Nov 5-6** | Do the real swap shoot, using the shot list. Nov 8 is the last reshoot day | Add the new files |
 | **Nov 9** | Confirm real costs, what Meta accepts, and the ad wording | Record C, budgets and limits, the profile setup, and any wording change |
 | **Nov 12** | Place test orders on the website and WhatsApp | Fix anything that fails |
 
@@ -34,7 +34,7 @@ Also worth doing soon:
 - **Checkout email:** decide whether to make it optional before the Nov 12 test orders. This is a website code change, not a calendar edit. The recommendation is to make it optional.
 - **`main` branch:** the updated files are only on `docs/stimpy-calendar-handoff`, so merge that branch if they should be on `main`.
 
-The estimate is unchanged at about 30% for clear success, or about 40% with strong footage. The plan is as ready as it can be without real data, so the Nov 8 footage and the real costs are what will move those odds.
+The estimate is unchanged at about 30% for clear success, or about 40% with strong footage. The plan is as ready as it can be without real data, so the real swap footage and the real costs are what will move those odds.
 
 ## The business
 
