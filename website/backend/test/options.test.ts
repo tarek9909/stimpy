@@ -22,7 +22,7 @@ describe('GET /options (public)', () => {
 
     const res = await t.client.get('/options');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=30, stale-while-revalidate=60');
     const body = res.json<{ colors: Color[]; sizes: Size[] }>();
     expect(body.colors.map((c) => c.name)).toEqual(['Alpha', 'Zed']);
     expect(body.sizes.map((s) => s.label)).toEqual(['S', 'M']);
@@ -50,7 +50,7 @@ describe('GET /size-chart (public)', () => {
 
     const res = await t.client.get('/size-chart');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=30, stale-while-revalidate=60');
     const body = res.json<{ columns: { id: number; label: string; unit: string }[]; rows: { sizeId: number; label: string; values: Record<string, string> }[]; howToMeasure: string }>();
     expect(body.columns.map((c) => [c.label, c.unit])).toEqual([['Chest', 'cm'], ['Length', 'cm']]);
     expect(Object.keys(body.columns[0]!)).toEqual(['id', 'label', 'unit']); // no position on the public chart

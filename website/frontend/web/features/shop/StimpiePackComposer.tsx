@@ -176,7 +176,7 @@ export function StimpiePackComposer({ packs, stimpies, preset, replaceLine, onAd
               const max = Math.max(0, Math.min(available, pack.stimpieCount - count + selectedQty));
               return (
                 <li key={stimpie.id} className={`flex flex-col overflow-hidden rounded-md border ${selectedQty > 0 ? 'border-ink' : 'border-base'} bg-white`} data-stimpie-id={stimpie.id}>
-                  <div className="relative overflow-hidden bg-cream" style={{ aspectRatio: '0.64' }}>
+                  <div className="relative overflow-hidden" style={{ aspectRatio: '0.64' }}>
                     <img src={stimpie.artworkUrl} alt={`${stimpie.name} Stimpie`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   </div>
                   <div className="flex flex-1 flex-col gap-3 p-3">

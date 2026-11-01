@@ -69,7 +69,6 @@ describe('Builder (page, 2D)', () => {
     expect(preview.mock.lastCall?.[0].stimpieId).toBe(2);
     fireEvent.click(screen.getByRole('button', { name: 'Preview duplicate' }));
     expect(preview.mock.lastCall?.[0].stimpieId).toBe(1);
-    expect(within(screen.getByRole('group', { name: 'Pack slots' })).getByRole('button', { name: /On your hoodie/ })).toHaveTextContent('Stimpie 1');
   });
 
   it('carousel: listbox of options, roving tabindex (one tab stop), selected state with aria-selected', () => {
@@ -108,22 +107,40 @@ describe('Builder (page, 2D)', () => {
     expect(screen.getByText('Most popular')).toBeInTheDocument();
   });
 
-  it('2-Stimpie pack: slots, "Pick 1 more Stimpie", duplicates disabled, running price from the pack', () => {
+  it('2-Stimpie pack: cards are checkboxes that tick, untick and stop at the limit', () => {
     render(<Builder data={data()} onAddToCart={vi.fn()} />);
-    const slots = screen.getByRole('group', { name: 'Pack slots' });
-    expect(within(slots).getAllByRole('button')).toHaveLength(2);
-    expect(within(slots).getByRole('button', { name: /On your hoodie/ })).toHaveAttribute('aria-pressed', 'false');
-    expect(within(slots).getByRole('button', { name: /In the box/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(carousel()).toHaveAttribute('aria-multiselectable', 'true');
+    expect(document.querySelectorAll('[data-builder-checkbox]')).toHaveLength(within(carousel()).getAllByRole('option').length);
+    fireEvent.click(option(/Stimpie 2/));
+    expect(option(/Stimpie 1/)).toHaveAttribute('aria-selected', 'true');
+    expect(option(/Stimpie 2/)).toHaveAttribute('aria-selected', 'true');
+    // full: another card changes nothing until one is unticked
+    fireEvent.click(option(/Stimpie 4/));
+    expect(option(/Stimpie 4/)).toHaveAttribute('aria-selected', 'false');
+    expect(document.querySelector('[data-builder-pick-hint]')).toHaveTextContent('Untick one');
+    fireEvent.click(option(/Stimpie 1/));
+    expect(option(/Stimpie 1/)).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('button', { name: /Add to cart/ })).toBeDisabled();
+    fireEvent.click(option(/Stimpie 4/));
+    expect(option(/Stimpie 4/)).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: /Add to cart/ })).toBeEnabled();
+  });
+
+  it('1-Stimpie pack keeps single-choice cards with no checkboxes', () => {
+    render(<Builder data={data()} initialShare={parseShareParams({ pack: 'hoodie-1' })} onAddToCart={vi.fn()} />);
+    expect(document.querySelector('[data-builder-checkbox]')).toBeNull();
+    fireEvent.click(option(/Stimpie 2/));
+    expect(option(/Stimpie 1/)).toHaveAttribute('aria-selected', 'false');
+    expect(option(/Stimpie 2/)).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('2-Stimpie pack: "Pick 1 more Stimpie", running price from the pack', () => {
+    render(<Builder data={data()} onAddToCart={vi.fn()} />);
     expect(screen.getByText('Pick 1 more Stimpie')).toBeInTheDocument();
     const add = screen.getByRole('button', { name: /Add to cart/ });
     expect(add).toBeDisabled();
     expect(add).toHaveTextContent('Add to cart - $45');
-    // Stimpie 1 already fills slot 1: the card is disabled for slot 2 and a click does nothing
-    expect(option(/Stimpie 1/)).toHaveAttribute('aria-disabled', 'true');
-    fireEvent.click(option(/Stimpie 1/));
-    expect(within(slots).getByRole('button', { name: /In the box/ })).toHaveTextContent('Choose');
     fireEvent.click(option(/Stimpie 2/));
-    expect(within(slots).getByRole('button', { name: /In the box/ })).toHaveTextContent('Stimpie 2');
     expect(screen.getByRole('button', { name: /Add to cart/ })).toBeEnabled();
     // changing pack updates the price immediately
     fireEvent.click(screen.getByRole('radio', { name: /Hoodie \+ 1 Stimpie/ }));

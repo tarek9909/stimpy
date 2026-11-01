@@ -17,6 +17,8 @@ export interface GalleryProps {
   /** Accessible name of the carousel, e.g. "Stimpy Hoodie photos". */
   label: string;
   ratio: number | string;
+  /** Passed to each image: no panel behind it. */
+  bare?: boolean;
   /** The first slide is the page's LCP image. */
   priority?: boolean;
   sizes?: string;
@@ -27,7 +29,7 @@ export interface GalleryProps {
  * Swipeable gallery: native scroll-snap (works with touch, trackpad and keyboard through the buttons), dots on
  * phones, thumbnails from `lg`. Each slide reserves its ratio, so nothing shifts while images load.
  */
-export function Gallery({ images, index, onIndexChange, label, ratio, priority, sizes, className }: GalleryProps) {
+export function Gallery({ images, index, onIndexChange, label, ratio, bare, priority, sizes, className }: GalleryProps) {
   const track = useRef<HTMLDivElement>(null);
   const programmatic = useRef(false);
   const count = images.length;
@@ -81,7 +83,7 @@ export function Gallery({ images, index, onIndexChange, label, ratio, priority, 
               aria-label={`${i + 1} of ${count}`}
               className="w-full shrink-0 snap-center"
             >
-              <Media src={img.src} alt={img.alt} ratio={ratio} priority={priority && i === 0} sizes={sizes} />
+              <Media bare={bare} src={img.src} alt={img.alt} ratio={ratio} priority={priority && i === 0} sizes={sizes} />
             </div>
           ))}
         </div>
@@ -134,7 +136,7 @@ export function Gallery({ images, index, onIndexChange, label, ratio, priority, 
                   onClick={() => onIndexChange(i)}
                   className={cn('block w-full overflow-hidden rounded-md border-2', i === current ? 'border-ink' : 'border-transparent')}
                 >
-                  <Media src={img.src} alt="" ratio={ratio} sizes="80px" />
+                  <Media bare={bare} src={img.src} alt="" ratio={ratio} sizes="80px" />
                 </button>
               </li>
             ))}

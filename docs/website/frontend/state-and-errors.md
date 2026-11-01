@@ -65,7 +65,7 @@ Constraints that shape everything: English only, USD, cash on delivery, mobile f
 |---|---|---|---|
 | `GET /content` | 60 | `content` | Text changes rarely. |
 | `GET /options` | 60 | `options` | Colours/sizes change rarely but must follow the dashboard. |
-| `GET /size-chart` | 300 | `size-chart` | Rarely changes. |
+| `GET /size-chart` | 30 | `size-chart` | Dashboard edits should show quickly. |
 | `GET /delivery/fees` | 300 | `delivery` | Rarely changes; re-fetched fresh (no-store) on `/checkout`. |
 | `GET /products/hoodies`, `/products/hoodies/:slug` | 60 | `catalog` | Per-variant stock (`inStock`) must not be stale for long; hoodie detail pages refetch on the client for stock (no-store) after hydration. |
 | `GET /products/stimpies`, `/products/stimpies/:slug` | 30 | `catalog` | Limited stock (`status`, `remaining`) is time-sensitive. |

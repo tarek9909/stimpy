@@ -15,6 +15,7 @@ export function StimpieGallery({ name, artworkUrl, images }: { name: string; art
       onIndexChange={setIndex}
       label={`${name} photos`}
       ratio={STIMPIE_RATIO}
+      bare
       priority
       sizes="(min-width: 1024px) 480px, 100vw"
       className="mx-auto w-full max-w-md"

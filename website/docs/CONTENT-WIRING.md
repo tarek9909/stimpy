@@ -34,4 +34,4 @@ Checked against the local dashboard, storefront and API on 2026-10-18.
 
 ## Refresh behaviour
 
-Public content, options and Builder data use the existing 60-second cache; promotions and the storefront catalog use a 5-second cache; the size chart uses 300 seconds. In local development, the existing `NEXT_PUBLIC_DEV_NO_CACHE=1` setting disables these caches. Reload the storefront after saving dashboard changes.
+Public content, options and Builder data use the existing 60-second cache; promotions and the storefront catalog use a 5-second cache; the size chart uses 30 seconds. In local development, the existing `NEXT_PUBLIC_DEV_NO_CACHE=1` setting disables these caches. Reload the storefront after saving dashboard changes.

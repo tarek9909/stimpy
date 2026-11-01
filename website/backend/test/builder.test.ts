@@ -94,7 +94,7 @@ describe('GET /builder/config: shape', () => {
       textures: [{ stimpieId: w.core[0]!.id, textureUrl: IMG(3) }],
     });
     const res = await t.client.get('/builder/config');
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=30, stale-while-revalidate=60');
     const b = res.json<Public>();
     expect(Object.keys(b).sort()).toEqual(['colors', 'defaultView', 'effectiveMode', 'hoodie', 'mode', 'model3d', 'stimpieTextures']);
     expect(b.hoodie).toEqual({ id: w.hoodie.id, slug: 'stimpy-hoodie', name: 'Stimpy Hoodie' });

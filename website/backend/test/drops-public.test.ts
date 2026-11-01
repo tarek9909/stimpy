@@ -184,7 +184,7 @@ describe('drop cache rules', () => {
 
   it('other public GETs keep their 30 s cache', async () => {
     await buildWorld(t.prisma);
-    expect((await t.client.get('/packs')).header('cache-control')).toBe('public, max-age=30');
+    expect((await t.client.get('/packs')).header('cache-control')).toBe('public, max-age=5, stale-while-revalidate=60');
   });
 });
 

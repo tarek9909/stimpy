@@ -23,7 +23,7 @@ describe('GET /content (public)', () => {
   it('has exactly the documented shape and a 30 s cache, with defaults on an empty database', async () => {
     const res = await t.client.get('/content');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=30, stale-while-revalidate=60');
     const c = res.json<Content>();
     expect(Object.keys(c).sort()).toEqual(['about', 'announcement', 'business', 'faqs', 'homepage', 'howItWorks', 'policies', 'reviews']);
     expect(Object.keys(c.business).sort()).toEqual(['instagramUrl', 'name', 'supportEmail', 'timezone', 'whatsappNumber']);

@@ -31,7 +31,7 @@ import type {
 } from './types';
 import { BuilderStage2D } from './BuilderStage2D';
 import { BuilderCanvas3D, Canvas3DBoundary, type Canvas3DHandle } from './BuilderCanvas3D';
-import { Controls3D, ColorSwatchRow, ModeToggle, PackSelector, SizeSheet, SlotChips, StimpieCarousel, BuilderStaticFallback } from './parts';
+import { Controls3D, ColorSwatchRow, ModeToggle, PackSelector, SizeSheet, StimpieCarousel, BuilderStaticFallback } from './parts';
 import { useInView, useReducedMotion } from './hooks';
 import { DecodedImageCache } from './lib/images';
 import {
@@ -434,6 +434,18 @@ export function Builder({
     const s = stimpieById(stimpies, id);
     if (s) emit('builder_stimpie_select', { stimpie_slug: s.slug, slot: (existingSlot >= 0 ? existingSlot : selection.focus) + 1, view: view === '3d' ? '3d' : '2d' });
   };
+  // Carousel cards are checkboxes in a multi-Stimpie pack; the host preview keeps onPick's slot behaviour.
+  const onCardPick = (id: number) => {
+    if (selection.slots.length < 2) {
+      onPick(id);
+      return;
+    }
+    dispatch({ type: 'toggle', stimpieId: id });
+    const empty = selection.slots.indexOf(null);
+    if (selection.slots.includes(id) || empty < 0) return;
+    const s = stimpieById(stimpies, id);
+    if (s) emit('builder_stimpie_select', { stimpie_slug: s.slug, slot: empty + 1, view: view === '3d' ? '3d' : '2d' });
+  };
   const onPack = (packId: number | null) => {
     dispatch({ type: 'pack', packId, packs });
     const p = packById(packs, packId);
@@ -509,13 +521,9 @@ export function Builder({
   };
 
   // ----- derived UI -----
-  const slotOf = (id: number) => {
-    if (stimpieOnly) return null;
-    const at = selection.slots.indexOf(id);
-    return at >= 0 && selection.slots.length > 1 ? at + 1 : null;
-  };
   const selectedIds = !compact && selection.purchaseMode === 'HOODIE_ONLY' ? [] : selection.slots.length > 0 ? selection.slots.filter((s): s is number => s !== null) : selection.previewId !== null ? [selection.previewId] : [];
-  // Other selected Stimpies stay focusable; clicking one focuses its numbered slot instead of duplicating it.
+  const ineligibleIds = useMemo(() => new Set(pack ? stimpies.filter((s) => !packAllowsStimpie(pack, s.id)).map((s) => s.id) : []), [pack, stimpies]);
+  // Host preview only: other selected Stimpies stay focusable; choosing one focuses its slot instead of duplicating it.
   const disabledIds = useMemo(() => {
     const out = new Set<number>();
     selection.slots.forEach((id, i) => {
@@ -692,17 +700,15 @@ export function Builder({
             stimpies={stimpies}
             selectedIds={selectedIds}
             previewId={selection.previewId}
-            focusedSlot={selection.focus + 1}
-            disabledIds={disabledIds}
-            slotOf={slotOf}
-            onPick={onPick}
+            disabledIds={ineligibleIds}
+            multiSelect={selection.slots.length > 1}
+            onPick={onCardPick}
             selectOnFocus={compact}
             reducedMotion={reduced}
             eagerCount={compact ? 0 : 4}
             imageUrl={imageUrl}
           />
-          {!compact ? <SlotChips slots={selection.slots} focus={selection.focus} stimpies={stimpies} onFocus={(slot) => dispatch({ type: 'focus', slot })} /> : null}
-          {!compact && pack && pack.stimpieCount > 1 ? <p className="text-caption text-fg-muted">Choose Stimpies in order. Tap a numbered card to replace it.</p> : null}
+          {!compact && selection.slots.length > 1 ? <p className="text-caption text-fg-muted" data-builder-pick-hint>{selection.slots.includes(null) ? `Tick ${selection.slots.length} Stimpies. Tap a ticked card to untick it.` : `${selection.slots.length} Stimpies ticked. Untick one to choose a different one.`}</p> : null}
           {!compact && stimpies.length > 4 ? <p className="text-caption text-fg-muted">Swipe or scroll sideways to browse all Stimpies.</p> : null}
 
           {/* Non-visual alternative to the carousel (website-pages 4.5 accessibility) */}
@@ -713,11 +719,11 @@ export function Builder({
               value={selection.previewId ?? ''}
               onChange={(e) => {
                 const id = Number(e.target.value);
-                if (id) onPick(id);
+                if (id) onCardPick(id);
               }}
             >
               {stimpies.map((s) => (
-                <option key={s.id} value={s.id} disabled={disabledIds.has(s.id) && !selectedIds.includes(s.id)}>
+                <option key={s.id} value={s.id} disabled={ineligibleIds.has(s.id) && !selectedIds.includes(s.id)}>
                   {s.name}
                   {stimpieBlockReason(s) ? ` (${stimpieBlockReason(s)})` : ''}
                 </option>

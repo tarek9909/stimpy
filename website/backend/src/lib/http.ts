@@ -92,7 +92,8 @@ export const errorResponses = { '4xx': errorBodySchema, '5xx': errorBodySchema }
 
 /** Public catalog GETs: `Cache-Control: public, max-age=30` (drops use 10, health uses no-store). */
 export function publicCache(reply: FastifyReply, seconds = 30): void {
-  reply.header('Cache-Control', `public, max-age=${seconds}`);
+  // A repeat visit shows the last response at once and refreshes behind it. Orders re-check stock on the server.
+  reply.header('Cache-Control', `public, max-age=${seconds}, stale-while-revalidate=60`);
 }
 export function noStore(reply: FastifyReply): void {
   reply.header('Cache-Control', 'no-store');

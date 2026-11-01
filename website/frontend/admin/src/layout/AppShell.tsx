@@ -44,6 +44,8 @@ function ShellEffects() {
  */
 export function AppShell() {
   const { pathname } = useLocation();
+  // A new boundary per area: the router navigates in a transition, which would otherwise keep the old page up, with no feedback, until the chunk arrives.
+  const area = pathname.split('/')[1] ?? '';
   return (
     <NotificationsProvider>
       <ShellEffects />
@@ -58,7 +60,7 @@ export function AppShell() {
           </div>
           <main id="main-content" tabIndex={-1} className="admin-page mx-auto w-full max-w-admin flex-1 px-4 pb-28 outline-none md:px-6 md:pb-10">
             <ErrorBoundary inline resetKey={pathname}>
-              <Suspense fallback={<PageFallback />}>
+              <Suspense key={area} fallback={<PageFallback />}>
                 <Outlet />
               </Suspense>
             </ErrorBoundary>

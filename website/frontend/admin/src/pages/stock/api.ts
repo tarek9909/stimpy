@@ -79,6 +79,16 @@ export function invalidateStockCaches(qc: QueryClient): void {
   }
 }
 
+/** Offers one more size on a hoodie: every colour gets a new cell at quantity 0, ready to adjust. */
+export function useAddHoodieSize() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ hoodieId, sizeIds }: { hoodieId: number; sizeIds: number[] }) =>
+      unwrap(api.PATCH('/api/v1/admin/hoodies/{id}', { params: { path: { id: hoodieId } }, body: { sizeIds } })),
+    onSuccess: () => invalidateStockCaches(qc),
+  });
+}
+
 export type AdjustInput =
   | { mode: 'adjust'; itemType: ItemType; itemId: number; delta: number; reason: 'RESTOCK' | 'CORRECTION' | 'DAMAGED'; note: string }
   | { mode: 'set'; itemType: ItemType; itemId: number; quantity: number; note: string };

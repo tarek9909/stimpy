@@ -150,7 +150,7 @@ export function PacksTab({ view, onViewChange }: { view: ActiveView; onViewChang
                   >
                     {/* Top: Pack Graphic & Badges */}
                     <div>
-                      <div className="relative aspect-[0.68] w-full overflow-hidden rounded-xl border border-line/60 bg-gradient-to-b from-surface via-surface-base to-cream/30 p-3 flex flex-col items-center justify-center">
+                      <div className="relative aspect-[0.68] w-full overflow-hidden rounded-xl border border-line/60 p-3 flex flex-col items-center justify-center">
                         {/* Always name the offer type; show the optional merchandising badge below it. */}
                         <div className="absolute left-2.5 top-2.5 flex flex-col items-start gap-1">
                           <Pill tone="cream" shape="pill" size="sm">{p.type === 'STIMPIE_ONLY' ? 'Stimpies only' : 'Hoodie set'}</Pill>

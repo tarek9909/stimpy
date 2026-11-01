@@ -18,7 +18,7 @@ export interface CacheOptions {
 export const REVALIDATE = {
   content: 60,
   options: 60,
-  sizeChart: 300,
+  sizeChart: 30,
   delivery: 300,
   hoodies: 5,
   stimpies: 5,

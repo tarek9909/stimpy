@@ -17,18 +17,20 @@ export interface MediaProps {
   className?: string;
   /** `object-fit`. Default `cover` (the box is already the right ratio). */
   fit?: 'cover' | 'contain';
+  /** No cream panel behind the image, for art with transparency (Stimpies). */
+  bare?: boolean;
   /** Overlay content (badges). Must carry its own solid background. */
   children?: ReactNode;
 }
 
 /** Ratio box with a solid cream placeholder (no shimmer, no blur-up) and an error tile. */
-export function Media({ src, alt, ratio, priority, sizes, className, fit = 'cover', children }: MediaProps) {
+export function Media({ src, alt, ratio, priority, sizes, className, fit = 'cover', bare, children }: MediaProps) {
   const { renderImage } = useUI();
   const [failed, setFailed] = useState(false);
   const showImage = !!src && !failed;
   return (
     <div
-      className={cn('relative w-full overflow-hidden bg-cream', className)}
+      className={cn('relative w-full overflow-hidden', !bare && 'bg-cream', className)}
       style={{ aspectRatio: String(ratio).replace('/', ' / ').replace(/\s+/g, ' ') }}
     >
       {showImage

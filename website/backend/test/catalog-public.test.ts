@@ -39,7 +39,7 @@ describe('GET /products/hoodies', () => {
     await createHoodie(t.prisma, { name: 'Hidden', slug: 'hidden', active: false, stock: 5 });
     const res = await t.client.get('/products/hoodies');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=5, stale-while-revalidate=60');
     const list = res.json<Page<HoodieSummary>>().items;
     expect(list.map((h) => h.slug)).toEqual([w.hoodie.slug, second.slug]);
     expect(Object.keys(list[0]!).sort()).toEqual(['colors', 'description', 'id', 'images', 'inStock', 'name', 'priceCents', 'slug']);
@@ -88,7 +88,7 @@ describe('GET /products/hoodies/:slug', () => {
     await t.prisma.color.update({ where: { id: w.colors.black.id }, data: { images: ['http://x/b.webp'] } });
     const res = await t.client.get(`/products/hoodies/${w.hoodie.slug}`);
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=5, stale-while-revalidate=60');
     const h = res.json<HoodieDetail>();
     expect(Object.keys(h).sort()).toEqual(['colors', 'description', 'details', 'id', 'images', 'inStock', 'name', 'priceCents', 'sizes', 'slug', 'variants']);
     expect(h.details).toEqual(['Heavy fleece', 'Zip back']);
@@ -172,7 +172,7 @@ describe('GET /products/stimpies', () => {
     await shop();
     const res = await t.client.get('/products/stimpies');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=5, stale-while-revalidate=60');
     const list = res.json<Page<Stimpie>>().items;
     expect(list.map((s) => s.slug)).toEqual(['the-void', 'after-dark', 'the-cedar', 'the-signal', 'the-static', 'the-dreamer', 'the-eye']);
     for (const s of list) expect(Object.keys(s).sort()).toEqual(STIMPIE_KEYS);
@@ -262,7 +262,7 @@ describe('GET /products/stimpies/:slug', () => {
     await createStimpie(t.prisma, { slug: 'later-1', dropId: d.id });
     const res = await t.client.get('/products/stimpies/later-1');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=5, stale-while-revalidate=60');
     const s = res.json<Stimpie>();
     expect(Object.keys(s).sort()).toEqual(STIMPIE_KEYS);
     expect(s.status).toBe('UPCOMING');
@@ -292,7 +292,7 @@ describe('GET /packs', () => {
     await createPack(t.prisma, { name: 'Hidden', slug: 'hid', active: false });
     const res = await t.client.get('/packs');
     expect(res.status).toBe(200);
-    expect(res.header('cache-control')).toBe('public, max-age=30');
+    expect(res.header('cache-control')).toBe('public, max-age=5, stale-while-revalidate=60');
     const list = res.json<Page<{ id: number; type: string; eligibleStimpieIds: number[] | null; slug: string; name: string; description: string; stimpieCount: number; priceCents: number; badge: string | null }>>().items;
     expect(list.map((p) => p.id)).toEqual([w.packs.one.id, w.packs.two.id]);
     expect(Object.keys(list[0]!).sort()).toEqual(['badge', 'description', 'eligibleStimpieIds', 'id', 'name', 'priceCents', 'slug', 'stimpieCount', 'type']);

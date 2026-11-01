@@ -15,19 +15,34 @@ import { RootLayout } from './RootLayout';
  * every sub-path (`orders/*`), so an area owner declares nested routes inside it
  * (`/orders/new`, `/orders/:id`) without touching this file.
  */
-const pages: Record<Area, React.LazyExoticComponent<ComponentType>> = {
-  overview: lazy(() => import('../pages/overview')),
-  orders: lazy(() => import('../pages/orders')),
-  products: lazy(() => import('../pages/products')),
-  stock: lazy(() => import('../pages/stock')),
-  drops: lazy(() => import('../pages/drops')),
-  promotions: lazy(() => import('../pages/promotions')),
-  customers: lazy(() => import('../pages/customers')),
-  finance: lazy(() => import('../pages/finance')),
-  insights: lazy(() => import('../pages/insights')),
-  content: lazy(() => import('../pages/content')),
-  settings: lazy(() => import('../pages/settings')),
+const pageLoaders: Record<Area, () => Promise<{ default: ComponentType }>> = {
+  overview: () => import('../pages/overview'),
+  orders: () => import('../pages/orders'),
+  products: () => import('../pages/products'),
+  stock: () => import('../pages/stock'),
+  drops: () => import('../pages/drops'),
+  promotions: () => import('../pages/promotions'),
+  customers: () => import('../pages/customers'),
+  finance: () => import('../pages/finance'),
+  insights: () => import('../pages/insights'),
+  content: () => import('../pages/content'),
+  settings: () => import('../pages/settings'),
 };
+
+const pages = Object.fromEntries(Object.entries(pageLoaders).map(([area, load]) => [area, lazy(load)])) as Record<Area, React.LazyExoticComponent<ComponentType>>;
+
+/** Fetches the page chunks one at a time when the browser is idle, so later clicks don't wait on the network. Skipped on data-saver and 2G. */
+export function preloadPages(): void {
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  if (connection?.saveData || connection?.effectiveType?.endsWith('2g')) return;
+  const queue = Object.values(pageLoaders);
+  const whenIdle = (fn: () => void) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn) : setTimeout(fn, 500));
+  const next = () => {
+    const load = queue.shift();
+    if (load) void load().catch(() => undefined).finally(() => whenIdle(next));
+  };
+  whenIdle(next);
+}
 
 function areaRoute(area: Area, path: string): RouteObject {
   const Page = pages[area];

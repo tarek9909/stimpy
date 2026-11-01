@@ -424,7 +424,7 @@ import { Builder, type BuilderData, type BuilderHandle, type ThrottleSimulator }
 />
 ```
 
-Without `onAddToCart` the whole purchase UI (price, size sheet, Add to cart) is not rendered: that is the dashboard preview. Props of the website island: `initialShare` (parsed share link), `syncUrl`, `shareBaseUrl`, `onAddToCart(item, summary)`, `source`, `hrefs` (override "See real photos"/size guide/shop/full-builder links), `stickyBar`, `debug3d`, `breakShader` (test hooks). Also exported separately: `<BuilderStage2D />`, `<BuilderCanvas3D />` (client-only, lazily imports `three/engine`), `Canvas3DBoundary`, the parts (`ColorSwatchRow`, `StimpieCarousel`, `PackSelector`, `SlotChips`, `SizeSheet`, `ModeToggle`, `Controls3D`, `BuilderStaticFallback`) and every pure function (see `src/index.ts`).
+Without `onAddToCart` the whole purchase UI (price, size sheet, Add to cart) is not rendered: that is the dashboard preview. Props of the website island: `initialShare` (parsed share link), `syncUrl`, `shareBaseUrl`, `onAddToCart(item, summary)`, `source`, `hrefs` (override "See real photos"/size guide/shop/full-builder links), `stickyBar`, `debug3d`, `breakShader` (test hooks). Also exported separately: `<BuilderStage2D />`, `<BuilderCanvas3D />` (client-only, lazily imports `three/engine`), `Canvas3DBoundary`, the parts (`ColorSwatchRow`, `StimpieCarousel`, `PackSelector`, `SizeSheet`, `ModeToggle`, `Controls3D`, `BuilderStaticFallback`) and every pure function (see `src/index.ts`).
 
 ### Feeding unsaved form state
 

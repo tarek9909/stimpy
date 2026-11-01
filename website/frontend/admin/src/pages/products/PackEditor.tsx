@@ -10,12 +10,11 @@ import { AdminForm } from '../../components/form/AdminForm';
 import { MoneyField, SwitchField, TextAreaField, TextField } from '../../components/form/Field';
 import { FormSection } from '../../components/form/FormSection';
 import { useFormDraft } from '../../components/form/useFormDraft';
-import { QueryBoundary } from '../../components/QueryBoundary';
 import { centsToDollarString, formatMoney } from '../../lib/format';
 import { dollarsToCents, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { invalidateFor, useAllStimpies, usePack, usePacks, type AdminPack } from './api';
-import { DeleteOrHide, EditorFrame } from './shared';
+import { DeleteOrHide, EditorFrame, EditorQuery } from './shared';
 import type { EditorProps } from './HoodieEditor';
 
 const MAX_OFFER_COUNT = 1_000_000;
@@ -65,9 +64,9 @@ export function PackEditor({ id, onClose }: EditorProps) {
   const crumbs = [{ label: 'Products', to: '/products' }, { label: 'Packs', to: '/products?tab=packs' }, { label: id === null ? requestedType === 'STIMPIE_ONLY' ? 'New Stimpie-only offer' : 'New pack' : 'Edit pack' }];
   if (id === null) return <PackForm key={requestedType} initial={null} requestedType={requestedType} onClose={onClose} crumbs={crumbs} />;
   return (
-    <QueryBoundary query={q} skeleton={<Skeleton variant="rect" className="h-80" />} notFoundWhat="pack" notFoundBackTo="/products?tab=packs" notFoundBackLabel="Back to packs">
+    <EditorQuery query={q} title="Edit pack" crumbs={crumbs} onClose={onClose} skeleton={<Skeleton variant="rect" className="h-80" />} notFoundWhat="pack" notFoundBackTo="/products?tab=packs" notFoundBackLabel="Back to packs">
       {(p) => <PackForm initial={p} requestedType={p.type} onClose={onClose} crumbs={crumbs} />}
-    </QueryBoundary>
+    </EditorQuery>
   );
 }
 

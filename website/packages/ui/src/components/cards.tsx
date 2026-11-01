@@ -201,6 +201,7 @@ export function StimpieCard({
           src={stimpie.images[0] ?? stimpie.artworkUrl}
           alt={`${stimpie.name} Stimpie`}
           ratio={STIMPIE_RATIO}
+          bare
           priority={priority}
           sizes={sizes}
         />

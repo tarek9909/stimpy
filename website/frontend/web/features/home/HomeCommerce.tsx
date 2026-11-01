@@ -46,7 +46,7 @@ export function HomeCommerce(props: HomeCommerceProps) {
       <ul className="store-collection-grid" aria-label="Core Stimpies">
         {props.stimpieCards ?? props.coreStimpies.slice(0, 4).map((stimpie) => <li key={stimpie.id}>
           <article className="store-product-card store-static-product relative flex flex-col">
-            <div><Media src={stimpie.images[0] ?? stimpie.artworkUrl} alt={`${stimpie.name} Stimpie`} ratio={STIMPIE_RATIO} sizes="(min-width: 768px) 25vw, 50vw" /></div>
+            <div><Media src={stimpie.images[0] ?? stimpie.artworkUrl} alt={`${stimpie.name} Stimpie`} ratio={STIMPIE_RATIO} bare sizes="(min-width: 768px) 25vw, 50vw" /></div>
             <div className="flex flex-1 flex-col"><h3 className="text-h4"><Link href={`/shop/stimpie/${stimpie.slug}`} className="after:absolute after:inset-0">{stimpie.name}</Link></h3><PriceTag cents={stimpie.priceCents} compareAtCents={stimpie.compareAtPriceCents ?? undefined} size="sm" /></div>
           </article>
         </li>)}
@@ -157,7 +157,7 @@ export function HomeCommerce(props: HomeCommerceProps) {
               <div className="store-pack-top"><Layers size={24} strokeWidth={1.5} aria-hidden="true" />
                 {offer.badge ? <span className="store-pack-badge">{offer.badge}</span> : null}
               </div>
-              {firstEligible ? <Media src={firstEligible.artworkUrl} alt={`${firstEligible.name} Stimpie`} ratio={STIMPIE_RATIO} sizes="(min-width: 768px) 25vw, 50vw" className="mb-3 rounded-md" /> : null}
+              {firstEligible ? <Media src={firstEligible.artworkUrl} alt={`${firstEligible.name} Stimpie`} ratio={STIMPIE_RATIO} bare sizes="(min-width: 768px) 25vw, 50vw" className="mb-3 rounded-md" /> : null}
               <h3>{offer.name}</h3>
               <p className="store-pack-description">Choose {offer.stimpieCount} Stimpies. No hoodie included.</p>
               <PriceTag cents={offer.priceCents} compareAtCents={offer.compareAtPriceCents ?? undefined} size="sm" className="store-pack-price" />

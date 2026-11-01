@@ -1,3 +1,5 @@
+import type { UseQueryResult } from '@tanstack/react-query';
+import { QueryBoundary } from '../../components/QueryBoundary';
 import { useState, type ReactNode } from 'react';
 import { Button, Modal, SegmentedControl, Switch } from '@stimpy/ui';
 import { asApiError, useNotifyError } from '../../api/errors';
@@ -41,6 +43,28 @@ export function EditorFrame({ title, crumbs, onClose, actions, children }: { tit
     <Modal open onClose={onClose} title={title} size="lg" className="!max-w-2xl" closeOnBackdrop footer={actions}>
       {children}
     </Modal>
+  );
+}
+
+/** Opens the editor pop-up straight away; the loading state and any error show inside it, not below the list. */
+export function EditorQuery<T>({ query, title, crumbs, onClose, skeleton, notFoundWhat, notFoundBackTo, notFoundBackLabel, children }: {
+  query: UseQueryResult<T>;
+  title: string;
+  crumbs: Crumb[];
+  onClose: () => void;
+  skeleton: ReactNode;
+  notFoundWhat: string;
+  notFoundBackTo: string;
+  notFoundBackLabel: string;
+  children: (data: T) => ReactNode;
+}) {
+  if (query.data !== undefined) return <>{children(query.data)}</>;
+  return (
+    <EditorFrame title={title} crumbs={crumbs} onClose={onClose} actions={null}>
+      <QueryBoundary query={query} skeleton={skeleton} notFoundWhat={notFoundWhat} notFoundBackTo={notFoundBackTo} notFoundBackLabel={notFoundBackLabel}>
+        {() => null}
+      </QueryBoundary>
+    </EditorFrame>
   );
 }
 

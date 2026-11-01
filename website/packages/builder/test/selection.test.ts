@@ -80,6 +80,17 @@ describe('slot flow (builder.md 10.2)', () => {
     expect(focused1.previewId).toBe(1);
     expect(selectionReducer(focused1, { type: 'pick', stimpieId: 3 }).slots).toEqual([3, 4]);
   });
+  it('toggle ticks into the first empty slot, unticks and closes the gap, and ignores new cards when full', () => {
+    const full = selectionReducer(start, { type: 'toggle', stimpieId: 2 });
+    expect(full).toMatchObject({ slots: [1, 2], previewId: 2 });
+    expect(selectionReducer(full, { type: 'toggle', stimpieId: 4 })).toBe(full);
+    const untickedPreview = selectionReducer(full, { type: 'toggle', stimpieId: 2 });
+    expect(untickedPreview).toMatchObject({ slots: [1, null], focus: 1, previewId: 1 });
+    const untickedFirst = selectionReducer(full, { type: 'toggle', stimpieId: 1 });
+    expect(untickedFirst).toMatchObject({ slots: [2, null], focus: 1, previewId: 2 });
+    const none = selectionReducer(untickedFirst, { type: 'toggle', stimpieId: 2 });
+    expect(none).toMatchObject({ slots: [null, null], focus: 0, previewId: 2 });
+  });
   it('the same Stimpie can never sit in both slots (the card is disabled for the other slot)', () => {
     expect(canPick(start, 1)).toBe(false); // slot 1 holds it, focus is slot 2
     expect(selectionReducer(start, { type: 'pick', stimpieId: 1 })).toBe(start);

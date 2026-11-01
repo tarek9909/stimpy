@@ -118,6 +118,7 @@ export type SelectionAction =
   | { type: 'pack'; packId: number | null; packs: readonly BuilderPack[] }
   | { type: 'mode'; mode: PurchaseMode; packs: readonly BuilderPack[] }
   | { type: 'pick'; stimpieId: number; allowDuplicates?: boolean }
+  | { type: 'toggle'; stimpieId: number }
   | { type: 'focus'; slot: number };
 
 /** A card is disabled for the focused slot when another slot already holds it (no duplicates in a pack). */
@@ -165,6 +166,21 @@ export function selectionReducer(state: Selection, action: SelectionAction): Sel
         if (next >= 0) focus = next;
       }
       return { ...state, slots, focus, previewId: action.stimpieId };
+    }
+    case 'toggle': {
+      // Checkbox behaviour for multi-Stimpie packs: a tap ticks or unticks; a full pack ignores new cards until one is unticked.
+      if (state.slots.includes(action.stimpieId)) {
+        const kept = state.slots.filter((id): id is number => id !== null && id !== action.stimpieId);
+        const slots: (number | null)[] = state.slots.map((_, i) => kept[i] ?? null);
+        const previewId = state.previewId === action.stimpieId ? (kept[kept.length - 1] ?? action.stimpieId) : state.previewId;
+        return { ...state, slots, focus: kept.length, previewId };
+      }
+      const empty = firstEmpty(state.slots);
+      if (empty < 0) return state;
+      const slots = [...state.slots];
+      slots[empty] = action.stimpieId;
+      const next = firstEmpty(slots);
+      return { ...state, slots, focus: next >= 0 ? next : empty, previewId: action.stimpieId };
     }
   }
 }

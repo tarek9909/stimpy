@@ -157,7 +157,7 @@ describe('security headers', () => {
   it('admin and auth responses are never cached; POSTs are never cached; public GETs opt in', async () => {
     expect((await t.client.get('/admin/colors')).header('cache-control')).toBe('no-store');
     expect((await t.client.post('/auth/login', { email: 'a@b.co', password: 'x' })).header('cache-control')).toBe('no-store');
-    expect((await t.client.get('/options')).header('cache-control')).toBe('public, max-age=30');
+    expect((await t.client.get('/options')).header('cache-control')).toBe('public, max-age=30, stale-while-revalidate=60');
   });
 
   it('adds HSTS only when cookies are Secure (HTTPS deployment)', async () => {

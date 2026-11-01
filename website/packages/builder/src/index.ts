@@ -11,7 +11,7 @@ export { BuilderStage2D } from './BuilderStage2D';
 export type { BuilderStage2DProps, Stage2DArt, Stage2DColor } from './BuilderStage2D';
 export { BuilderCanvas3D, Canvas3DBoundary } from './BuilderCanvas3D';
 export type { BuilderCanvas3DProps, Canvas3DHandle, EngineArt } from './BuilderCanvas3D';
-export { BuilderStaticFallback, ColorSwatchRow, Controls3D, ModeToggle, PackSelector, SizeSheet, SlotChips, StimpieCarousel } from './parts';
+export { BuilderStaticFallback, ColorSwatchRow, Controls3D, ModeToggle, PackSelector, SizeSheet, StimpieCarousel } from './parts';
 export { useInView, useReducedMotion } from './hooks';
 
 // Types

@@ -60,7 +60,7 @@ function StaticTeaser({ hoodieImage, stimpies }: { hoodieImage: string | null; s
           <div><p className="text-body-sm font-medium text-fg">Choose a Stimpie</p>
             <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-3 pt-1" aria-label="Stimpies you can try" style={{ scrollbarWidth: 'none' }}>
               {stimpies.map((s) => <li key={s.id} className="w-[88px] shrink-0 snap-start overflow-hidden rounded-md bg-white">
-                <Media src={s.artworkUrl} alt={`${s.name} Stimpie`} ratio={STIMPIE_RATIO} sizes="88px" />
+                <Media src={s.artworkUrl} alt={`${s.name} Stimpie`} ratio={STIMPIE_RATIO} bare sizes="88px" />
                 <span className="block truncate px-1 pb-1 pt-1 text-caption font-medium text-ink">{s.name}</span>
               </li>)}
             </ul>

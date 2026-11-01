@@ -109,10 +109,8 @@ export interface CarouselProps {
   previewId: number | null;
   /** Cards that cannot be picked for the focused slot (already in another slot). */
   disabledIds: ReadonlySet<number>;
-  /** Slot number (1-based) of cards held by a slot, for the caption. */
-  slotOf: (id: number) => number | null;
-  /** Slot number (1-based) that the next pick will replace. */
-  focusedSlot?: number;
+  /** Several cards can be ticked (multi-Stimpie pack): every card shows a checkbox. */
+  multiSelect?: boolean;
   onPick: (id: number) => void;
   /** Arrow keys also select (teaser). In the page the arrows move focus and Enter/Space select. */
   selectOnFocus?: boolean;
@@ -133,8 +131,7 @@ export function StimpieCarousel({
   selectedIds,
   previewId,
   disabledIds,
-  slotOf,
-  focusedSlot,
+  multiSelect = false,
   onPick,
   selectOnFocus = false,
   reducedMotion,
@@ -203,7 +200,7 @@ export function StimpieCarousel({
     <div
       role="listbox"
       aria-label={label}
-      aria-multiselectable={selectedIds.length > 1 ? true : undefined}
+      aria-multiselectable={multiSelect ? true : undefined}
       data-builder-carousel
       onKeyDown={onKey}
       className="flex w-full min-w-0 max-w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-1 pb-3 pt-1"
@@ -216,8 +213,6 @@ export function StimpieCarousel({
         const selected = selectedIds.includes(s.id);
         const disabled = isBlocked(s.id);
         const reason = stimpieBlockReason(s);
-        const slot = slotOf(s.id);
-        const focused = slot !== null && slot === focusedSlot;
         const accent = s.type === 'LIMITED' ? (s.drop?.accentHex ?? null) : null;
         const outline = selected ? `3px solid ${accent ?? '#111111'}` : '3px solid transparent';
         return (
@@ -231,7 +226,7 @@ export function StimpieCarousel({
             id={`builder-stimpie-${s.id}`}
             aria-selected={selected}
             aria-disabled={disabled ? true : undefined}
-            aria-label={[s.name, formatCents(s.priceCents), reason ?? '', slot !== null ? `pack slot ${slot}${focused ? ', selected to replace' : ''}` : '', disabled ? 'already chosen' : ''].filter(Boolean).join(', ')}
+            aria-label={[s.name, formatCents(s.priceCents), reason ?? '', disabled ? 'not included in this offer' : ''].filter(Boolean).join(', ')}
             tabIndex={s.id === focusId ? 0 : -1}
             data-stimpie-slug={s.slug}
             data-selected={selected ? 'true' : 'false'}
@@ -243,7 +238,7 @@ export function StimpieCarousel({
             className={cn('relative shrink-0 snap-start cursor-pointer rounded-md bg-white text-left', disabled && 'opacity-50')}
             style={{ width: 112, outline, outlineOffset: -1 }}
           >
-            <div className="relative overflow-hidden rounded-md bg-cream" style={{ aspectRatio: String(STIMPIE_RATIO) }}>
+            <div className="relative overflow-hidden rounded-md" style={{ aspectRatio: String(STIMPIE_RATIO) }}>
               <img
                 src={imageUrl ? imageUrl(s.artworkUrl, CARD_IMAGE_WIDTH) : s.artworkUrl}
                 alt=""
@@ -254,14 +249,13 @@ export function StimpieCarousel({
                 draggable={false}
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              {selected ? (
+              {multiSelect ? (
+                <span data-builder-checkbox className={cn('absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-sm border-2 border-ink', selected ? 'bg-ink text-white' : 'bg-white')} aria-hidden="true">
+                  {selected ? <icons.Check size={12} /> : null}
+                </span>
+              ) : selected ? (
                 <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-white" aria-hidden="true">
                   <icons.Check size={12} />
-                </span>
-              ) : null}
-              {slot !== null ? (
-                <span className={cn('absolute bottom-1 left-1 rounded-full px-2 text-caption', focused ? 'bg-ink text-white' : 'bg-white/90 text-ink')} aria-hidden="true">
-                  {slot}
                 </span>
               ) : null}
             </div>
@@ -391,44 +385,6 @@ export function PackSelector({ packs, selectedPackId, selectedMode, hoodiePriceC
           })}
         </div>
       ) : <p className="text-body-sm text-fg-muted">No offers are available in this category.</p>}
-    </div>
-  );
-}
-
-const SLOT_LABELS = ['On your hoodie', 'In the box', 'Slot 3', 'Slot 4', 'Slot 5'];
-
-export interface SlotChipsProps {
-  slots: readonly (number | null)[];
-  focus: number;
-  stimpies: readonly BuilderStimpie[];
-  onFocus: (slot: number) => void;
-}
-
-/** N "slots" chips above the carousel (builder.md 10.2); only for packs of two or more. */
-export function SlotChips({ slots, focus, stimpies, onFocus }: SlotChipsProps) {
-  if (slots.length < 2) return null;
-  return (
-    <div role="group" aria-label="Pack slots" className="flex flex-wrap gap-2" data-builder-slots>
-      {slots.map((id, i) => {
-        const s = id === null ? null : stimpies.find((x) => x.id === id);
-        const active = i === focus;
-        return (
-          <button
-            key={i}
-            type="button"
-            aria-pressed={active}
-            data-slot={i + 1}
-            onClick={() => onFocus(i)}
-            className={cn(
-              'flex min-h-tap items-center gap-2 rounded-full border px-3 text-body-sm',
-              active ? 'border-ink bg-ink text-white' : 'border-control bg-white text-ink',
-            )}
-          >
-            <span className="font-medium">{SLOT_LABELS[i] ?? `Slot ${i + 1}`}</span>
-            <span className={active ? 'text-white' : 'text-ink-70'}>{s ? s.name : 'Choose'}</span>
-          </button>
-        );
-      })}
     </div>
   );
 }

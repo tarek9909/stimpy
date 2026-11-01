@@ -97,7 +97,7 @@ export function BuilderTeaserView({ colors, stimpies, color, stimpie, stage, col
                 className="w-28 shrink-0 snap-start overflow-hidden rounded-md bg-white text-left outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ink"
                 style={{ outline: item.id === stimpie.id ? '3px solid #111111' : '3px solid transparent' }}
               >
-                <span className="relative block overflow-hidden bg-cream" style={{ aspectRatio: '0.64' }}>
+                <span className="relative block overflow-hidden" style={{ aspectRatio: '0.64' }}>
                   <img src={item.artworkUrl} alt="" width={160} height={250} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-cover" />
                 </span>
                 <span className="block truncate px-1 pb-1 pt-1 text-caption font-medium text-ink">{item.name}</span>

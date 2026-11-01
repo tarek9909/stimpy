@@ -8,10 +8,23 @@ import { RouterProvider } from 'react-router-dom';
 import { getEnv } from './env';
 import { Providers } from './app/providers';
 import { createQueryClient } from './app/queryClient';
-import { createAppRouter } from './app/router';
+import { createAppRouter, preloadPages } from './app/router';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing #root element');
+
+// After a deploy the old chunk names are gone: reload once to pick up the new build instead of leaving dead links.
+window.addEventListener('vite:preloadError', () => {
+  try {
+    const key = 'stimpy-chunk-reload';
+    const last = Number(sessionStorage.getItem(key) ?? 0);
+    if (Date.now() - last < 60_000) return;
+    sessionStorage.setItem(key, String(Date.now()));
+  } catch {
+    return;
+  }
+  window.location.reload();
+});
 
 function showPlainMessage(text: string): void {
   const p = document.createElement('p');
@@ -36,6 +49,7 @@ if (window.top !== window.self) {
         </Providers>
       </StrictMode>,
     );
+    preloadPages();
   } catch (e) {
     showPlainMessage(e instanceof Error ? e.message : 'The dashboard could not start.');
   }

@@ -43,6 +43,8 @@ export interface PackComposerProps {
   source?: AddSource;
   /** The chosen colour changed (the gallery shows its photo). */
   onColorChange?: (colorId: number) => void;
+  /** The chosen Stimpies, in the order they were picked (3D preview). */
+  onStimpiesChange?: (stimpieIds: readonly number[]) => void;
   /** Called after the line was added to the cart. */
   onAdded?: () => void;
   /** Mobile sticky bottom bar with total and Add to cart. Default true. */
@@ -70,6 +72,7 @@ export function PackComposer({
   estimateText,
   source = 'product',
   onColorChange,
+  onStimpiesChange,
   onAdded,
   stickyBar = true,
   replaceLine,
@@ -104,6 +107,11 @@ export function PackComposer({
     if (state.colorId !== null) onColorChange?.(state.colorId);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- notify on colour change only
   }, [state.colorId]);
+
+  useEffect(() => {
+    onStimpiesChange?.(state.stimpieIds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- notify on selection change only
+  }, [state.stimpieIds]);
 
   // A chosen Stimpie that is no longer purchasable (refetch on focus): clear it with a notice.
   useEffect(() => {

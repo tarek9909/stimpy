@@ -61,7 +61,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns,
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 3600,
+    // Uploads have random, never-reused names, so optimized copies can stay cached for a long time.
+    minimumCacheTTL: 2592000,
   },
   experimental: {
     optimizePackageImports: ['@stimpy/ui', 'lucide-react'],

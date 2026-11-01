@@ -36,13 +36,14 @@
     ".next-e2efull-clean-20261004/types/**/*.ts",
     ".next-e2efull-corrected-20261004/types/**/*.ts",
     ".next-e2efull-impacted-20261004/types/**/*.ts",
+    ".next-e2efull-impacted2-20261004/types/**/*.ts",
     ".next-e2efull-snapshot-20261004/types/**/*.ts",
     ".next-e2efull-snapshot2-20261004/types/**/*.ts",
     ".next-fw2/types/**/*.ts",
     ".next-fw2dev/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-e2efull-impacted2-20261004/types/**/*.ts"
+    ".next-preview-live/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

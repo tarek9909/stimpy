@@ -11,6 +11,9 @@ import { useActiveToggle, useHoodies, useReorder, type AdminHoodie } from './api
 
 type ViewMode = 'grid' | 'table';
 
+/** Still render of the website's hoodie.glb. A picture because the dashboard does not bundle the Three engine. */
+const HOODIE_MODEL_IMAGE = '/images/hoodie-3d.webp';
+
 /** Products -> Hoodies: visual card grid and reorderable table with picture previews and active switches. */
 export function HoodiesTab({ view, onViewChange }: { view: ActiveView; onViewChange: (v: ActiveView) => void }) {
   const q = useHoodies();
@@ -38,11 +41,7 @@ export function HoodiesTab({ view, onViewChange }: { view: ActiveView; onViewCha
           title={`Inspect ${h.name}`}
           className="group/art relative block h-14 w-11 overflow-hidden rounded-md border border-base bg-cream/40 transition hover:ring-2 hover:ring-coral"
         >
-          {h.images[0] ? (
-            <img src={h.images[0]} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <span className="block h-full w-full bg-cream" aria-hidden="true" />
-          )}
+          <img src={HOODIE_MODEL_IMAGE} alt="" className="h-full w-full object-contain" />
           <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition group-hover/art:opacity-100">
             <Eye size={14} className="text-white" />
           </span>
@@ -158,7 +157,6 @@ export function HoodiesTab({ view, onViewChange }: { view: ActiveView; onViewCha
                 aria-label="Products Hoodies grid"
               >
                 {rows.map((h) => {
-                  const imageSrc = h.images[0];
                   return (
                     <article
                       key={h.id}
@@ -170,21 +168,12 @@ export function HoodiesTab({ view, onViewChange }: { view: ActiveView; onViewCha
                       {/* Top: Picture & Badges */}
                       <div>
                         <div className="relative aspect-[0.72] w-full overflow-hidden rounded-xl border border-line/60 bg-gradient-to-b from-surface to-cream/20 p-2">
-                          {imageSrc ? (
-                            <img
-                              src={imageSrc}
-                              alt={h.name}
-                              className="h-full w-full object-cover rounded-lg drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-fg-muted">
-                              <span className="text-h3 font-black tracking-widest text-fg-muted/40">
-                                {h.name.slice(0, 2).toUpperCase()}
-                              </span>
-                              <span className="text-caption">No photo</span>
-                            </div>
-                          )}
+                          <img
+                            src={HOODIE_MODEL_IMAGE}
+                            alt={h.name}
+                            className="h-full w-full object-contain rounded-lg drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
 
                           {/* Top-Left: Product Type */}
                           <div className="absolute left-2.5 top-2.5">
@@ -201,17 +190,15 @@ export function HoodiesTab({ view, onViewChange }: { view: ActiveView; onViewCha
                           </div>
 
                           {/* Quick Inspect Button */}
-                          {imageSrc ? (
-                            <button
-                              type="button"
-                              onClick={() => setPreviewItem(h)}
-                              className="absolute bottom-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur-sm transition hover:bg-black group-hover:opacity-100"
-                              title="Inspect picture"
-                              aria-label={`Inspect ${h.name} photo`}
-                            >
-                              <Eye size={14} />
-                            </button>
-                          ) : null}
+                          <button
+                            type="button"
+                            onClick={() => setPreviewItem(h)}
+                            className="absolute bottom-2.5 right-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur-sm transition hover:bg-black group-hover:opacity-100"
+                            title="Inspect picture"
+                            aria-label={`Inspect ${h.name} photo`}
+                          >
+                            <Eye size={14} />
+                          </button>
                         </div>
 
                         {/* Title */}
@@ -337,15 +324,11 @@ export function HoodiesTab({ view, onViewChange }: { view: ActiveView; onViewCha
         >
           <div className="flex flex-col items-center gap-4">
             <div className="relative aspect-[0.72] max-h-[460px] w-full max-w-[320px] overflow-hidden rounded-xl border border-line bg-gradient-to-b from-surface to-cream/30 p-2 shadow-inner">
-              {previewItem.images[0] ? (
-                <img
-                  src={previewItem.images[0]}
-                  alt={previewItem.name}
-                  className="h-full w-full object-cover rounded-lg drop-shadow"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-fg-muted">No photo available</div>
-              )}
+              <img
+                src={HOODIE_MODEL_IMAGE}
+                alt={previewItem.name}
+                className="h-full w-full object-contain rounded-lg drop-shadow"
+              />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2">
               {previewItem.active ? (

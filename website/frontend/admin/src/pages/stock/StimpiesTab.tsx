@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, LayoutGrid, List, Search, TriangleAlert, X } from 'lucide-react';
 import { Badge, Button, EmptyState, Modal, Pill, Skeleton, cn } from '@stimpy/ui';
+import { ArtImage } from '../../components/ArtImage';
 import { DataTable, type Column } from '../../components/DataTable';
 import { QueryBoundary } from '../../components/QueryBoundary';
 import { AdjustDialog, type AdjustTarget } from './AdjustDialog';
@@ -79,10 +80,10 @@ export function StimpiesTab({ highlight }: { highlight: number | null }) {
             type="button"
             onClick={() => setPreviewItem(s)}
             title={`Inspect ${s.name}`}
-            className="group/art relative block h-14 w-10 overflow-hidden rounded-md border border-base bg-cream/40 transition hover:ring-2 hover:ring-coral"
+            className="group/art relative block h-14 w-10 overflow-hidden rounded-md border border-base transition hover:ring-2 hover:ring-coral"
           >
             {imgSrc ? (
-              <img src={imgSrc} alt="" className="h-full w-full object-contain" />
+              <ArtImage src={imgSrc} width={128} className="h-full w-full object-contain" />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-surface text-caption font-bold text-fg-muted">
                 {s.name.slice(0, 2).toUpperCase()}
@@ -331,13 +332,13 @@ export function StimpiesTab({ highlight }: { highlight: number | null }) {
                     >
                       {/* Top: Picture & Badges */}
                       <div>
-                        <div className="relative aspect-[0.68] w-full overflow-hidden rounded-xl border border-line/60 bg-gradient-to-b from-surface to-cream/20 p-2">
+                        <div className="relative aspect-[0.68] w-full overflow-hidden rounded-xl border border-line/60 p-2">
                           {imgSrc ? (
-                            <img
+                            <ArtImage
+                              width={384}
                               src={imgSrc}
                               alt={s.name}
                               className="h-full w-full object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
-                              loading="lazy"
                             />
                           ) : (
                             <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-fg-muted">
@@ -507,7 +508,7 @@ export function StimpiesTab({ highlight }: { highlight: number | null }) {
           }
         >
           <div className="flex flex-col items-center gap-4">
-            <div className="relative aspect-[0.68] max-h-[460px] w-full max-w-[320px] overflow-hidden rounded-xl border border-line bg-gradient-to-b from-surface to-cream/30 p-3 shadow-inner">
+            <div className="relative aspect-[0.68] max-h-[460px] w-full max-w-[320px] overflow-hidden rounded-xl border border-line p-3 shadow-inner">
               {previewItem.imageUrl ?? previewItem.artworkUrl ? (
                 <img
                   src={previewItem.imageUrl ?? previewItem.artworkUrl ?? ''}

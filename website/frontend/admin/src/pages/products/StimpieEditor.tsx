@@ -12,13 +12,12 @@ import { FormSection } from '../../components/form/FormSection';
 import { ImageListField } from '../../components/form/ListFields';
 import { useFormDraft } from '../../components/form/useFormDraft';
 import { FileUpload } from '../../components/FileUpload';
-import { QueryBoundary } from '../../components/QueryBoundary';
 import { Select } from '@stimpy/ui';
 import { centsToDollarString } from '../../lib/format';
 import { dollarsToCents, intStringSchema, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { invalidateFor, useAllDrops, useStimpie, type AdminStimpie } from './api';
-import { DeleteOrHide, EditorFrame } from './shared';
+import { DeleteOrHide, EditorFrame, EditorQuery } from './shared';
 import type { EditorProps } from './HoodieEditor';
 
 const schema = z.object({
@@ -55,9 +54,9 @@ export function StimpieEditor({ id, onClose }: EditorProps) {
   const crumbs = [{ label: 'Products', to: '/products' }, { label: 'Stimpies', to: '/products?tab=stimpies' }, { label: id === null ? 'New Stimpie' : 'Edit Stimpie' }];
   if (id === null) return <StimpieForm initial={null} onClose={onClose} crumbs={crumbs} />;
   return (
-    <QueryBoundary query={q} skeleton={<Skeleton variant="rect" className="h-96" />} notFoundWhat="Stimpie" notFoundBackTo="/products?tab=stimpies" notFoundBackLabel="Back to Stimpies">
+    <EditorQuery query={q} title="Edit Stimpie" crumbs={crumbs} onClose={onClose} skeleton={<Skeleton variant="rect" className="h-96" />} notFoundWhat="Stimpie" notFoundBackTo="/products?tab=stimpies" notFoundBackLabel="Back to Stimpies">
       {(s) => <StimpieForm initial={s} onClose={onClose} crumbs={crumbs} />}
-    </QueryBoundary>
+    </EditorQuery>
   );
 }
 

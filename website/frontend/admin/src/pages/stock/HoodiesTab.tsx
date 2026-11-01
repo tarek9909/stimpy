@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, TriangleAlert, PackageX } from 'lucide-react';
 import { Button, EmptyState, Skeleton, cn } from '@stimpy/ui';
+import { useNotifyError } from '../../api/errors';
 import { QueryBoundary } from '../../components/QueryBoundary';
 import { useIsMdUp } from '../../lib/hooks';
 import { useSettings } from '../../lib/settings';
 import { AdjustDialog, type AdjustTarget } from './AdjustDialog';
-import { useStockHoodies, type StockCell, type StockHoodies } from './api';
+import { useAddHoodieSize, useStockHoodies, type StockCell, type StockHoodies } from './api';
 
 type CellState = 'sold-out' | 'low' | 'ok';
 
@@ -55,7 +56,7 @@ export function HoodiesTab({ highlight }: { highlight: number | null }) {
           ) : (
             <div className="flex flex-col gap-6">
               {data.items.map((h) => (
-                <HoodieGrid key={h.hoodieId} hoodie={h} threshold={threshold} highlight={highlight} onAdjust={setTarget} />
+                <HoodieGrid key={h.hoodieId} hoodie={h} allSizes={data.sizes} threshold={threshold} highlight={highlight} onAdjust={setTarget} />
               ))}
             </div>
           )
@@ -68,16 +69,22 @@ export function HoodiesTab({ highlight }: { highlight: number | null }) {
 
 function HoodieGrid({
   hoodie,
+  allSizes,
   threshold,
   highlight,
   onAdjust,
 }: {
   hoodie: StockHoodies['items'][number];
+  allSizes: StockHoodies['sizes'];
   threshold: number;
   highlight: number | null;
   onAdjust: (t: AdjustTarget) => void;
 }) {
   const isMd = useIsMdUp();
+  const addSize = useAddHoodieSize();
+  const notify = useNotifyError();
+  const offered = new Set(hoodie.sizes.map((s) => s.id));
+  const missingSizes = (allSizes ?? []).filter((s) => !offered.has(s.id));
   const byKey = new Map(hoodie.cells.map((c) => [`${c.colorId}:${c.sizeId}`, c]));
   const colorName = new Map(hoodie.colors.map((c) => [c.id, c.name]));
   const sizeLabel = new Map(hoodie.sizes.map((s) => [s.id, s.label]));
@@ -167,6 +174,23 @@ function HoodieGrid({
           ))}
         </div>
       )}
+      {missingSizes.length > 0 && hoodie.colors.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2" data-testid="add-sizes">
+          <span className="text-body-sm text-fg-muted">Sizes not stocked yet:</span>
+          {missingSizes.map((size) => (
+            <Button
+              key={size.id}
+              variant="secondary"
+              size="sm"
+              disabled={addSize.isPending}
+              aria-label={`Add size ${size.label} to ${hoodie.name}`}
+              onClick={() => addSize.mutate({ hoodieId: hoodie.hoodieId, sizeIds: [...offered, size.id] }, { onError: (e) => notify(e) })}
+            >
+              + {size.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 }

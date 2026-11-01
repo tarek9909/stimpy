@@ -11,12 +11,11 @@ import { MoneyField, SwitchField, TextAreaField, TextField } from '../../compone
 import { FormSection } from '../../components/form/FormSection';
 import { ImageListField, StringListField } from '../../components/form/ListFields';
 import { useFormDraft } from '../../components/form/useFormDraft';
-import { QueryBoundary } from '../../components/QueryBoundary';
 import { centsToDollarString } from '../../lib/format';
 import { dollarsToCents, moneySchema } from '../../lib/schemas';
 import { useUnsavedChangesGuard } from '../../lib/unsavedChanges';
 import { invalidateFor, useColors, useHoodie, useSizes, type AdminHoodie } from './api';
-import { DeleteOrHide, EditorFrame } from './shared';
+import { DeleteOrHide, EditorFrame, EditorQuery } from './shared';
 import { Skeleton } from '@stimpy/ui';
 
 const schema = z.object({
@@ -63,9 +62,9 @@ export function HoodieEditor({ id, onClose, onCreated }: EditorProps) {
   const crumbs = [{ label: 'Products', to: '/products' }, { label: 'Hoodies', to: '/products?tab=hoodies' }, { label: id === null ? 'New hoodie' : 'Edit hoodie' }];
   if (id === null) return <HoodieForm initial={null} onClose={onClose} onCreated={onCreated} crumbs={crumbs} />;
   return (
-    <QueryBoundary query={q} skeleton={<Skeleton variant="rect" className="h-96" />} notFoundWhat="hoodie" notFoundBackTo="/products?tab=hoodies" notFoundBackLabel="Back to hoodies">
+    <EditorQuery query={q} title="Edit hoodie" crumbs={crumbs} onClose={onClose} skeleton={<Skeleton variant="rect" className="h-96" />} notFoundWhat="hoodie" notFoundBackTo="/products?tab=hoodies" notFoundBackLabel="Back to hoodies">
       {(h) => <HoodieForm initial={h} onClose={onClose} onCreated={onCreated} crumbs={crumbs} />}
-    </QueryBoundary>
+    </EditorQuery>
   );
 }
 
