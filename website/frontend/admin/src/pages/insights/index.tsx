@@ -5,7 +5,8 @@ import { api, unwrap, type Schemas } from '../../api/client';
 import { describeError } from '../../api/errors';
 import { queryKeys } from '../../api/queryKeys';
 import { ChartCard, ColumnChart, HBarChart, type BarRow } from '../../components/charts';
-import { DataTable, type Column, type SortState } from '../../components/DataTable';
+import { DataTable, type Column, type DataTableProps, type SortState } from '../../components/DataTable';
+import { PAGE_SIZES, Pagination, pageCount } from '../../components/Pagination';
 import { PageHeader } from '../../components/PageHeader';
 import { RangeSelector, useRangeState } from '../../components/RangeSelector';
 import { useFormatters } from '../../lib/format';
@@ -42,9 +43,24 @@ function TabState<T>({ query, children, isEmpty }: { query: ReturnType<typeof us
   return isEmpty?.(d) ? NOT_ENOUGH : <>{children(d)}</>;
 }
 
+/** A report table paged in the browser (the insights endpoints return whole lists). The pager only
+ *  appears once there is more than one page of the smallest size. */
+function PagedTable<R>({ rows, ...props }: Omit<DataTableProps<R>, 'footer'>) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(PAGE_SIZES[0]);
+  const total = rows?.length ?? 0;
+  const paged = total > PAGE_SIZES[0];
+  const current = Math.min(page, pageCount(total, pageSize));
+  const shown = paged ? rows!.slice((current - 1) * pageSize, current * pageSize) : rows;
+  const footer = paged
+    ? <Pagination page={current} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1); }} />
+    : undefined;
+  return <DataTable {...props} rows={shown} footer={footer} />;
+}
+
 /** Simple data table (also the "Show data" alternative of each chart). */
 function GridTable<R>({ caption, columns, rows, getId }: { caption: string; columns: Column<R>[]; rows: R[]; getId: (r: R) => string | number }) {
-  return <DataTable caption={caption} columns={columns} rows={rows} getRowId={getId} density="dense" stickyHeader={false} />;
+  return <PagedTable caption={caption} columns={columns} rows={rows} getRowId={getId} density="dense" stickyHeader={false} />;
 }
 
 function SalesTab({ range }: { range: DateRange }) {
@@ -114,7 +130,7 @@ function SalesTab({ range }: { range: DateRange }) {
             <section aria-labelledby="campaigns" className="flex flex-col gap-2">
               <h2 id="campaigns" className="text-h5">By campaign</h2>
               <p className="text-body-sm text-fg-muted">UTM values the website captured on landing and stored on orders. (none) means the visitor came without one.</p>
-              <DataTable caption="Sales by campaign" columns={campaignCols} rows={campaigns} getRowId={(c) => `${c.utmSource}|${c.utmCampaign}`} sort={sort} onSortChange={setSort} empty={<EmptyState title="No campaign data in this range" headingLevel={3} />} />
+              <PagedTable caption="Sales by campaign" columns={campaignCols} rows={campaigns} getRowId={(c) => `${c.utmSource}|${c.utmCampaign}`} sort={sort} onSortChange={setSort} empty={<EmptyState title="No campaign data in this range" headingLevel={3} />} />
             </section>
           </div>
         );

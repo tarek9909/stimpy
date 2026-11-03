@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Bowlby+One&amp;family=Bowlby+One+SC&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="21"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.16"/></feComponentTransfer>
+    </filter>
+    <!-- giant zipper used as a crossbone -->
+    <g id="zip">
+      <rect x="-1250" y="-95" width="2500" height="190" rx="20" fill="#111111"/>
+      <rect x="-1250" y="-14" width="2500" height="28" fill="#2E63FF"/>
+      <g fill="#CFD6DE" stroke="#111111" stroke-width="8">
+        <path d="M-1180 -60h60v60h-60zM-1100 0h60v60h-60zM-1020 -60h60v60h-60zM-940 0h60v60h-60zM-860 -60h60v60h-60zM-780 0h60v60h-60zM-700 -60h60v60h-60zM-620 0h60v60h-60zM-540 -60h60v60h-60zM-460 0h60v60h-60zM-380 -60h60v60h-60zM-300 0h60v60h-60zM-220 -60h60v60h-60zM-140 0h60v60h-60zM-60 -60h60v60h-60zM20 0h60v60h-60zM100 -60h60v60h-60zM180 0h60v60h-60zM260 -60h60v60h-60zM340 0h60v60h-60zM420 -60h60v60h-60zM500 0h60v60h-60zM580 -60h60v60h-60zM660 0h60v60h-60zM740 -60h60v60h-60zM820 0h60v60h-60z"/>
+      </g>
+      <!-- slider + pull -->
+      <path d="M900 -120 L1120 -80 L1120 80 L900 120Z" fill="#CFD6DE" stroke="#111111" stroke-width="26" stroke-linejoin="round"/>
+      <rect x="1080" y="-55" width="320" height="110" rx="55" fill="#FF7A59" stroke="#111111" stroke-width="26"/>
+      <circle cx="1330" cy="0" r="24" fill="#111111"/>
+      <path d="M930 -70 L1070 -50" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round"/>
+    </g>
+  </defs>
+
+  <!-- background + sunburst -->
+  <rect width="3000" height="4000" fill="#FFE45C"/>
+  <g transform="translate(1500 1750)" fill="#FFB443">
+    <path d="M0 0 L-240 -3200 L240 -3200Z"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(24)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(48)"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(72)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(96)"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(120)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(144)"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(168)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(192)"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(216)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(240)"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(264)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(288)"/><path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(312)"/>
+    <path d="M0 0 L-240 -3200 L240 -3200Z" transform="rotate(336)"/>
+  </g>
+
+  <!-- wordmark -->
+  <g font-family="Bowlby One" font-size="500" text-anchor="middle" letter-spacing="10">
+    <text x="1530" y="700" fill="#111111">STIMPY</text>
+    <text x="1500" y="670" fill="#FF7A59" stroke="#111111" stroke-width="22" paint-order="stroke">STIMPY</text>
+  </g>
+
+  <!-- crossed zippers behind -->
+  <use href="#zip" transform="translate(1500 1900) rotate(36)"/>
+  <use href="#zip" transform="translate(1500 1900) rotate(144)"/>
+
+  <!-- hood + shoulders melting -->
+  <g stroke="#111111" stroke-width="30" stroke-linejoin="round">
+    <path fill="#2E63FF" d="M560 2760 C600 2400 820 2260 1000 2210 C850 1850 860 1010 1500 990 C2140 1010 2150 1850 2000 2210 C2180 2260 2400 2400 2440 2760
+      L2330 2760 C2330 2880 2250 2880 2250 2760 L2120 2760 C2120 3060 2010 3060 2010 2760 L1880 2760 C1880 2830 1820 2830 1820 2760 L1640 2760 C1650 3100 1520 3100 1530 2760
+      L1330 2760 C1330 2860 1260 2860 1260 2760 L1120 2760 C1130 3000 990 3000 1000 2760 L840 2760 C840 2880 770 2880 770 2760 L700 2760 C700 2820 650 2820 650 2760 Z"/>
+    <!-- separate drops -->
+    
+    <path fill="#2E63FF" d="M1585 3060 C1610 3100 1625 3120 1625 3140 C1625 3170 1545 3170 1545 3140 C1545 3120 1560 3100 1585 3060Z"/>
+    <path fill="#2E63FF" d="M1060 3050 C1080 3090 1095 3110 1095 3130 C1095 3160 1025 3160 1025 3130 C1025 3110 1040 3090 1060 3050Z"/>
+    <!-- face opening -->
+    <path fill="#111111" d="M1010 1760 C1010 1300 1230 1080 1500 1080 C1770 1080 1990 1300 1990 1760 L1990 2240 L1010 2240Z"/>
+  </g>
+  <!-- hood highlights -->
+  <g fill="#FFFFFF">
+    <path d="M1250 1120 C1110 1250 1020 1420 990 1600 C1030 1450 1110 1300 1250 1170Z"/>
+    <path d="M700 2480 C760 2390 840 2330 930 2300 C860 2350 800 2420 760 2500Z"/>
+    <ellipse cx="1575" cy="3115" rx="10" ry="16"/>
+  </g>
+  <g fill="#1B3FB8">
+    <path d="M1990 2240 C2200 2290 2360 2420 2410 2700 L2380 2740 C2320 2500 2190 2370 1990 2300Z"/>
+  </g>
+  <g stroke="#111111" stroke-width="10" stroke-linecap="round">
+    <path d="M2150 2420 l60 -50 M2210 2480 l60 -50 M2260 2550 l55 -45 M2300 2620 l50 -40"/>
+    <path d="M2030 1500 l50 -30 M2040 1580 l50 -30 M2045 1660 l50 -30 M2045 1740 l45 -28"/>
+  </g>
+  <g fill="#5CC8FF">
+    <path d="M2050 1600 C2080 1800 2060 2000 2010 2150 C2110 2000 2130 1800 2090 1580Z"/>
+  </g>
+  <!-- drawstrings -->
+  <g stroke="#111111" stroke-width="22" stroke-linecap="round">
+    <path d="M1360 2240 C1340 2400 1380 2500 1350 2640" stroke="#FFF4E6" stroke-width="44"/>
+    <path d="M1640 2240 C1660 2400 1620 2500 1650 2640" stroke="#FFF4E6" stroke-width="44"/>
+  </g>
+  <g fill="#FF7A59" stroke="#111111" stroke-width="16">
+    <rect x="1320" y="2620" width="60" height="110" rx="14"/>
+    <rect x="1620" y="2620" width="60" height="110" rx="14"/>
+  </g>
+
+  <!-- skull -->
+  <g stroke="#111111" stroke-width="30" stroke-linejoin="round">
+    <path fill="#FFF4E6" d="M1080 1700 C1080 1320 1270 1150 1500 1150 C1730 1150 1920 1320 1920 1700 C1920 1850 1870 1950 1810 2010 L1800 2200 L1200 2200 L1190 2010 C1130 1950 1080 1850 1080 1700Z"/>
+  </g>
+  <!-- skull shading -->
+  <path fill="#E2D6C3" d="M1760 1240 C1880 1340 1910 1500 1910 1700 C1910 1850 1860 1950 1800 2010 L1795 2185 L1730 2185 C1760 2000 1840 1850 1830 1640 C1820 1460 1790 1340 1760 1240Z"/>
+  <path d="M1640 1170 L1610 1270 L1665 1320 L1630 1410" fill="none" stroke="#111111" stroke-width="14" stroke-linejoin="round"/>
+  <!-- eyes -->
+  <path fill="#111111" d="M1200 1650 C1200 1530 1300 1490 1390 1540 C1460 1580 1460 1710 1400 1770 C1330 1830 1210 1790 1200 1650Z"/>
+  <path fill="#111111" d="M1800 1650 C1800 1530 1700 1490 1610 1540 C1540 1580 1540 1710 1600 1770 C1670 1830 1790 1790 1800 1650Z"/>
+  <circle cx="1345" cy="1660" r="58" fill="#FF7A59"/><circle cx="1655" cy="1660" r="58" fill="#FF7A59"/>
+  <circle cx="1325" cy="1640" r="18" fill="#FFFFFF"/><circle cx="1635" cy="1640" r="18" fill="#FFFFFF"/>
+  <!-- nose -->
+  <path fill="#111111" d="M1500 1800 C1470 1840 1440 1890 1460 1920 C1475 1940 1495 1925 1500 1910 C1505 1925 1525 1940 1540 1920 C1560 1890 1530 1840 1500 1800Z"/>
+  <!-- grin -->
+  <clipPath id="mouth"><path d="M1210 1990 C1380 2070 1620 2070 1790 1990 C1770 2140 1660 2210 1500 2210 C1340 2210 1230 2140 1210 1990Z"/></clipPath>
+  <path fill="#111111" d="M1210 1990 C1380 2070 1620 2070 1790 1990 C1770 2140 1660 2210 1500 2210 C1340 2210 1230 2140 1210 1990Z"/>
+  <g clip-path="url(#mouth)" fill="#FFF4E6" stroke="#111111" stroke-width="10">
+    <path d="M1230 1990h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1300 2010h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1370 2025h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1440 2030h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1510 2030h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1580 2025h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1650 2010h64v95q0 18 -18 18h-28q-18 0 -18 -18zM1720 1990h64v95q0 18 -18 18h-28q-18 0 -18 -18z"/>
+    <path d="M1300 2230v-70q0 -18 18 -18h28q18 0 18 18v70zM1370 2230v-60q0 -18 18 -18h28q18 0 18 18v60zM1440 2230v-55q0 -18 18 -18h28q18 0 18 18v55zM1510 2230v-55q0 -18 18 -18h28q18 0 18 18v55zM1580 2230v-60q0 -18 18 -18h28q18 0 18 18v60zM1650 2230v-70q0 -18 18 -18h28q18 0 18 18v70z"/>
+  </g>
+  <path fill="none" stroke="#111111" stroke-width="30" stroke-linejoin="round" d="M1210 1990 C1380 2070 1620 2070 1790 1990 C1770 2140 1660 2210 1500 2210 C1340 2210 1230 2140 1210 1990Z"/>
+  <!-- skull highlight -->
+  <path fill="#FFFFFF" d="M1300 1250 C1220 1310 1170 1400 1150 1500 C1200 1420 1250 1350 1330 1290Z"/>
+
+  <!-- banner -->
+  <g stroke="#111111" stroke-width="26" stroke-linejoin="round">
+    <path fill="#B8402C" d="M330 3330 L560 3330 L560 3610 L330 3610 L430 3470Z"/>
+    <path fill="#B8402C" d="M2670 3330 L2440 3330 L2440 3610 L2670 3610 L2570 3470Z"/>
+    <path fill="#7A2618" d="M560 3610 L640 3540 L560 3540Z M2440 3610 L2360 3540 L2440 3540Z"/>
+    <path fill="#FF7A59" d="M560 3270 C1100 3200 1900 3200 2440 3270 L2440 3540 C1900 3470 1100 3470 560 3540Z"/>
+  </g>
+  <text font-family="Bowlby One SC" font-size="124" fill="#FFF4E6" stroke="#111111" stroke-width="14" paint-order="stroke" text-anchor="middle" letter-spacing="4">
+    <textPath href="#banner-curve" startOffset="50%">SKATE · SWAP · REPEAT</textPath>
+  </text>
+  <path id="banner-curve" d="M520 3455 C1100 3385 1900 3385 2480 3455" fill="none"/>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3830)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="220" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="17" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="220" fill="none" stroke="#FF7A59" stroke-width="12" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Inter:wght@400;500;700;800&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.10"/></feComponentTransfer>
+    </filter>
+    <clipPath id="field"><rect x="200" y="200" width="2600" height="2660"/></clipPath>
+  </defs>
+
+  <rect width="3000" height="4000" fill="#F1EEE7"/>
+
+  <!-- concentric arc fan, cropped to the grid field -->
+  <g clip-path="url(#field)" fill="none" stroke-width="50" stroke-linecap="butt">
+    <path d="M1371 1260 A380 380 0 0 1 1766 1076" stroke="#111111"/>
+    <path d="M1416 1073 A472 472 0 0 1 2171 1417" stroke="#111111"/>
+    <path d="M1564 903 A564 564 0 0 1 1874 1986" stroke="#111111"/>
+    <path d="M1803 802 A656 656 0 1 1 1144 1798" stroke="#FF7A59"/>
+    <path d="M2096 816 A748 748 0 0 1 2028 2122" stroke="#111111"/>
+    <path d="M2388 968 A840 840 0 0 1 1057 1990" stroke="#111111"/>
+    <path d="M2612 1256 A932 932 0 1 1 946 902" stroke="#111111"/>
+    <path d="M2705 1645 A1024 1024 0 0 1 1015 2211" stroke="#111111"/>
+    <path d="M2625 2074 A1116 1116 0 0 1 715 926" stroke="#111111"/>
+    <path d="M2358 2463 A1208 1208 0 1 1 1992 278" stroke="#111111"/>
+    <path d="M1926 2730 A1300 1300 0 0 1 478 1005" stroke="#111111"/>
+    <path d="M1387 2806 A1392 1392 0 0 1 1846 66" stroke="#FF7A59"/>
+    <path d="M828 2651 A1484 1484 0 1 1 3170 1243" stroke="#111111"/>
+    <path d="M349 2262 A1576 1576 0 0 1 1645 -125" stroke="#111111"/>
+    <path d="M48 1682 A1668 1668 0 0 1 3303 990" stroke="#111111"/>
+    <path d="M241 310 A1852 1852 0 0 1 3392 697" stroke="#111111"/>
+    <path d="M758 -250 A1944 1944 0 0 1 2897 2982" stroke="#111111"/>
+  </g>
+
+  <!-- split circle: the hoodie (solid) and the Stimpie (outline) -->
+  <path d="M1700 1150 A300 300 0 0 0 1700 1750 Z" fill="#111111"/>
+  <path d="M1700 1190 A300 300 0 0 1 1700 1790 Z" fill="#FF7A59"/>
+
+  <!-- grid rule -->
+  <rect x="200" y="2950" width="2600" height="10" fill="#111111"/>
+
+  <!-- headline, flush left -->
+  <text x="190" y="3330" font-family="Inter" font-weight="800" font-size="330" letter-spacing="-12" fill="#111111">Two Sides</text>
+
+  <!-- info block on a 3-column grid -->
+  <g font-family="Inter" font-size="56" fill="#111111">
+    <text x="200" y="3520" font-weight="700">Stimpy 001</text>
+    <text x="200" y="3600" font-weight="400">One hoodie.</text>
+    <text x="200" y="3672" font-weight="400">Many identities.</text>
+
+    <text x="1100" y="3520" font-weight="700">Zwei Seiten</text>
+    <text x="1100" y="3600" font-weight="400">Deux côtés</text>
+    <text x="1100" y="3672" font-weight="400">Due lati</text>
+
+    <text x="1880" y="3520" font-weight="700" fill="#FF7A59">Zip on.</text>
+    <text x="1880" y="3600" font-weight="400">Zip off.</text>
+    <text x="1880" y="3672" font-weight="400">Repeat.</text>
+  </g>
+  <text x="200" y="3790" font-family="Inter" font-weight="500" font-size="34" letter-spacing="2" fill="#6B675F">Back panel 30 × 40 cm · Interchangeable · Collection 2026</text>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

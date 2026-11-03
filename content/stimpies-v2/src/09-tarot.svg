@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Cinzel:wght@500;700&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="5"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.12"/></feComponentTransfer>
+    </filter>
+    <clipPath id="window"><rect x="260" y="420" width="2480" height="2850" rx="40"/></clipPath>
+    <clipPath id="leftHalf"><rect x="0" y="0" width="1500" height="4000"/></clipPath>
+    <clipPath id="rightHalf"><rect x="1500" y="0" width="1500" height="4000"/></clipPath>
+
+    <linearGradient id="daySky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF6A4D"/><stop offset="0.55" stop-color="#FF9A6B"/><stop offset="1" stop-color="#FFE45C"/>
+    </linearGradient>
+    <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B0C2A"/><stop offset="0.6" stop-color="#231B5C"/><stop offset="1" stop-color="#4B3592"/>
+    </linearGradient>
+    <radialGradient id="sunDisc" cx="0.35" cy="0.4" r="0.75">
+      <stop offset="0" stop-color="#FFF6B8"/><stop offset="0.5" stop-color="#FFE45C"/><stop offset="1" stop-color="#FF9A3C"/>
+    </radialGradient>
+    <radialGradient id="moonDisc" cx="0.65" cy="0.35" r="0.8">
+      <stop offset="0" stop-color="#F3EEFF"/><stop offset="0.6" stop-color="#C9B6FF"/><stop offset="1" stop-color="#8C77E0"/>
+    </radialGradient>
+    <linearGradient id="sunCloth" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFB15C"/><stop offset="0.45" stop-color="#FF7A59"/><stop offset="1" stop-color="#D9412E"/>
+    </linearGradient>
+    <linearGradient id="nightCloth" x1="1" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#9A86F0"/><stop offset="0.45" stop-color="#5A43B8"/><stop offset="1" stop-color="#2A1D6E"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B9862C"/><stop offset="0.45" stop-color="#FFE7A0"/><stop offset="0.7" stop-color="#E7B64A"/><stop offset="1" stop-color="#9C6B1E"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.38"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2A27E"/><stop offset="1" stop-color="#B8604A"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E2552F"/><stop offset="0.5" stop-color="#B0447A"/><stop offset="1" stop-color="#4B3592"/>
+    </linearGradient>
+    <pattern id="teeth" width="64" height="44" patternUnits="userSpaceOnUse" patternTransform="translate(2048 0)">
+      <rect x="2" y="0" width="30" height="20" rx="5" fill="url(#gold)"/>
+      <rect x="32" y="22" width="30" height="20" rx="5" fill="url(#gold)"/>
+    </pattern>
+    <pattern id="speckDay" width="90" height="70" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="18" r="7" fill="#FF7A59"/><circle cx="58" cy="44" r="5" fill="#2E63FF"/><circle cx="75" cy="12" r="4" fill="#FF7A59"/><circle cx="33" cy="60" r="4" fill="#FFE45C"/>
+    </pattern>
+    <pattern id="speckNight" width="90" height="70" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="18" r="6" fill="#C9B6FF"/><circle cx="58" cy="44" r="4" fill="#5CC8FF"/><circle cx="75" cy="12" r="3" fill="#FFF4E6"/><circle cx="33" cy="60" r="4" fill="#C9B6FF"/>
+    </pattern>
+    <path id="spark" d="M0 -40 C5 -6 6 -5 40 0 C6 5 5 6 0 40 C-5 6 -6 5 -40 0 C-6 -5 -5 -6 0 -40 Z"/>
+
+    <!-- figure silhouette, fill is supplied per half -->
+    <g id="figure">
+      <path d="M1180 1240 C1300 1196 1700 1196 1820 1240 L1880 1330 L1862 2086 C1700 2116 1300 2116 1138 2086 L1120 1330 Z"/>
+      <path d="M1820 1250 C1900 1280 1960 1360 1992 1460 L2112 1680 L2034 1752 L1878 1560 Z"/>
+      <path d="M1180 1250 C1100 1280 1050 1380 1030 1500 L962 1958 L1062 1978 L1128 1560 Z"/>
+      <path d="M1170 2066 L1494 2066 C1490 2300 1470 2600 1440 2800 C1430 2900 1440 3020 1464 3130 L1060 3130 C1110 3010 1150 2900 1160 2780 C1170 2500 1160 2300 1170 2066 Z"/>
+      <path d="M1506 2066 L1830 2066 C1840 2300 1830 2500 1840 2780 C1850 2900 1890 3010 1940 3130 L1536 3130 C1560 3020 1570 2900 1560 2800 C1530 2600 1510 2300 1506 2066 Z"/>
+      <path d="M1500 700 C1702 700 1802 860 1792 1062 C1787 1162 1762 1232 1722 1282 L1278 1282 C1238 1232 1213 1162 1208 1062 C1198 860 1298 700 1500 700 Z"/>
+    </g>
+  </defs>
+
+  <!-- card -->
+  <rect width="3000" height="4000" fill="#FFF4E6"/>
+  <rect x="150" y="150" width="2700" height="3700" rx="90" fill="none" stroke="#C9B49A" stroke-width="8"/>
+  <rect x="196" y="196" width="2608" height="3608" rx="64" fill="none" stroke="#C9B49A" stroke-width="3"/>
+  <text x="1500" y="345" text-anchor="middle" font-family="Cinzel" font-weight="700" font-size="120" letter-spacing="40" fill="#E2552F">XXII</text>
+
+  <g clip-path="url(#window)">
+    <!-- split sky -->
+    <rect x="0" y="0" width="1500" height="4000" fill="url(#daySky)"/>
+    <rect x="1500" y="0" width="1500" height="4000" fill="url(#nightSky)"/>
+
+    <!-- day: wavy rays -->
+    <g fill="none" stroke="#FFF4E6" stroke-width="6" opacity="0.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1392 389 C1308 316 1293 230 1347 133 C1401 35 1386 -49 1302 -122 C1218 -195 1203 -281 1256 -378 C1310 -476 1295 -561 1211 -634 C1127 -707 1112 -793 1166 -890 C1220 -988 1205 -1073 1121 -1146 C1037 -1220 1022 -1305 1076 -1402 C1130 -1500 1115 -1585 1031 -1658"/>
+      <path d="M1218 447 C1241 338 1202 261 1100 215 C998 170 959 93 982 -15 C1005 -124 966 -201 864 -247 C762 -292 723 -370 746 -479 C769 -588 730 -665 628 -710 C526 -756 487 -833 510 -942 C533 -1051 493 -1128 392 -1174 C290 -1219 251 -1296 274 -1405"/>
+      <path d="M1069 554 C958 540 898 477 888 366 C878 256 818 193 708 179 C597 166 537 103 527 -7 C517 -118 457 -180 346 -194 C236 -207 176 -270 166 -381 C156 -492 96 -554 -14 -568 C-124 -581 -185 -644 -194 -755 C-204 -866 -265 -928 -375 -942"/>
+      <path d="M957 699 C915 596 840 554 730 573 C620 592 544 550 502 447 C461 344 385 302 275 321 C165 340 89 298 48 195 C6 91 -69 49 -179 69 C-289 88 -364 46 -406 -56 C-448 -160 -524 -202 -634 -182 C-743 -163 -819 -205 -861 -308"/>
+      <path d="M893 871 C794 921 709 903 639 817 C569 730 484 712 384 762 C285 813 200 795 130 708 C60 622 -24 604 -123 654 C-223 705 -307 687 -378 600 C-448 514 -533 496 -632 546 C-731 597 -816 579 -886 492 C-956 406 -1041 388 -1140 438"/>
+      <path d="M882 1054 C789 991 703 999 623 1076 C543 1153 456 1161 364 1099 C271 1037 185 1044 105 1122 C25 1199 -61 1206 -153 1144 C-246 1082 -332 1090 -412 1167 C-492 1244 -579 1252 -671 1189 C-764 1127 -850 1135 -930 1212 C-1010 1289 -1097 1297 -1189 1235"/>
+      <path d="M925 1232 C871 1329 790 1362 684 1329 C577 1297 497 1329 443 1427 C388 1524 308 1556 201 1524 C95 1492 15 1524 -39 1621 C-93 1719 -173 1751 -280 1719 C-386 1686 -467 1719 -521 1816 C-575 1914 -655 1946 -762 1914 C-868 1881 -949 1914 -1003 2011"/>
+      <path d="M1018 1390 C906 1390 839 1444 816 1553 C792 1662 725 1717 614 1717 C502 1717 435 1772 411 1881 C388 1989 321 2044 209 2044 C98 2044 31 2099 7 2208 C-15 2317 -82 2371 -194 2371 C-305 2372 -372 2426 -396 2535 C-419 2644 -486 2699 -598 2699"/>
+      <path d="M1153 1514 C1162 1624 1114 1696 1007 1729 C901 1762 852 1834 862 1945 C872 2056 823 2127 717 2160 C610 2193 562 2265 571 2376 C581 2487 532 2559 426 2591 C319 2624 271 2696 280 2807 C290 2918 242 2990 135 3022 C29 3055 -19 3127 -9 3238"/>
+      <path d="M1318 1592 C1226 1655 1201 1738 1242 1841 C1284 1944 1258 2027 1166 2090 C1074 2152 1049 2235 1090 2338 C1132 2442 1106 2525 1014 2587 C922 2649 897 2732 938 2836 C980 2939 954 3022 862 3084 C770 3147 745 3230 786 3333 C828 3436 802 3519 710 3582"/>
+    </g>
+    <!-- night: stars and orbit rings -->
+    <g fill="none" stroke="#C9B6FF" stroke-width="4" opacity="0.45">
+      <circle cx="1500" cy="1000" r="760"/><circle cx="1500" cy="1000" r="980"/><circle cx="1500" cy="1000" r="1240"/>
+    </g>
+    <g fill="#FFF4E6">
+      <use href="#spark" transform="translate(2420 640) scale(1.1)"/>
+      <use href="#spark" transform="translate(2600 1180) scale(0.6)"/>
+      <use href="#spark" transform="translate(2300 1500) scale(0.45)"/>
+      <use href="#spark" transform="translate(2560 1920) scale(0.9)"/>
+      <use href="#spark" transform="translate(2280 2420) scale(0.5)"/>
+      <use href="#spark" transform="translate(2620 2700) scale(0.7)"/>
+      <use href="#spark" transform="translate(1980 560) scale(0.5)"/>
+      <use href="#spark" transform="translate(2200 860) scale(0.35)"/>
+    </g>
+    <g fill="#FFE45C"><use href="#spark" transform="translate(560 2300) scale(0.5)"/><use href="#spark" transform="translate(420 1520) scale(0.35)"/></g>
+
+    <!-- sun / moon disc -->
+    <path d="M1500 440 A560 560 0 0 0 1500 1560 Z" fill="url(#sunDisc)"/>
+    <path d="M1500 440 A560 560 0 0 1 1500 1560 Z" fill="url(#moonDisc)"/>
+    <g fill="#8C77E0" opacity="0.45">
+      <circle cx="1820" cy="760" r="70"/><circle cx="1700" cy="1340" r="95"/><circle cx="1930" cy="1110" r="45"/><circle cx="1620" cy="600" r="30"/>
+    </g>
+
+    <!-- ground -->
+    <rect x="0" y="3130" width="1500" height="200" fill="#FFF4E6"/>
+    <rect x="0" y="3130" width="1500" height="200" fill="url(#speckDay)"/>
+    <rect x="1500" y="3130" width="1500" height="200" fill="#1A1446"/>
+    <rect x="1500" y="3130" width="1500" height="200" fill="url(#speckNight)"/>
+
+    <!-- zipper staff -->
+    <rect x="2048" y="800" width="64" height="2420" fill="url(#teeth)"/>
+    <rect x="2072" y="800" width="16" height="2420" fill="#7A5418" opacity="0.5"/>
+    <path d="M2030 700 L2130 700 L2112 830 L2048 830 Z" fill="url(#gold)"/>
+    <rect x="2045" y="560" width="70" height="170" rx="35" fill="url(#gold)"/>
+    <rect x="2066" y="590" width="28" height="90" rx="14" fill="#1A1446"/>
+
+    <!-- figure: day half / night half -->
+    <use href="#figure" fill="url(#sunCloth)" clip-path="url(#leftHalf)"/>
+    <use href="#figure" fill="url(#nightCloth)" clip-path="url(#rightHalf)"/>
+
+    <!-- airbrush sheen -->
+    <path d="M1250 2100 L1330 2100 L1260 3100 L1180 3100 Z" fill="url(#sheen)"/>
+    <path d="M1680 2100 L1760 2100 L1820 3100 L1740 3100 Z" fill="url(#sheen)" opacity="0.7"/>
+    <path d="M1300 1300 L1380 1300 L1360 2060 L1280 2060 Z" fill="url(#sheen)" opacity="0.8"/>
+    <path d="M1360 760 C1420 730 1470 726 1500 726 L1500 790 C1440 792 1400 810 1360 840 Z" fill="#FFFFFF" opacity="0.35"/>
+
+    <!-- seams: zipper down the middle, kangaroo pocket, cuffs, hem -->
+    <line x1="1500" y1="1282" x2="1500" y2="2086" stroke="#FFE7A0" stroke-width="10" stroke-dasharray="18 12"/>
+    <path d="M1300 1820 L1700 1820 L1760 2040 L1240 2040 Z" fill="#000000" opacity="0.12"/>
+    <rect x="1138" y="2030" width="724" height="56" fill="#000000" opacity="0.15"/>
+
+    <!-- hood void with sun eye and moon eye -->
+    <ellipse cx="1500" cy="1052" rx="150" ry="192" fill="#120E2E"/>
+    <ellipse cx="1500" cy="1052" rx="150" ry="192" fill="none" stroke="#000000" stroke-opacity="0.25" stroke-width="18"/>
+    <circle cx="1446" cy="1030" r="24" fill="#FFE45C"/>
+    <g stroke="#FFE45C" stroke-width="6" stroke-linecap="round">
+      <line x1="1446" y1="988" x2="1446" y2="972"/><line x1="1446" y1="1072" x2="1446" y2="1088"/>
+      <line x1="1404" y1="1030" x2="1388" y2="1030"/><line x1="1488" y1="1030" x2="1478" y2="1030"/>
+      <line x1="1417" y1="1001" x2="1406" y2="990"/><line x1="1475" y1="1059" x2="1484" y2="1068"/>
+      <line x1="1417" y1="1059" x2="1406" y2="1070"/><line x1="1475" y1="1001" x2="1484" y2="990"/>
+    </g>
+    <path d="M1566 1004 A30 30 0 1 0 1566 1056 A24 24 0 1 1 1566 1004 Z" fill="#C9B6FF"/>
+
+    <!-- hands -->
+    <ellipse cx="2080" cy="1722" rx="58" ry="66" fill="url(#skin)"/>
+    <ellipse cx="1010" cy="2010" rx="56" ry="64" fill="url(#skin)"/>
+
+    <!-- the Stimpie held in the left hand -->
+    <g transform="rotate(-12 980 2160)">
+      <rect x="860" y="2010" width="240" height="320" rx="10" fill="#FFF4E6"/>
+      <rect x="860" y="2010" width="240" height="320" rx="10" fill="none" stroke="#FF7A59" stroke-width="10" stroke-dasharray="20 12"/>
+      <path d="M980 2100 A70 70 0 0 0 980 2240 Z" fill="#FF7A59"/>
+      <path d="M980 2100 A70 70 0 0 1 980 2240 Z" fill="#4B3592"/>
+    </g>
+    <ellipse cx="1010" cy="2010" rx="56" ry="40" fill="url(#skin)"/>
+
+    <!-- platform boots -->
+    <rect x="1050" y="3112" width="420" height="96" rx="30" fill="url(#gold)"/>
+    <rect x="1530" y="3112" width="420" height="96" rx="30" fill="url(#gold)"/>
+  </g>
+  <rect x="260" y="420" width="2480" height="2850" rx="40" fill="none" stroke="#C9B49A" stroke-width="6"/>
+
+  <!-- title bar -->
+  <rect x="260" y="3330" width="2480" height="200" rx="24" fill="#FFF4E6" stroke="#C9B49A" stroke-width="6"/>
+  <text x="1500" y="3482" text-anchor="middle" font-family="Cinzel" font-weight="500" font-size="140" letter-spacing="60" fill="url(#title)">THE SWAP</text>
+  <text x="1500" y="3690" text-anchor="middle" font-family="Cinzel" font-weight="500" font-size="62" letter-spacing="26" fill="#9C8466">ONE HOODIE · TWO SIDES</text>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

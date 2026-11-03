@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Shrikhand&amp;family=Bowlby+One&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="11"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.2"/></feComponentTransfer>
+    </filter>
+    <g id="petal"><ellipse cx="0" cy="-330" rx="105" ry="230" fill="#FFF4E6" stroke="#4A2C1A" stroke-width="16"/></g>
+  </defs>
+
+  <rect width="3000" height="4000" fill="#F3DFBF"/>
+
+  <!-- sunburst -->
+  <g transform="translate(1500 2600)" fill="#EBCFA3">
+    <path d="M0 0 L-260 -3400 L260 -3400 Z"/>
+    <path d="M0 0 L-260 -3400 L260 -3400 Z" transform="rotate(24)"/>
+    <path d="M0 0 L-260 -3400 L260 -3400 Z" transform="rotate(-24)"/>
+    <path d="M0 0 L-260 -3400 L260 -3400 Z" transform="rotate(48)"/>
+    <path d="M0 0 L-260 -3400 L260 -3400 Z" transform="rotate(-48)"/>
+    <path d="M0 0 L-260 -3400 L260 -3400 Z" transform="rotate(72)"/>
+    <path d="M0 0 L-260 -3400 L260 -3400 Z" transform="rotate(-72)"/>
+  </g>
+
+  <!-- wavy top stripes -->
+  <g fill="none" stroke-width="105" stroke-linecap="butt">
+    <path d="M-100 180 C 400 50, 700 310, 1100 180 S 1800 50, 2200 180 S 2800 310, 3100 180" stroke="#E8A33D"/>
+    <path d="M-100 290 C 400 160, 700 420, 1100 290 S 1800 160, 2200 290 S 2800 420, 3100 290" stroke="#C8501E"/>
+    <path d="M-100 400 C 400 270, 700 530, 1100 400 S 1800 270, 2200 400 S 2800 530, 3100 400" stroke="#6B3A1E"/>
+  </g>
+
+  <!-- rainbow with legs running off the bottom -->
+  <g fill="none" stroke-width="152">
+    <path d="M215 4100 L215 2600 A1285 1285 0 0 1 2785 2600 L2785 4100" stroke="#4A2C1A"/>
+    <path d="M385 4100 L385 2600 A1115 1115 0 0 1 2615 2600 L2615 4100" stroke="#A34419"/>
+    <path d="M555 4100 L555 2600 A945 945 0 0 1 2445 2600 L2445 4100" stroke="#FF7A59"/>
+    <path d="M725 4100 L725 2600 A775 775 0 0 1 2275 2600 L2275 4100" stroke="#E8A33D"/>
+    <path d="M895 4100 L895 2600 A605 605 0 0 1 2105 2600 L2105 4100" stroke="#F2C94C"/>
+  </g>
+
+  <!-- title -->
+  <g font-family="Shrikhand" text-anchor="middle">
+    <text x="1500" y="840" font-size="320" fill="#4A2C1A" transform="translate(16 16)">Keep on</text>
+    <text x="1500" y="840" font-size="320" fill="#FF7A59" stroke="#4A2C1A" stroke-width="16" paint-order="stroke">Keep on</text>
+    <text x="1500" y="1260" font-size="520" fill="#4A2C1A" transform="translate(24 24)">Swappin'</text>
+    <text x="1500" y="1260" font-size="520" fill="#F2C94C" stroke="#4A2C1A" stroke-width="20" paint-order="stroke">Swappin'</text>
+  </g>
+
+  <!-- daisy with split centre -->
+  <g transform="translate(1500 2560)">
+    <g transform="rotate(15)">
+      <use href="#petal"/><use href="#petal" transform="rotate(30)"/><use href="#petal" transform="rotate(60)"/>
+      <use href="#petal" transform="rotate(90)"/><use href="#petal" transform="rotate(120)"/><use href="#petal" transform="rotate(150)"/>
+      <use href="#petal" transform="rotate(180)"/><use href="#petal" transform="rotate(210)"/><use href="#petal" transform="rotate(240)"/>
+      <use href="#petal" transform="rotate(270)"/><use href="#petal" transform="rotate(300)"/><use href="#petal" transform="rotate(330)"/>
+    </g>
+    <circle r="190" fill="#4A2C1A"/>
+    <path d="M0 -175 A175 175 0 0 0 0 175 Z" fill="#111111"/>
+    <path d="M0 -175 A175 175 0 0 1 0 175 Z" fill="#FF7A59"/>
+  </g>
+
+  <!-- tagline between the rainbow legs -->
+  <g font-family="Bowlby One" text-anchor="middle" fill="#4A2C1A">
+    <text x="1500" y="3260" font-size="96" letter-spacing="6">ONE HOODIE</text>
+    <text x="1500" y="3390" font-size="96" letter-spacing="6">ALL THE VIBES</text>
+    <text x="1500" y="3560" font-size="64" letter-spacing="10" fill="#A34419">EST. '77-ISH</text>
+  </g>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <!-- signature badge -->
+  <circle cx="2720" cy="3690" r="150" fill="#F3DFBF" stroke="#4A2C1A" stroke-width="10"/>
+  <g id="stimpy-sig" transform="translate(2720 3770)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="230" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="18" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="230" fill="none" stroke="#FF7A59" stroke-width="10" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

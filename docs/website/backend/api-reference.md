@@ -641,6 +641,7 @@ Read adds: `state`, `unitsTotal`, `unitsSold`, `unitsRemaining`, `revenueCents`,
 | `POST /admin/deliveries/:deliveryNumber/settle` | `{ settled: boolean }` : marks cash settled for every order on that delivery number. Response `{ orderIds: number[] }` |
 | `/admin/areas` | `GET` query `page`, `pageSize` (default 100), optional `active=true\|false`; returns `Page<Area>`. `POST`, `PATCH /:id`, `DELETE /:id`. Fields: `name`, `feeCents` (nullable), `estDays` (nullable), `active` |
 | `GET` / `PATCH /admin/settings/delivery` | `{ defaultFeeCents: Cents, estimateText: string }` |
+| `POST /admin/push/test` | No body. Sends a test OneSignal push to the signed-in user's devices (External ID = user id). Response `{ configured: boolean, sent: boolean, recipients: number \| null }`. `configured: false` when `ONESIGNAL_APP_ID` / `ONESIGNAL_REST_API_KEY` are unset |
 
 ### 5.9 Finance
 

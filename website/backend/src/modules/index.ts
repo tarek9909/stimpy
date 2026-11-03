@@ -12,6 +12,7 @@ import { optionsModule } from './options/routes';
 import { ordersModule } from './orders/routes';
 import { overviewModule } from './overview/routes';
 import { promotionsModule } from './promotions/routes';
+import { pushModule } from './push/routes';
 import { settingsModule } from './settings/routes';
 import { stockModule } from './stock/routes';
 import { uploadsModule } from './uploads/routes';
@@ -39,4 +40,5 @@ export const modules: ModuleDef[] = [
   settingsModule,
   overviewModule,
   promotionsModule,
+  pushModule,
 ];

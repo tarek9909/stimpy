@@ -1,0 +1,234 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+<style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Pixelify+Sans:wght@500;700&amp;family=VT323&amp;display=block');</style>
+<defs>
+<linearGradient id="tb" x1="0" x2="1"><stop offset="0" stop-color="#000080"/><stop offset="1" stop-color="#1084D0"/></linearGradient>
+<linearGradient id="tbi" x1="0" x2="1"><stop offset="0" stop-color="#808080"/><stop offset="1" stop-color="#B5B5B5"/></linearGradient>
+<pattern id="dither" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#007878"/><rect x="4" y="4" width="4" height="4" fill="#007878"/></pattern>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="4"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 0.12"/></feComponentTransfer></filter>
+</defs>
+<rect width="3000" height="4000" fill="#008080"/>
+<rect width="3000" height="4000" fill="url(#dither)" opacity="0.5"/>
+
+<text x="1500" y="3520" text-anchor="middle" font-family="VT323" font-size="168" fill="#7CC9C9" letter-spacing="8">ONE HOODIE. MULTIPLE IDENTITIES.</text>
+<path d="M200 250h70l20 24h110v136H200z" fill="#F7D35C" stroke="#0A0A0A" stroke-width="6"/>
+<path d="M200 290h200v120H200z" fill="#FFE98A" stroke="#0A0A0A" stroke-width="6"/>
+<rect x="260" y="310" width="80" height="80" fill="#FF7A59" stroke="#0A0A0A" stroke-width="5"/>
+<text x="300" y="482" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="50" fill="#FFFFFF">My Stimpies</text>
+<path d="M230 580h140l-16 160h-108z" fill="#E6E6E6" stroke="#0A0A0A" stroke-width="6"/>
+<rect x="218" y="562" width="164" height="24" fill="#C0C0C0" stroke="#0A0A0A" stroke-width="6"/>
+<line x1="270" y1="610" x2="270" y2="720" stroke="#808080" stroke-width="8"/>
+<line x1="300" y1="610" x2="300" y2="720" stroke="#808080" stroke-width="8"/>
+<line x1="330" y1="610" x2="330" y2="720" stroke="#808080" stroke-width="8"/>
+<text x="300" y="802" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="50" fill="#FFFFFF">Old Looks</text>
+<rect x="210" y="880" width="180" height="150" fill="#C0C0C0" stroke="#0A0A0A" stroke-width="6"/>
+<rect x="210" y="880" width="180" height="34" fill="#000080"/>
+<path d="M300 930c40 0 56 30 56 60v40h-112v-40c0-30 16-60 56-60z" fill="#111111"/>
+<rect x="276" y="960" width="48" height="56" fill="#FF7A59"/>
+<text x="300" y="1122" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="50" fill="#FFFFFF">hoodie.exe</text>
+<circle cx="300" cy="1280" r="90" fill="#5CC8FF" stroke="#0A0A0A" stroke-width="6"/>
+<path d="M240 1240q40 -20 60 10t30 50q-30 30 -60 20zM320 1330q30-30 60-10" fill="#7BD389" stroke="#0A0A0A" stroke-width="5"/>
+<text x="300" y="1442" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="50" fill="#FFFFFF">Mood Explorer</text>
+<rect x="648" y="278" width="2180" height="1080" fill="#003F3F" opacity="0.45"/>
+<rect x="620" y="250" width="2180" height="1080" fill="#C0C0C0"/>
+<path d="M620 1330V250H2800" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M620 1330H2800V250" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M628 1322V258H2792" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M628 1322H2792V258" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<rect x="636" y="266" width="2148" height="104" fill="url(#tbi)"/>
+<text x="664" y="340" font-family="Pixelify Sans" font-weight="700" font-size="62" fill="#FFFFFF">Stimpy Identity Manager</text>
+<rect x="2500" y="278" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2500 350V278H2580" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2500 350H2580V278" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2506 344V284H2574" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2506 344H2574V284" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<rect x="2522" y="330" width="32" height="8" fill="#0A0A0A"/>
+<rect x="2592" y="278" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2592 350V278H2672" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2592 350H2672V278" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2598 344V284H2666" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2598 344H2666V284" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<rect x="2612" y="292" width="40" height="38" fill="none" stroke="#0A0A0A" stroke-width="7"/>
+<rect x="2700" y="278" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2700 350V278H2780" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2700 350H2780V278" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2706 344V284H2774" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2706 344H2774V284" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2722 296L2758 334M2758 296L2722 334" stroke="#0A0A0A" stroke-width="10"/>
+<circle cx="850" cy="680" r="120" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="8"/>
+<text x="850" y="750" text-anchor="middle" font-family="Pixelify Sans" font-weight="700" font-size="200" fill="#000080">?</text>
+<text x="1040" y="650" font-family="VT323" font-size="230" fill="#0A0A0A">SWAP IDENTITY?</text>
+<text x="1045" y="770" font-family="Pixelify Sans" font-weight="500" font-size="60" fill="#0A0A0A">Your current look will be saved to My Stimpies.</text>
+<rect x="690" y="1108" width="64" height="64" fill="#FFFFFF"/>
+<path d="M690 1172V1108H754" fill="none" stroke="#808080" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M690 1172H754V1108" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M696 1166V1114H748" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M696 1166H748V1114" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M704 1140l14 16l26 -34" fill="none" stroke="#0A0A0A" stroke-width="10"/>
+<text x="780" y="1160" font-family="Pixelify Sans" font-weight="500" font-size="54" fill="#0A0A0A">Ask me every morning</text>
+<rect x="1380" y="1070" width="500" height="140" fill="#C0C0C0"/>
+<path d="M1380 1210V1070H1880" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1380 1210H1880V1070" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M1388 1202V1078H1872" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1388 1202H1872V1078" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="1630.0" y="1165.92" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="72" fill="#0A0A0A">Yes</text>
+<rect x="1912" y="1062" width="636" height="156" fill="#0A0A0A"/>
+<rect x="1920" y="1070" width="620" height="140" fill="#C0C0C0"/>
+<path d="M1920 1210V1070H2540" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1920 1210H2540V1070" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M1928 1202V1078H2532" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1928 1202H2532V1078" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="2230.0" y="1165.92" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="72" fill="#0A0A0A">Also yes</text>
+<rect x="1942" y="1088" width="576" height="104" fill="none" stroke="#0A0A0A" stroke-width="4" stroke-dasharray="6 6"/>
+<rect x="328" y="1528" width="2150" height="880" fill="#003F3F" opacity="0.45"/>
+<rect x="300" y="1500" width="2150" height="880" fill="#C0C0C0"/>
+<path d="M300 2380V1500H2450" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M300 2380H2450V1500" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M308 2372V1508H2442" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M308 2372H2442V1508" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<rect x="316" y="1516" width="2118" height="104" fill="url(#tbi)"/>
+<text x="344" y="1590" font-family="Pixelify Sans" font-weight="700" font-size="62" fill="#FFFFFF">Error</text>
+<rect x="2150" y="1528" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2150 1600V1528H2230" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2150 1600H2230V1528" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2156 1594V1534H2224" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2156 1594H2224V1534" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<rect x="2172" y="1580" width="32" height="8" fill="#0A0A0A"/>
+<rect x="2242" y="1528" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2242 1600V1528H2322" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2242 1600H2322V1528" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2248 1594V1534H2316" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2248 1594H2316V1534" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<rect x="2262" y="1542" width="40" height="38" fill="none" stroke="#0A0A0A" stroke-width="7"/>
+<rect x="2350" y="1528" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2350 1600V1528H2430" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2350 1600H2430V1528" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2356 1594V1534H2424" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2356 1594H2424V1534" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2372 1546L2408 1584M2408 1546L2372 1584" stroke="#0A0A0A" stroke-width="10"/>
+<circle cx="530" cy="1900" r="125" fill="#E01B1B" stroke="#7A0000" stroke-width="8"/>
+<path d="M470 1840l120 120M590 1840l-120 120" stroke="#FFFFFF" stroke-width="34" stroke-linecap="square"/>
+<text x="730" y="1860" font-family="Pixelify Sans" font-weight="700" font-size="96" fill="#0A0A0A">Too many hoodies.</text>
+<text x="730" y="1980" font-family="Pixelify Sans" font-weight="500" font-size="80" fill="#0A0A0A">Wear one anyway?</text>
+<text x="730" y="2070" font-family="Pixelify Sans" font-weight="500" font-size="52" fill="#555555">Error 0x001: closet.sys is full</text>
+<rect x="952" y="2152" width="436" height="146" fill="#0A0A0A"/>
+<rect x="960" y="2160" width="420" height="130" fill="#C0C0C0"/>
+<path d="M960 2290V2160H1380" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M960 2290H1380V2160" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M968 2282V2168H1372" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M968 2282H1372V2168" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="1170.0" y="2248.04" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">OK</text>
+<rect x="982" y="2178" width="376" height="94" fill="none" stroke="#0A0A0A" stroke-width="4" stroke-dasharray="6 6"/>
+<rect x="1440" y="2160" width="420" height="130" fill="#C0C0C0"/>
+<path d="M1440 2290V2160H1860" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1440 2290H1860V2160" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M1448 2282V2168H1852" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1448 2282H1852V2168" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="1650.0" y="2248.04" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">OK</text>
+<rect x="1920" y="2160" width="420" height="130" fill="#C0C0C0"/>
+<path d="M1920 2290V2160H2340" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1920 2290H2340V2160" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M1928 2282V2168H2332" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1928 2282H2332V2168" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="2130.0" y="2248.04" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">Details</text>
+<rect x="588" y="2518" width="2280" height="820" fill="#003F3F" opacity="0.45"/>
+<rect x="560" y="2490" width="2280" height="820" fill="#C0C0C0"/>
+<path d="M560 3310V2490H2840" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M560 3310H2840V2490" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M568 3302V2498H2832" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M568 3302H2832V2498" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<rect x="576" y="2506" width="2248" height="104" fill="url(#tb)"/>
+<text x="604" y="2580" font-family="Pixelify Sans" font-weight="700" font-size="62" fill="#FFFFFF">Installing new personality...</text>
+<rect x="2540" y="2518" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2540 2590V2518H2620" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2540 2590H2620V2518" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2546 2584V2524H2614" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2546 2584H2614V2524" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<rect x="2562" y="2570" width="32" height="8" fill="#0A0A0A"/>
+<rect x="2632" y="2518" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2632 2590V2518H2712" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2632 2590H2712V2518" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2638 2584V2524H2706" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2638 2584H2706V2524" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<rect x="2652" y="2532" width="40" height="38" fill="none" stroke="#0A0A0A" stroke-width="7"/>
+<rect x="2740" y="2518" width="80" height="72" fill="#C0C0C0"/>
+<path d="M2740 2590V2518H2820" fill="none" stroke="#FFFFFF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2740 2590H2820V2518" fill="none" stroke="#0A0A0A" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2746 2584V2524H2814" fill="none" stroke="#DFDFDF" stroke-width="6" transform="translate(3.0 3.0)"/>
+<path d="M2746 2584H2814V2524" fill="none" stroke="#808080" stroke-width="6" transform="translate(-3.0 -3.0)"/>
+<path d="M2762 2536L2798 2574M2798 2536L2762 2574" stroke="#0A0A0A" stroke-width="10"/>
+<text x="630" y="2740" font-family="Pixelify Sans" font-weight="500" font-size="66" fill="#0A0A0A">Copying confidence.dll to C:\YOU\BACK</text>
+<rect x="630" y="2800" width="2140" height="150" fill="#FFFFFF"/>
+<path d="M630 2950V2800H2770" fill="none" stroke="#808080" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M630 2950H2770V2800" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M638 2942V2808H2762" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M638 2942H2762V2808" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<rect x="652" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="738" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="824" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="910" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="996" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1082" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1168" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1254" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1340" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1426" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1512" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1598" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1684" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1770" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1856" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="1942" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="2028" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="2114" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="2200" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="2286" y="2822" width="74" height="106" fill="#000080"/>
+<rect x="2372" y="2822" width="74" height="106" fill="#000080"/>
+<text x="630" y="3050" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">87% complete</text>
+<text x="2770" y="3050" text-anchor="end" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">Time remaining: 1 zip</text>
+<rect x="2350" y="3110" width="420" height="130" fill="#C0C0C0"/>
+<path d="M2350 3240V3110H2770" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M2350 3240H2770V3110" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M2358 3232V3118H2762" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M2358 3232H2762V3118" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="2560.0" y="3198.04" text-anchor="middle" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">Cancel</text>
+<path transform="translate(2330 1160) scale(9)" d="M0 0V17L4 13L7 20L10 19L7 12H12Z" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="1.2"/>
+<rect x="-20" y="3640" width="3040" height="400" fill="#C0C0C0"/>
+<path d="M-20 4040V3640H3020" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M-20 4040H3020V3640" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M-12 4032V3648H3012" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M-12 4032H3012V3648" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<rect x="170" y="3680" width="470" height="150" fill="#C0C0C0"/>
+<path d="M170 3830V3680H640" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M170 3830H640V3680" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M178 3822V3688H632" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M178 3822H632V3688" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<g transform="translate(250 3800)"><clipPath id="sbL"><rect x="-80" y="-140" width="80" height="180"/></clipPath><clipPath id="sbR"><rect x="0" y="-140" width="80" height="180"/></clipPath>
+<text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="140" fill="#111111" clip-path="url(#sbL)">S</text>
+<text x="0" y="10" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="140" fill="none" stroke="#FF7A59" stroke-width="6" clip-path="url(#sbR)">S</text></g>
+<text x="330" y="3780" font-family="Pixelify Sans" font-weight="700" font-size="80" fill="#0A0A0A">Stimpy</text>
+<rect x="700" y="3680" width="620" height="150" fill="#D4D4D4"/>
+<path d="M700 3830V3680H1320" fill="none" stroke="#808080" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M700 3830H1320V3680" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M708 3822V3688H1312" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M708 3822H1312V3688" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="740" y="3775" font-family="Pixelify Sans" font-weight="700" font-size="56" fill="#0A0A0A">Installing new p...</text>
+<rect x="1360" y="3680" width="560" height="150" fill="#C0C0C0"/>
+<path d="M1360 3830V3680H1920" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1360 3830H1920V3680" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M1368 3822V3688H1912" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M1368 3822H1912V3688" fill="none" stroke="#808080" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="1400" y="3775" font-family="Pixelify Sans" font-weight="500" font-size="56" fill="#0A0A0A">Error</text>
+<rect x="2000" y="3680" width="830" height="150" fill="#C0C0C0"/>
+<path d="M2000 3830V3680H2830" fill="none" stroke="#808080" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M2000 3830H2830V3680" fill="none" stroke="#FFFFFF" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<path d="M2008 3822V3688H2822" fill="none" stroke="#0A0A0A" stroke-width="8" transform="translate(4.0 4.0)"/>
+<path d="M2008 3822H2822V3688" fill="none" stroke="#DFDFDF" stroke-width="8" transform="translate(-4.0 -4.0)"/>
+<text x="2060" y="3780" font-family="Pixelify Sans" font-weight="500" font-size="64" fill="#0A0A0A">12:00 AM</text>
+<rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+<g id="stimpy-sig" transform="translate(2700 3790)">
+<clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+<clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+<text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="190" fill="#111111" clip-path="url(#sigL)">S</text>
+<text x="0" y="14" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="190" fill="none" stroke="#FF7A59" stroke-width="8" clip-path="url(#sigR)">S</text>
+</g>
+</svg>
