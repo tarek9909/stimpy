@@ -168,6 +168,9 @@ const envSchema = z.object({
   /** Events Manager "Test events" code: events then show there only. Remove it for live tracking. */
   META_CAPI_TEST_EVENT_CODE: z.string().regex(/^[A-Za-z0-9]{1,40}$/, 'must be the code shown in Events Manager').optional(),
   META_GRAPH_VERSION: z.string().regex(/^v\d+\.\d+$/, 'must look like v24.0').default('v24.0'),
+  /** OneSignal push (optional). The app id is public (it ships in the mobile build); the REST key is a secret. */
+  ONESIGNAL_APP_ID: z.string().regex(/^[0-9a-f-]{36}$/i, 'must be the OneSignal app id (a UUID)').optional(),
+  ONESIGNAL_REST_API_KEY: z.string().trim().min(20, 'must be the OneSignal REST API key').optional(),
 });
 
 export type Config = {
@@ -198,9 +201,12 @@ export type Config = {
   mailpitUrl: string;
   /** Meta Conversions API, or null when not configured (then no events are sent). */
   metaCapi: MetaCapiConfig | null;
+  /** OneSignal push, or null when not configured (then nothing is sent). */
+  onesignal: OneSignalConfig | null;
 };
 
 export type MetaCapiConfig = { pixelId: string; accessToken: string; testEventCode?: string; graphVersion: string };
+export type OneSignalConfig = { appId: string; restApiKey: string };
 
 /** Pure, throws ConfigError. Used by the server (process.env) and by tests (any object). */
 export function parseConfig(env: Record<string, string | undefined> = process.env): Config {
@@ -216,6 +222,9 @@ export function parseConfig(env: Record<string, string | undefined> = process.en
   const problems = productionConfigProblems(e);
   if (Boolean(e.META_PIXEL_ID) !== Boolean(e.META_CAPI_TOKEN)) {
     problems.push('META_PIXEL_ID / META_CAPI_TOKEN: set both to send Conversions API events, or neither');
+  }
+  if (Boolean(e.ONESIGNAL_APP_ID) !== Boolean(e.ONESIGNAL_REST_API_KEY)) {
+    problems.push('ONESIGNAL_APP_ID / ONESIGNAL_REST_API_KEY: set both to send push notifications, or neither');
   }
   if (problems.length) throw new ConfigError(problems);
 
@@ -244,6 +253,7 @@ export function parseConfig(env: Record<string, string | undefined> = process.en
       e.META_PIXEL_ID && e.META_CAPI_TOKEN
         ? { pixelId: e.META_PIXEL_ID, accessToken: e.META_CAPI_TOKEN, testEventCode: e.META_CAPI_TEST_EVENT_CODE, graphVersion: e.META_GRAPH_VERSION }
         : null,
+    onesignal: e.ONESIGNAL_APP_ID && e.ONESIGNAL_REST_API_KEY ? { appId: e.ONESIGNAL_APP_ID, restApiKey: e.ONESIGNAL_REST_API_KEY } : null,
   };
 }
 

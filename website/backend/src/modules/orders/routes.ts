@@ -8,6 +8,7 @@ import { RATE_RULES, rateLimiter } from '../../lib/rate-limiter';
 import { z } from 'zod';
 import { addNote, buildWhatsapp, extendHold, sendOrderEmail, setCash, updateContact, updateDelivery } from '../../services/order-admin';
 import { queuePurchaseEvent } from '../../services/meta-capi';
+import { notifyOwnersOfNewOrder } from '../../services/push';
 import { changeStatus, placeOrder, setDeliveryNumber, type PlaceOrderInput } from '../../services/orders';
 import type { ModuleDef } from '../module';
 import {
@@ -126,6 +127,15 @@ const publicRoutes: FastifyPluginAsyncZod = async (app) => {
           signals: { fbp: b.metaAds.fbp, fbc: b.metaAds.fbc },
           eventSourceUrl: `${app.ctx.config.webUrl}/checkout`,
           eventTime: new Date(),
+        });
+      }
+      if (result.created) {
+        void notifyOwnersOfNewOrder(app.ctx, {
+          orderId: result.orderId,
+          orderNumber: body.order.number,
+          customerName: b.customer.name,
+          itemCount: body.order.items.reduce((n, i) => n + i.qty, 0),
+          totalCents: body.order.totalCents,
         });
       }
       return reply.code(result.created ? 201 : 200).send(body);
