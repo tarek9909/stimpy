@@ -72,6 +72,7 @@ class AuthController extends Notifier<AuthState> {
     } on ApiError {
       // Signing out locally still works if the server cannot be reached.
     }
+    await _store.clearBioLogin(); // an explicit sign-out also forgets the fingerprint login
     await _forget();
   }
 
