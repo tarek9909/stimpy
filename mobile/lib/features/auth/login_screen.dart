@@ -29,7 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _localAuth = LocalAuthentication();
   bool _busy = false;
   String? _error;
-  bool _bioSupported = false; // the phone has a fingerprint / face / screen lock
+  bool _bioSupported = false; // the phone has a fingerprint / face / PIN / pattern (its passkey)
   bool _bioSaved = false; // credentials are saved, so the fingerprint can sign in
   bool _enableBio = true; // the "next time" checkbox
 
@@ -64,7 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      final ok = await _localAuth.authenticate(localizedReason: 'Sign in to Stimpy Admin', persistAcrossBackgrounding: true);
+      final ok = await _localAuth.authenticate(localizedReason: 'Sign in to Stimpy Admin', biometricOnly: false, persistAcrossBackgrounding: true);
       if (!ok || !mounted) return;
       await ref.read(authProvider.notifier).login(creds.email, creds.password);
     } on ApiError catch (e) {
@@ -211,7 +211,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 onPressed: _busy ? null : _signInWithFingerprint,
                                 style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                                 icon: const Icon(LucideIcons.fingerprint, size: 20),
-                                label: const Text('Sign in with fingerprint'),
+                                label: const Text('Sign in with fingerprint or passkey'),
                               ),
                             ] else if (_bioSupported)
                               CheckboxListTile(
@@ -220,7 +220,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 contentPadding: EdgeInsets.zero,
                                 controlAffinity: ListTileControlAffinity.leading,
                                 dense: true,
-                                title: Text('Use fingerprint to sign in next time', style: text.bodySmall),
+                                title: Text('Use fingerprint or passkey to sign in next time', style: text.bodySmall),
                               ),
                             const SizedBox(height: 20),
                             Row(
