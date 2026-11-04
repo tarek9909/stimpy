@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../features/auth/auth_controller.dart';
 import '../features/auth/auth_state.dart';
+import 'providers.dart';
 import '../theme/brand.dart';
 
 /// Locks the app behind the phone's fingerprint / face / PIN / pattern.
@@ -26,12 +27,24 @@ class _AppLockState extends ConsumerState<AppLock> with WidgetsBindingObserver {
   bool _locked = true;
   bool _checking = false;
   DateTime? _backgroundedAt;
-  bool _askedOnce = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _start();
+  }
+
+  /// Cold start: with a saved session the fingerprint comes first, in place of any screen or password.
+  /// With no saved session there is nothing to protect yet, so the login screen shows and the password is the login.
+  Future<void> _start() async {
+    final saved = await ref.read(sessionStoreProvider).read();
+    if (!mounted) return;
+    if (saved == null) {
+      setState(() => _locked = false);
+      return;
+    }
+    await _unlock();
   }
 
   @override
@@ -47,9 +60,9 @@ class _AppLockState extends ConsumerState<AppLock> with WidgetsBindingObserver {
     } else if (state == AppLifecycleState.resumed) {
       final since = _backgroundedAt;
       _backgroundedAt = null;
-      if (since != null && DateTime.now().difference(since) >= AppLock.lockAfter) {
+      final signedIn = ref.read(authProvider).status == AuthStatus.signedIn;
+      if (signedIn && since != null && DateTime.now().difference(since) >= AppLock.lockAfter) {
         setState(() => _locked = true);
-        _askedOnce = false;
         _unlock();
       }
     }
@@ -81,16 +94,6 @@ class _AppLockState extends ConsumerState<AppLock> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final signedIn = ref.watch(authProvider.select((s) => s.status == AuthStatus.signedIn));
-    if (!signedIn) {
-      _locked = true; // the next sign-in unlocks with its own password, then locks again on the next cold start
-      _askedOnce = true;
-      return widget.child;
-    }
-    if (_locked && !_askedOnce) {
-      _askedOnce = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _unlock());
-    }
     return Stack(
       children: [
         widget.child,
