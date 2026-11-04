@@ -140,6 +140,7 @@ void main() {
           apiClientProvider.overrideWithValue(FakeApi(handlers: {
             'GET /admin/orders': (_, _) => pageJson([summaryOf(orderJson()), summaryOf(orderJson(id: 8, number: 'STP-1043', status: 'PACKED', customerName: 'Omar Khoury'))]),
             'GET /admin/orders/counts': (_, _) => countsJson(),
+            'GET /admin/customers': (_, _) => {'items': [], 'page': 1, 'pageSize': 25, 'total': 0},
           })),
         ],
         child: Consumer(
@@ -157,7 +158,7 @@ void main() {
 
     await tester.tap(find.text('Customers'));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Your customers will live here'), findsOneWidget);
+    expect(find.text('Search name, phone or email'), findsOneWidget);
     await _save(tester, key, '05_customers_tab');
 
     await tester.tap(find.text('More'));

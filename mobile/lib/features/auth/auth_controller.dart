@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api_client.dart';
 import '../../core/api_error.dart';
+import '../../core/crash_reporting.dart';
+import '../../core/offline.dart';
 import '../../core/providers.dart';
 import '../../core/push.dart';
 import 'auth_state.dart';
@@ -32,7 +36,22 @@ class AuthController extends Notifier<AuthState> {
     await _api.restoreSession(saved);
     try {
       await _loadMe();
-    } on ApiError {
+    } on ApiError catch (e) {
+      // No connection at all (no HTTP status): keep the session and open on the saved user, so the cached
+      // orders and customers are usable offline. Any answer from the server (401 etc.) still signs out.
+      if (e.statusCode == null) {
+        final raw = await _store.readUser();
+        if (raw != null) {
+          try {
+            final user = AuthUser.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+            _api.cache?.userId = user.id.toString();
+            state = AuthState(status: AuthStatus.signedIn, user: user);
+            return;
+          } catch (_) {
+            // Corrupt saved user: fall through to sign-out.
+          }
+        }
+      }
       await _forget();
     }
   }
@@ -66,12 +85,20 @@ class AuthController extends Notifier<AuthState> {
       user: user,
       sessionExpiresAt: expires == null ? null : DateTime.tryParse(expires)?.toLocal(),
     );
+    await _store.writeUser(jsonEncode({'id': user.id, 'email': user.email, 'name': user.name, 'role': user.role}));
+    // Scope the offline cache to this account before any data screen asks for it.
+    _api.cache?.userId = user.id.toString();
+    CrashReporting.setUser(user.id.toString());
     await PushService.identify(user.id);
   }
 
   Future<void> _forget() async {
     await PushService.forget();
     await _api.clearSession();
+    await _api.cache?.clear();
+    _api.cache?.userId = null;
+    CrashReporting.clearUser();
+    ref.read(offlineProvider.notifier).clear();
     await _store.clear();
     state = const AuthState.signedOut();
   }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../core/offline.dart';
 import '../features/orders/data/orders_api.dart';
 import '../theme/brand.dart';
 import 'nav_badges.dart';
@@ -67,7 +68,12 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
     final newOrders = ref.watch(newOrdersBadgeProvider);
     final shell = widget.shell;
     return Scaffold(
-      body: shell,
+      body: Column(
+        children: [
+          const _OfflineBanner(),
+          Expanded(child: shell),
+        ],
+      ),
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(border: Border(top: BorderSide(color: Brand.line))),
         child: NavigationBar(
@@ -83,6 +89,40 @@ class _AppShellState extends ConsumerState<AppShell> with WidgetsBindingObserver
             const NavigationDestination(icon: Icon(LucideIcons.layoutDashboard), label: 'Overview'),
             const NavigationDestination(icon: Icon(LucideIcons.ellipsis), label: 'More'),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Slim notice shown while cached data is being served because the server cannot be reached.
+class _OfflineBanner extends ConsumerWidget {
+  const _OfflineBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final savedAt = ref.watch(offlineProvider);
+    if (savedAt == null) return const SizedBox.shrink();
+    return Material(
+      color: Brand.ink,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            children: [
+              const Icon(LucideIcons.wifiOff, size: 14, color: Brand.white),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Offline — showing saved data from ${timeAgo(savedAt)}',
+                  style: const TextStyle(fontFamily: 'Poppins', fontSize: 12, color: Brand.white),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

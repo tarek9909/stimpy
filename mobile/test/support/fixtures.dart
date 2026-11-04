@@ -201,6 +201,10 @@ class FakeApi extends ApiClient {
 
   @override
   Future<Map<String, dynamic>> postJson(String path, {Object? body}) async => _answer('POST', path, null, body);
+  @override
+  Future<Map<String, dynamic>> patchJson(String path, {Object? body}) async => _answer('PATCH', path, null, body);
+  @override
+  Future<Map<String, dynamic>> deleteJson(String path, {Object? body}) async => _answer('DELETE', path, null, body);
 }
 
 /// A FakeApi that serves the catalog endpoints used by the New order form.

@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/auth_state.dart';
 import '../features/auth/login_screen.dart';
-import '../features/customers/customers_placeholder.dart';
+import '../features/customers/customer_detail_screen.dart';
+import '../features/customers/customers_screen.dart';
+import '../features/customers/follow_ups.dart';
 import '../features/orders/detail/order_detail_screen.dart';
 import '../features/orders/list/orders_list_screen.dart';
 import '../features/orders/new_order/new_order_screen.dart';
-import '../features/overview/overview_placeholder.dart';
+import '../features/overview/overview_screen.dart';
 import '../features/more/more_screen.dart';
 import '../features/splash/splash_screen.dart';
 import 'shell.dart';
@@ -36,6 +38,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       // Full-screen pages above the tabs. `/orders/new` must come before `/orders/:id`.
       GoRoute(path: '/orders/new', builder: (_, _) => const NewOrderScreen()),
+      GoRoute(path: '/follow-ups', builder: (_, _) => const FollowUpsScreen()),
+      GoRoute(
+        path: '/customers/:id',
+        builder: (_, state) => CustomerDetailScreen(customerId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0),
+      ),
       GoRoute(
         path: '/orders/:id',
         builder: (_, state) => OrderDetailScreen(orderId: int.tryParse(state.pathParameters['id'] ?? '') ?? 0),
@@ -47,10 +54,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: '/orders', builder: (_, _) => const OrdersListScreen()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/customers', builder: (_, _) => const CustomersPlaceholder()),
+            GoRoute(path: '/customers', builder: (_, _) => const CustomersScreen()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/overview', builder: (_, _) => const OverviewPlaceholder()),
+            GoRoute(path: '/overview', builder: (_, _) => const OverviewScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/more', builder: (_, _) => const MoreScreen()),
