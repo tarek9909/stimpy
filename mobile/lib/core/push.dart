@@ -3,7 +3,7 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 
 import 'config.dart';
 
-/// OneSignal push for the admin app. The backend sends to External ID = admin user id (see backend services/push.ts),
+/// OneSignal push for the admin app. The backend sends to External ID = 'admin-<user id>' (see backend services/push.ts),
 /// so after sign-in this device is linked to that id, and unlinked on sign-out.
 /// Does nothing when ONESIGNAL_APP_ID is not set at build time, so the app runs without push.
 class PushService {
@@ -27,7 +27,8 @@ class PushService {
   static Future<void> identify(int userId) async {
     if (!enabled || !_initialized) return;
     try {
-      await OneSignal.login(userId.toString());
+      // OneSignal blocks guessable ids like "1"; the backend uses the same prefix (services/push.ts pushExternalId).
+      await OneSignal.login('admin-$userId');
     } catch (e) {
       debugPrint('OneSignal login failed: $e');
     }

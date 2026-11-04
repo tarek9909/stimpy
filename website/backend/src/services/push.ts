@@ -14,6 +14,12 @@ const log = logger('onesignal');
 
 export const ONESIGNAL_PUSH_URL = 'https://api.onesignal.com/notifications?c=push';
 
+/**
+ * The External ID a device is linked under. OneSignal rejects trivially guessable ids such as "1" ("external_id is
+ * blocked"), so admin user ids are prefixed. The mobile app (core/push.dart) must use the same format.
+ */
+export const pushExternalId = (adminUserId: number | string): string => `admin-${adminUserId}`;
+
 export type PushMessage = {
   /** Admin user ids as strings (the External ID the app logs in with). */
   externalIds: string[];
@@ -106,7 +112,7 @@ export async function notifyOwnersOfNewOrder(ctx: AppContext, order: NewOrderFor
   try {
     const owners = await ctx.prisma.adminUser.findMany({ where: { role: 'OWNER' }, select: { id: true } });
     queuePush(config, {
-      externalIds: owners.map((o: { id: number }) => String(o.id)),
+      externalIds: owners.map((o: { id: number }) => pushExternalId(o.id)),
       title: `New order ${order.orderNumber}`,
       body: `${order.customerName} · ${order.itemCount} item${order.itemCount === 1 ? '' : 's'} · ${formatUsd(order.totalCents)}`,
       data: { kind: 'new_order', orderId: String(order.orderId) },

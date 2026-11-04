@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { errorResponses } from '../../lib/http';
-import { sendPush } from '../../services/push';
+import { pushExternalId, sendPush } from '../../services/push';
 import type { ModuleDef } from '../module';
 
 const pushTestResponse = z
@@ -27,7 +27,7 @@ const adminRoutes: FastifyPluginAsyncZod = async (app) => {
       const config = app.ctx.config.onesignal;
       if (!config) return { configured: false, sent: false, recipients: null };
       const result = await sendPush(config, {
-        externalIds: [String(req.auth!.user.id)],
+        externalIds: [pushExternalId(req.auth!.user.id)],
         title: 'Stimpy Admin',
         body: 'Test notification: push is working.',
         data: { kind: 'test' },
