@@ -98,11 +98,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref.read(authProvider.notifier).login(_email.text, _password.text);
+      // Read everything before signing in: a successful sign-in navigates away and disposes this screen, after
+      // which `ref` and the text controllers can no longer be used.
+      final email = _email.text.trim();
+      final password = _password.text;
       final store = ref.read(sessionStoreProvider);
-      if (_bioSupported && _enableBio) {
-        await store.writeBioLogin(_email.text.trim(), _password.text);
-      } else if (!_enableBio) {
+      final remember = _bioSupported && _enableBio;
+      final forget = !_enableBio;
+      await ref.read(authProvider.notifier).login(email, password);
+      if (remember) {
+        await store.writeBioLogin(email, password);
+      } else if (forget) {
         await store.clearBioLogin();
       }
     } on ApiError catch (e) {
