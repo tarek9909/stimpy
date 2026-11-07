@@ -242,6 +242,7 @@ Bio: `One hoodie. Multiple identities. Swap the back, change the look. Order bel
 | Sat Nov 21 | 8:30 PM | Reel | <a href="posts/2026-11-21_2030_reel_glimpse-receipt.mp4"><img src="_previews/2026-11-21_2030_reel_glimpse-receipt.jpg" width="260"></a> | `2026-11-21_2030_reel_glimpse-receipt.mp4` | Total due: go touch grass 🧾🌱 هودي واحد، وظهر بيتغيّر. اختار تنين Stimpies من الموقع. | Website, link in bio |
 | Sun Nov 22 | 8:30 PM | Carousel | <a href="posts/2026-11-22_2030_carousel_loud-and-wild"><img src="_previews/2026-11-22_2030_carousel_loud-and-wild.jpg" width="260"></a> | `2026-11-22_2030_carousel_loud-and-wild\` | Loud or wild? 🔊🐯 أي واحد إلك؟ احكيلنا بالكومنتات. | Comment |
 | Mon Nov 23 | 12:30 PM | Story | <a href="posts/2026-11-23_1230_story_perfectloop.mp4"><img src="_previews/2026-11-23_1230_story_perfectloop.jpg" width="260"></a> | `2026-11-23_1230_story_perfectloop.mp4` | Zip off. Zip on. 🔁 صعب توقّف تتفرّج. | Website link sticker |
+| Tue Nov 24 | 8:30 PM | Reel | <a href="posts/2026-11-24_2030_reel_60s-film.mp4"><img src="_previews/2026-11-24_2030_reel_60s-film.jpg" width="260"></a> | `2026-11-24_2030_reel_60s-film.mp4` | أنت مين اليوم؟ | Comment your design |
 | Thu Nov 26 | 8:30 PM | Carousel | <a href="posts/2026-11-26_2030_carousel_soft-and-chill"><img src="_previews/2026-11-26_2030_carousel_soft-and-chill.jpg" width="260"></a> | `2026-11-26_2030_carousel_soft-and-chill\` | Soft, chill, offline. 🫧 شو مزاجك اليوم؟ | Website, link in bio |
 | Fri Nov 27 | 8:30 PM | Reel | *To film or add* | **Arabic Video 5 (order or customer clip)**<br>Save as `2026-11-27_2030_reel_arabic-video-5.mp4`. If nothing is genuine, use a real product demo or skip | من الطلب للباب 📦 اطلب عالواتساب، الرابط بالـbio. | WhatsApp, link in bio |
 
@@ -294,7 +295,7 @@ The replacement exports are now in `posts\`, and the originals are in `_archive\
 | `2026-11-13_2030_reel_50s-film.mp4` | Replaced and checked Nov 8: decodes in full, 40s, -14.0 LUFS, -2.5 dBTP. Frames every second show a zip around the panel instead of studs, no edition text, "11 STIMPIES" and the "ONE HOODIE. YOUR WORLD. @STIMPY.LB" end card. Ready to post |
 | `2026-11-19_2030_reel_split.mp4` | Replaced. Owner watched it and confirmed all its designs are on the website. Checked Nov 8: 12s, -14.1 LUFS, -1.1 dBTP. Ready to post |
 | `2026-11-21_2030_reel_glimpse-receipt.mp4` | Replaced. Checked Nov 8: 15s, -14.1 LUFS, -1.6 dBTP |
-| `2026-11-24_2030_reel_60s-film.mp4` | Replaced. Checked Nov 8: 21s, -14.0 LUFS, -2.7 dBTP. The 13-17s titles are a fast transition, with each new panel arriving about 0.25s before its title, so `_CHECK-PLAYBACK` was removed from the name. It has no calendar row |
+| `2026-11-24_2030_reel_60s-film.mp4` | Replaced. Checked Nov 8: 21s, -14.0 LUFS, -2.7 dBTP. The 13-17s titles are a fast transition, with each new panel arriving about 0.25s before its title, so `_CHECK-PLAYBACK` was removed from the name. Ready to post |
 | `2026-11-28_2030_reel_glimpse-sameday.mp4` | Replaced. Checked Nov 8: 15s, -14.1 LUFS, -1.5 dBTP |
 
 All five were decoded start to finish with no errors. Audio was measured, not listened to.
