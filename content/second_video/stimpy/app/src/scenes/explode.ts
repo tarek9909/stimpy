@@ -69,7 +69,7 @@ export function explode(S: Stage, t: number) {
   const bx = DOCK.w / 2, by = DOCK.h / 2;
   const labels: [string, string, number, number, number][] = [
     // title, detail, layer z, anchor y (dock-local), label row
-    ['03 — STIMPIE', '100% COTTON PRINT PANEL · 41 × 50 CM', 460 * sep + 2.5, -by + 30, 0],
+    ['03 — STIMPIE', '100% COTTON PRINT PANEL · 30 × 40 CM', 460 * sep + 2.5, -by + 30, 0],
     ['02 — ZIP DOCK', 'ZIPS ON AND OFF — HIDDEN IN THE SEAM', fz, -by + 20, 1],
     ['01 — SHELL', '400 GSM HEAVYWEIGHT FLEECE', 0, -by - 60, 2],
   ];
@@ -97,8 +97,8 @@ export function explode(S: Stage, t: number) {
       f.beginPath(); f.moveTo(p0[0], p0[1]); f.lineTo(p0[0] + (p1[0] - p0[0]) * ease.outCubic(dk), p0[1] + (p1[1] - p0[1]) * ease.outCubic(dk)); f.stroke();
     }
     f.restore();
-    mono(f, '41 CM', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 10, { size: 14, align: 'center', alpha: dk });
-    mono(f, '50 CM', (c2[0] + d2[0]) / 2 - 12, (c2[1] + d2[1]) / 2, { size: 14, align: 'right', alpha: dk });
+    mono(f, '30 CM', (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 10, { size: 14, align: 'center', alpha: dk });
+    mono(f, '40 CM', (c2[0] + d2[0]) / 2 - 12, (c2[1] + d2[1]) / 2, { size: 14, align: 'right', alpha: dk });
   }
   // the track goes home
   const ck = seg(t, EV.collapse, EV.collapse + 0.1) * (1 - seg(t, 14.9, 15.2));

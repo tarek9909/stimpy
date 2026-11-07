@@ -17,7 +17,7 @@ function of song time, rendered with three.js. So the browser preview and the ex
 | 48–54 s | **Yours** | Stimpy Studio: a drawing is dropped in, printed on cotton, and snaps onto the hoodie. |
 | 54–60 s | **End** | The panel peels away, the logo lands with the magnets, every identity flickers through once. |
 
-Product details on screen: 400 GSM fleece and a zip-on back panel. The panel size (41 × 50 cm) and "Drop 01" are placeholders.
+Product details on screen: 400 GSM fleece and a zip-on back panel. The panel is 30 × 40 cm (the finished-panel spec). Drop 01 launches 14.11.26.
 
 ## Layout
 
