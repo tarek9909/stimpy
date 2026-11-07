@@ -76,6 +76,7 @@ Do not schedule, build or change any of these:
 | 15 | Thu Nov 26 | Carousel | [x] | |
 | 16 | Sat Nov 28 | Reel | [x] | |
 | 17 | Tue Dec 1 | Carousel | [ ] | |
+| 18 | Tue Nov 24 | Reel | [ ] | Added Nov 8, after the first 17. Schedule it on its own |
 
 ## The 17 posts
 
@@ -247,6 +248,18 @@ Same day, different me. 🌀 الصبح شخص، بالليل شخص تاني، 
 
 ```text
 Who are you today? 🎭 عنّا ظهر لكل مزاج.
+```
+
+### 18. Tue Nov 24, 8:30 PM: Reel (added Nov 8)
+
+Added after the first 17 were scheduled, so the prompt below doesn't cover it. Schedule it by hand, or send a separate approval for this one post.
+
+- **File:** `C:\Projects\motion\content\calendar\posts\2026-11-24_2030_reel_60s-film.mp4`
+- **Cover:** `C:\Projects\motion\content\calendar\_covers\2026-11-24_2030_reel_60s-film_cover.jpg`
+- **Caption:**
+
+```text
+أنت مين اليوم؟
 ```
 
 ## Prompt for Codex
