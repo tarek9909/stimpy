@@ -29,7 +29,7 @@ export type SeedOptions = { minimal?: boolean; admin?: boolean; log?: (msg: stri
 const ARTWORK_DIRS = [
   resolve(API_ROOT, '..', 'seed-assets', 'stimpies'),
   resolve(API_ROOT, '..', '..', 'stimpy-video', 'out', 'stimpies'),
-  resolve(API_ROOT, '..', '..', 'content', 'stimpy-video', 'out', 'stimpies'),
+  resolve(API_ROOT, '..', '..', 'content', 'videos', 'stimpy-video', 'out', 'stimpies'),
 ];
 const GLB_FILE = join(API_ROOT, 'seed-assets', 'models', 'hoodie.glb');
 const GLB_META_FILE = join(API_ROOT, 'seed-assets', 'models', 'hoodie.meta.json');

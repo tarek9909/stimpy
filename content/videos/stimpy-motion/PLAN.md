@@ -1,6 +1,6 @@
 # Stimpy: motion graphics production plan
 
-The six motion-graphic videos from `motion.md` / `stimpy_master_plan.md` §9, built as code in one app.
+The six motion-graphic videos from [`video-briefs.md`](../video-briefs.md) / [`master-plan.md`](../../strategy/master-plan.md) §9, built as code in one app.
 Every frame is a pure function of time, and the soundtrack is synthesised from the same timeline, so the
 preview in the browser is exactly what the final render will be.
 

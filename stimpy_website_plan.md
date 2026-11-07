@@ -11,7 +11,7 @@ Both share one backend and one database.
 
 > **Detailed documentation lives in [docs/website/](docs/website/README.md)**: the backend (data model, business rules, API contract), the wiring between all parts, and the frontend plan. Where they differ from this overview, the detailed documents win. Two decisions changed since this plan was first written: dashboard login uses **server-side sessions in an HttpOnly cookie** instead of JWT, and local MySQL uses **host port 3317**.
 
-> Source of truth for brand, pricing, and market: [stimpy_master_plan.md](stimpy_master_plan.md) and [identity/stimpy_brand_identity.md](identity/stimpy_brand_identity.md). Where this document makes an assumption the master plan does not cover, it is marked **(assumption)** and collected in [section 14](#14-open-decisions).
+> Source of truth for brand, pricing, and market: [content/strategy/master-plan.md](content/strategy/master-plan.md) and [content/identity/stimpy_brand_identity.md](content/identity/stimpy_brand_identity.md). Where this document makes an assumption the master plan does not cover, it is marked **(assumption)** and collected in [section 14](#14-open-decisions).
 
 ---
 
@@ -515,7 +515,7 @@ Every order carries two different numbers that serve different people and are cr
 
 ## 7. Look and Feel
 
-Follows [identity/stimpy_brand_identity.md](identity/stimpy_brand_identity.md) exactly. The brand rule is: **the hoodie stays calm, the Stimpies bring the noise.**
+Follows [content/identity/stimpy_brand_identity.md](content/identity/stimpy_brand_identity.md) exactly. The brand rule is: **the hoodie stays calm, the Stimpies bring the noise.**
 
 ### 7.1 Website
 
@@ -570,7 +570,7 @@ The dashboard is a work tool, so it is quieter than the storefront but unmistaka
 | Images | Upload to object storage (Cloudflare R2 or similar), resized via a worker/`sharp` | Fast mobile images |
 | Email | Nodemailer behind an adapter: Mailpit locally, a transactional provider (Resend or Brevo) later; sent through a background queue | Automatic customer emails and founder alerts |
 | Jobs | A small scheduler (`node-cron` or BullMQ if Redis is added later) | Drop start, reservation expiry, daily summaries |
-| Builder | **Three.js** (3D, glTF/GLB model) and layered images (2D), mode chosen at runtime from dashboard settings | Reuses the Three.js work already in `stimpy-video` and `second_video` |
+| Builder | **Three.js** (3D, glTF/GLB model) and layered images (2D), mode chosen at runtime from dashboard settings | Reuses the Three.js work already in `stimpy-video` and `content/videos/second_video` |
 | Testing | Vitest (unit), Playwright (checkout and swap flows) | Orders and stock are the highest-risk code |
 
 ### 8.2 Repository layout (monorepo, npm/pnpm workspaces)
@@ -827,6 +827,6 @@ The target is to have a complete, locally running product ready before the Octob
 | 5 | Analytics | A privacy-friendly tool plus UTM links, added when going live |
 | 6 | Who builds it | You with Claude as the developer |
 | 7 | Delivery number format | Free text; duplicates warn but do not block, since one run may carry several orders |
-| 8 | 3D hoodie model | Needs a hoodie GLB model: reuse or adapt the one in `stimpy-video/app` and `second_video`, or model a new one |
-| 9 | Existing assets | Stimpie back-design cards in `stimpy-video/out/stimpies/` and the hoodie work in `second_video/` and `stimpy-video/app/` will be reviewed for Builder and product images |
+| 8 | 3D hoodie model | Needs a hoodie GLB model: reuse or adapt the one in `content/videos/stimpy-video/app` and `content/videos/second_video`, or model a new one |
+| 9 | Existing assets | Stimpie back-design cards in `content/videos/stimpy-video/out/stimpies/` and the hoodie work in `content/videos/second_video/` and `content/videos/stimpy-video/app/` will be reviewed for Builder and product images |
 | 10 | Seed data | A few placeholder colors, sizes, and size-chart values are seeded only so the site is not empty; replace them in the dashboard |

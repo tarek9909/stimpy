@@ -1,0 +1,104 @@
+diff --git a/C:/Projects/motion/content/second_video/stimpy/app/src/art/worlds.ts b/v4/src/art/worlds.ts
+index 5be2130..fa83f27 100644
+--- a/C:/Projects/motion/content/second_video/stimpy/app/src/art/worlds.ts
++++ b/v4/src/art/worlds.ts
+@@ -12,15 +12,15 @@ import { walkFloor, floorShadow } from '../scenes/common';
+ export type World = (c: Ctx, t: number, age: number, d: Design) => void;
+ 
+ const beatOf = (t: number) => t * 2; // 120 BPM
+-const WY = 540;          // identity word
+-const LY = 690;          // the line under it
+-const FLOOR = H * 0.84;  // floor line under the hoodie
++const WY = 454;          // identity word
++const LY = 608;          // the line under it
++const FLOOR = H * 0.66;  // floor line under the hoodie
+ 
+ type Fam = 'ArchivoX' | 'ArchivoC' | 'Corm';
+ function bigWord(c: Ctx, s: string, age: number, o: { y?: number; size: number; color: string; family?: Fam; italic?: boolean; weight?: number; track?: number; alpha?: number; shadow?: string }) {
+   const u = ease.outExpo(age / 0.45);
+   const opts = { size: o.size, family: o.family ?? 'ArchivoX', weight: o.weight ?? 900, italic: o.italic, track: o.track ?? -0.04 } as const;
+-  const fit = Math.min(1, (W - 90) / measure(c, s, opts));
++  const fit = Math.min(1, (W - 130) / measure(c, s, opts));
+   const k = fit * (1 + (1 - u) * 0.12);
+   c.save();
+   c.globalAlpha = (o.alpha ?? 1) * clamp(age / 0.08);
+@@ -118,8 +118,8 @@ export const WORLDS: Record<string, World> = {
+       c.fillStyle = 'rgba(255,255,255,0.7)';
+       c.beginPath(); c.ellipse(x + Math.sin(t + i) * 20 - r * 0.35, y - r * 0.4, r * 0.18, r * 0.1, -0.6, 0, TAU); c.fill();
+     }
+-    bigWord(c, d.word, age, { y: WY - 20, size: 560, color: '#111111', family: 'Corm', italic: true, weight: 600, track: -0.02 });
+-    line(c, d, age, '#111111', { size: 64, y: LY + 90 });
++    bigWord(c, d.word, age, { y: WY, size: 560, color: '#111111', family: 'Corm', italic: true, weight: 600, track: -0.02 });
++    line(c, d, age, '#111111', { size: 64, y: LY + 22 });
+     floorShadow(c, W / 2, FLOOR, 440, 0.3);
+   },
+ 
+@@ -150,7 +150,7 @@ export const WORLDS: Record<string, World> = {
+       c.fillRect(x, 0, aw, ah);
+       c.beginPath(); c.arc(x + aw / 2, ah, aw / 2, 0, Math.PI); c.fill();
+     }
+-    walkFloor(c, t, '#1E2A5A', 0.25, H * 0.68);
++    walkFloor(c, t, '#1E2A5A', 0.25, H * 0.52);
+     bigWord(c, d.word, age, { y: WY + 10, size: 400, color: '#1E2A5A', track: -0.04 });
+     line(c, d, age, '#1E2A5A', { y: LY + 10 });
+     floorShadow(c, W / 2, FLOOR, 440, 0.35);
+@@ -208,7 +208,7 @@ export const WORLDS: Record<string, World> = {
+   // a VHS sleeve: blue, retro sunset bars behind the hoodie, tracking lines
+   vhs(c, t, age, d) {
+     fill(c, d.pal.bg);
+-    const cx = W / 2, cy = H * 0.74, R = 560 * ease.outCubic(age / 0.5);
++    const cx = W / 2, cy = H * 0.57, R = 560 * ease.outCubic(age / 0.5);
+     c.save();
+     c.beginPath(); c.arc(cx, cy, R, Math.PI, 0); c.closePath(); c.clip();
+     const g = c.createLinearGradient(0, cy - R, 0, cy);
+@@ -235,9 +235,9 @@ export const WORLDS: Record<string, World> = {
+   unhinged(c, t, age, d) {
+     fill(c, d.pal.bg);
+     c.globalAlpha = 0.55 * clamp(age / 0.2);
+-    rays(c, W / 2, H * 0.62, 28, t * 0.15 + 0.06 * pulse((beatOf(t) % 1) / 2, 6), '#FFC94A');
++    rays(c, W / 2, H * 0.48, 28, t * 0.15 + 0.06 * pulse((beatOf(t) % 1) / 2, 6), '#FFC94A');
+     c.globalAlpha = 1;
+-    glowBlob(c, W / 2, H * 0.62, 700, '#F6EBD2', 0.9);
++    glowBlob(c, W / 2, H * 0.48, 700, '#F6EBD2', 0.9);
+     c.fillStyle = d.pal.bg; c.fillRect(0, WY - 170, W, 380);
+     bigWord(c, d.word, age, { size: 440, color: '#111111', shadow: '#F2762E', track: -0.04 });
+     line(c, d, age, '#111111');
+@@ -247,7 +247,7 @@ export const WORLDS: Record<string, World> = {
+   // black, a spiral in orange and blue, wireframe grids drifting
+   sameday(c, t, age, d) {
+     fill(c, d.pal.bg);
+-    const cx = W / 2, cy = H * 0.62;
++    const cx = W / 2, cy = H * 0.48;
+     c.lineWidth = 22;
+     for (let k = 0; k < 2; k++) {
+       c.strokeStyle = k ? '#4FB6F0' : '#F26A4B';
+@@ -301,7 +301,7 @@ export const WORLDS: Record<string, World> = {
+   neon(c, t, age, d) {
+     fill(c, d.pal.bg);
+     stars(c, W, H, 11, 260, 'rgba(232,244,255,0.8)', t);
+-    const cx = W / 2, cy = H * 0.64;
++    const cx = W / 2, cy = H * 0.49;
+     glowBlob(c, cx, cy, 800, '#D6264A', 0.35);
+     glowBlob(c, cx, cy, 500, '#E8F4FF', 0.25 + 0.2 * pulse((beatOf(t) % 1) / 2, 5));
+     c.lineWidth = 3;
+diff --git a/C:/Projects/motion/content/second_video/stimpy/app/src/scenes/identities.ts b/v4/src/scenes/identities.ts
+index 2d7574a..88d4928 100644
+--- a/C:/Projects/motion/content/second_video/stimpy/app/src/scenes/identities.ts
++++ b/v4/src/scenes/identities.ts
+@@ -34,7 +34,7 @@ export function identities(S: Stage, t: number) {
+   WORLDS[d.id]!(S.bgc(), t, age, d);
+ 
+   const fast = t >= 34;
+-  placeHoodie(S, { x: 0, y: 270, s: fast ? 1.02 : 0.98, walk: 1, punch: 0.05 * pulse(age, 12) });
++  placeHoodie(S, { x: 0, y: -38, s: fast ? 0.66 : 0.64, walk: 1, punch: 0.05 * pulse(age, 12) });
+   lightFor(S, d);
+ 
+   const cur = S.hoodie.panels[0]!.state;
+@@ -72,6 +72,6 @@ export function identities(S: Stage, t: number) {
+   // tiny camera kick per swap; on the long holds the camera creeps in on the Stimpie's hero detail
+   const creep = interval >= 1.9 ? 0.3 * ease.inOutCubic(seg(age, 0.5, interval)) : 0;
+   const [fx, fy] = focusWorld(S, d);
+-  S.cam({ tx: fx * creep, ty: fy * creep, roll: (k % 2 ? 1 : -1) * 0.012 * pulse(age, 6), dist: DIST * (1 - 0.03 * pulse(age, 7) - 0.25 * creep) });
++  S.cam({ tx: fx * creep, ty: fy * creep, roll: (k % 2 ? 1 : -1) * 0.012 * pulse(age, 6), dist: DIST * (1 - 0.03 * pulse(age, 7) - 0.12 * creep) });
+   void ease;
+ }

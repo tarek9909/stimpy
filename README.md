@@ -7,42 +7,26 @@ Official repository containing the motion design pipelines, 3D/WebGL video rende
 ## 📁 Repository Structure
 
 ```
-├── identity/                      # Complete brand identity assets
-│   ├── stimpy_brand_identity.md   # Typography, color palette & core rules
-│   ├── stimpy_brand_sheet.png     # Full brand visual board
-│   ├── stimpy_logo_*.png          # Primary logos (main, on dark, on light)
-│   └── stimpy_icon_*.png          # App & social icon variations
+├── content/                 # Start at content/README.md
+│   ├── calendar/            # Launch plan and every file ready to post
+│   │   ├── posts/           # Dated Reels, Stories, carousels and image posts
+│   │   ├── _covers/         # Reel covers
+│   │   ├── _previews/       # Calendar preview images
+│   │   └── _archive/        # Replaced versions
+│   ├── posters/             # The 18 poster designs
+│   ├── videos/              # Video briefs and render projects
+│   │   ├── stimpy-motion/   # Motion graphics and poster export
+│   │   ├── stimpy-video/    # 50-second "One Hoodie" teaser
+│   │   └── second_video/    # 60-second "Multiple Identities" film
+│   ├── strategy/            # Master plan, concept, bio and highlights, creative review
+│   ├── identity/            # Brand guide, logos, icons, hoodie specifications
+│   ├── _stimpies/           # Source Stimpie artwork
+│   └── drop-001/            # Drop 001 artwork
 │
-├── stimpy-motion/                 # Canvas & motion-graphics rendering pipeline
-│   ├── app/                       # TypeScript/Vite motion engine & scene scripts
-│   ├── out/                       # Rendered social video teasers & audio stems (.mp4, .wav)
-│   │   ├── stimpy_logo.mp4        # Logo Reveal teaser
-│   │   ├── stimpy_question.mp4    # "How many hoodies do you own?" teaser
-│   │   ├── stimpy_split.mp4       # The Split Screen loop
-│   │   ├── stimpy_glimpses_*.mp4  # Glimpses series (Sabotage, Bubblegum, Receipt, Tiger, Sameday)
-│   │   ├── stimpy_countdown_*.mp4 # Daily Countdown series (D5 through Launch)
-│   │   └── stimpy_which_*.mp4     # "Which Back Are You?" poll & result films (loud, wild, unleashed)
-│   ├── PLAN.md                    # Motion graphics implementation plan
-│   └── README.md                  # Motion engine documentation & render guide
-│
-├── stimpy-video/                  # 3D Avatar & WebGL video generator
-│   ├── app/                       # Three.js 3D character animation engine
-│   ├── out/                       # Rendered MP4s (stimpy_instagram.mp4, stimpy_avatar.mp4)
-│   │   ├── stills/ & shots/       # Rendered frame previews & still captures
-│   │   └── stimpies/              # Lookbook and Stimpie back-design cards
-│   ├── song/                      # Audio synthesis scripts (synth.py) & QA logs
-│   └── README.md                  # 3D renderer setup & specs
-│
-├── second_video/                  # 2D/GL scene engine & interactive sequencer
-│   └── stimpy/                    # Stage engine, hoodie shaders, designs, and music
-│
-├── pdoom-video/                   # WebGL procedural canvas & visual treatment docs
-│   └── docs/                      # ENGINE.md, TREATMENT.md
-│
-├── stimpy_master_plan.md          # Full brand, product, drop & content master plan
-├── stimpy_concept_prelaunch.md    # Pre-launch hype strategy & community rollout
-├── stimpy_bio_and_highlights.md   # Social bios, story highlights & caption copy
-└── motion.md                      # Motion design signature system & storyboards
+├── website/                 # Storefront, dashboard and backend code
+├── docs/website/            # Website build documentation
+├── stimpy_website_plan.md   # Website and dashboard plan
+└── pp-viewer/               # 3D model viewer
 ```
 
 ---
@@ -67,8 +51,11 @@ Every transition in the motion system uses the **"zip wipe"** — a zipper line 
 
 ## 📄 Documentation
 
-- [Brand Identity Guide](identity/stimpy_brand_identity.md)
-- [Master Plan & Drop Architecture](stimpy_master_plan.md)
-- [Pre-launch Strategy](stimpy_concept_prelaunch.md)
-- [Social Bio & Highlights Architecture](stimpy_bio_and_highlights.md)
-- [Motion Design & Video Storyboards](motion.md)
+- [Content index](content/README.md)
+- [Launch calendar](content/calendar/STIMPY_CALENDAR.md)
+- [Brand Identity Guide](content/identity/stimpy_brand_identity.md)
+- [Master Plan & Drop Architecture](content/strategy/master-plan.md)
+- [Pre-launch Strategy](content/strategy/concept-and-prelaunch.md)
+- [Social Bio & Highlights](content/strategy/instagram-bio-and-highlights.md)
+- [Video Briefs](content/videos/video-briefs.md)
+- [Website documentation](docs/website/README.md)

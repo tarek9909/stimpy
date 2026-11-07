@@ -749,10 +749,10 @@ Once these are complete, follow the dated pre-launch week in section 10 (8–13 
 
 | File | Description |
 |---|---|
-| `stimpy_master_plan.md` | This document: the complete plan. |
-| `stimpy_concept_prelaunch.md` | The concept and pre-launch ideas table. |
-| `stimpy_brand_identity.md` | The detailed brand identity guide. |
-| `stimpy_bio_and_highlights.md` | Bio options and story highlight ideas. |
+| `content/strategy/master-plan.md` | This document: the complete plan. |
+| `content/strategy/concept-and-prelaunch.md` | The concept and pre-launch ideas table. |
+| `content/identity/stimpy_brand_identity.md` | The detailed brand identity guide. |
+| `content/strategy/instagram-bio-and-highlights.md` | Bio options and story highlight ideas. |
 | `stimpy_brand_sheet.png` | Logo versions and full color palette. |
 | `stimpy_icon_sheet.png` | The split-S icon in all three versions. |
 | `stimpy_logo_main.png` | Full logo on coral. |

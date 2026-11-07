@@ -88,13 +88,11 @@ function drawCard(c: Ctx, n: number, cx: number, cy: number, w: number, rot: num
   c.globalAlpha = clamp(alpha);
   c.translate(cx, cy);
   c.rotate(rot);
+  // the shadow follows the picture's own shape
   if (shadow > 0) {
     c.shadowColor = `rgba(0,0,0,${shadow})`;
     c.shadowBlur = w * 0.12;
     c.shadowOffsetY = w * 0.05;
-    c.fillStyle = '#000';
-    c.fillRect(-w / 2, -h / 2, w, h);
-    c.shadowColor = 'transparent';
   }
   c.drawImage(cardCanvas(n), -w / 2, -h / 2, w, h);
   c.restore();
@@ -130,7 +128,6 @@ function topHud(c: Ctx, color: string, alpha: number) {
   c.closePath();
   c.fill();
   c.restore();
-  text(c, 'DROP 001', W - 84, 124, '600 24px PlexB', color, 'right', alpha, 3);
 }
 
 // ---------------------------------------------------------------- world dispatch

@@ -516,6 +516,7 @@ export class Avatar {
     const settle = 1 + 0.05 * (o.cardSettle ?? 0);
     this.card.scale.set(settle, settle, 1);
     (this.outline.material as THREE.LineBasicMaterial).opacity = on ? 0 : Math.max(0.25, o.slotGlow ?? 0);
+    for (const s of this.studs) s.visible = !on;
     const studMat = this.studs[0].material as THREE.MeshStandardMaterial;
     studMat.emissiveIntensity = Math.max(o.snapFlash ?? 0, (o.slotGlow ?? 0) * 0.6) * 3;
 

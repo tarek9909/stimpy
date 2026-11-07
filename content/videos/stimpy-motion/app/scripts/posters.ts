@@ -3,7 +3,7 @@
 //
 //   node scripts/posters.ts [--only 01_one-hoodie,14_the-split] [--out <dir>] [--chrome <path>]
 //
-// Default output: content/posters/ (next to the other content folders).
+// Default output: content/posters/.
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -13,7 +13,7 @@ import { chromium } from 'playwright-core';
 const argv = process.argv.slice(2);
 const opt = (k: string, d?: string) => { const i = argv.indexOf(`--${k}`); return i >= 0 ? argv[i + 1] : d; };
 const APP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.resolve(opt('out', path.resolve(APP, '..', '..', 'posters'))!);
+const OUT = path.resolve(opt('out', path.resolve(APP, '..', '..', '..', 'posters'))!);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function reachable(url: string) {

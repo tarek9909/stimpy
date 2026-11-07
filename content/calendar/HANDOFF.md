@@ -114,10 +114,10 @@ Nov 28 can shift the $182: $127/$55 toward whichever route qualifies, with a $5 
 | Pushed | Not pushed |
 |---|---|
 | This file and `STIMPY_CALENDAR.md` | All 34 video files (555 MB), listed by name below |
-| Posters, carousel slides, `_covers/` and `_previews/` | `_fixed/_source-changes/*.diff` |
+| Posters, carousel slides, `_covers/` and `_previews/` | `_archive/fixed-exports/_source-changes/*.diff` |
 | The `ADD-*.txt` placeholder notes | |
 
-Video links in the calendar won't open from GitHub, because the videos stay on the owner's computer in `C:\Projects\motion\content\calendar\`. Preview images do render.
+Video links in the calendar won't open from GitHub, because the videos stay on the owner's computer in `C:\Projects\motion\content\calendar\posts\`. Preview images do render.
 
 The full chat is on the owner's computer at `C:\Users\aswad\.claude\projects\C--Projects-motion\55b34874-9d99-4bb3-af49-598caf3dbe73.jsonl`.
 
@@ -127,46 +127,46 @@ Names only. The files aren't in the repo.
 
 **Calendar videos**
 
-- `2026-11-02_2030_reel_logo.mp4`
-- `2026-11-03_1230_story_soon.mp4`
-- `2026-11-04_2030_reel_question.mp4`
-- `2026-11-05_2100_story_soundfirst.mp4`
-- `2026-11-06_2030_reel_glimpse-bubblegum.mp4`
-- `2026-11-07_1230_story_glimpse-sabotage.mp4`
-- `2026-11-07_2030_reel_shyback.mp4`
-- `2026-11-08_2030_reel_edgezip.mp4`
-- `2026-11-09_1230_story_countdown-5.mp4`
-- `2026-11-09_2030_reel_glimpse-tiger.mp4`
-- `2026-11-10_1230_story_countdown-4.mp4`
-- `2026-11-10_2030_reel_emptyframe.mp4`
-- `2026-11-11_1230_story_countdown-3.mp4`
-- `2026-11-11_2100_story_reveal.mp4`
-- `2026-11-12_1230_story_countdown-2.mp4`
-- `2026-11-13_1230_story_tomorrow.mp4`
-- `2026-11-13_2030_reel_50s-film.mp4`
-- `2026-11-13_2100_story_date.mp4`
-- `2026-11-14_1200_story_launch.mp4`
-- `2026-11-19_2030_reel_split.mp4`
-- `2026-11-21_2030_reel_glimpse-receipt.mp4`
-- `2026-11-23_1230_story_perfectloop.mp4`
-- `2026-11-24_2030_reel_60s-film_CHECK-PLAYBACK.mp4`
-- `2026-11-28_2030_reel_glimpse-sameday.mp4`
+- `posts/2026-11-02_2030_reel_logo.mp4`
+- `posts/2026-11-03_1230_story_soon.mp4`
+- `posts/2026-11-04_2030_reel_question.mp4`
+- `posts/2026-11-05_2100_story_soundfirst.mp4`
+- `posts/2026-11-06_2030_reel_glimpse-bubblegum.mp4`
+- `posts/2026-11-07_1230_story_glimpse-sabotage.mp4`
+- `posts/2026-11-07_2030_reel_shyback.mp4`
+- `posts/2026-11-08_2030_reel_edgezip.mp4`
+- `posts/2026-11-09_1230_story_countdown-5.mp4`
+- `posts/2026-11-09_2030_reel_glimpse-tiger.mp4`
+- `posts/2026-11-10_1230_story_countdown-4.mp4`
+- `posts/2026-11-10_2030_reel_emptyframe.mp4`
+- `posts/2026-11-11_1230_story_countdown-3.mp4`
+- `posts/2026-11-11_2100_story_reveal.mp4`
+- `posts/2026-11-12_1230_story_countdown-2.mp4`
+- `posts/2026-11-13_1230_story_tomorrow.mp4`
+- `posts/2026-11-13_2030_reel_50s-film.mp4`
+- `posts/2026-11-13_2100_story_date.mp4`
+- `posts/2026-11-14_1200_story_launch.mp4`
+- `posts/2026-11-19_2030_reel_split.mp4`
+- `posts/2026-11-21_2030_reel_glimpse-receipt.mp4`
+- `posts/2026-11-23_1230_story_perfectloop.mp4`
+- `posts/2026-11-24_2030_reel_60s-film_CHECK-PLAYBACK.mp4`
+- `posts/2026-11-28_2030_reel_glimpse-sameday.mp4`
 
-**`_fixed/` (replacement exports as received)**
+**`_archive/fixed-exports/` (replacement exports as received)**
 
-- `_fixed/2026-11-13_2030_reel_50s-film_FIXED.mp4`
-- `_fixed/2026-11-19_2030_reel_split.mp4`
-- `_fixed/2026-11-21_2030_reel_glimpse-receipt.mp4`
-- `_fixed/2026-11-24_2030_reel_60s-film.mp4`
-- `_fixed/2026-11-28_2030_reel_glimpse-sameday.mp4`
+- `_archive/fixed-exports/2026-11-13_2030_reel_50s-film_FIXED.mp4`
+- `_archive/fixed-exports/2026-11-19_2030_reel_split.mp4`
+- `_archive/fixed-exports/2026-11-21_2030_reel_glimpse-receipt.mp4`
+- `_archive/fixed-exports/2026-11-24_2030_reel_60s-film.mp4`
+- `_archive/fixed-exports/2026-11-28_2030_reel_glimpse-sameday.mp4`
 
-**`_old/` (originals)**
+**`_archive/replaced-originals/` (originals)**
 
-- `_old/2026-11-13_2030_reel_50s-film.mp4`
-- `_old/2026-11-19_2030_reel_split_NEEDS-FIX.mp4`
-- `_old/2026-11-21_2030_reel_glimpse-receipt_NEEDS-FIX.mp4`
-- `_old/2026-11-24_2030_reel_60s-film_NEEDS-FIX.mp4`
-- `_old/2026-11-28_2030_reel_glimpse-sameday_NEEDS-FIX.mp4`
+- `_archive/replaced-originals/2026-11-13_2030_reel_50s-film.mp4`
+- `_archive/replaced-originals/2026-11-19_2030_reel_split_NEEDS-FIX.mp4`
+- `_archive/replaced-originals/2026-11-21_2030_reel_glimpse-receipt_NEEDS-FIX.mp4`
+- `_archive/replaced-originals/2026-11-24_2030_reel_60s-film_NEEDS-FIX.mp4`
+- `_archive/replaced-originals/2026-11-28_2030_reel_glimpse-sameday_NEEDS-FIX.mp4`
 
 ## Prompts written in the chat
 
@@ -182,7 +182,7 @@ Concept: one hoodie with zip-on, interchangeable back panels called Stimpies.
 Tagline: "One hoodie. Multiple identities."
 
 SOURCE FILES
-Folder: C:\Projects\motion\content\calendar
+Folder: C:\Projects\motion\content\calendar\posts
 Calendar: C:\Projects\motion\content\calendar\STIMPY_CALENDAR.md
 Save covers to: C:\Projects\motion\content\calendar\_covers
 Do not edit, rename or delete any existing file.
@@ -305,8 +305,8 @@ Stimpy sells one hoodie with zip-on, interchangeable back panels called Stimpies
 Tagline: "One hoodie. Multiple identities."
 
 FILES
-Source folder: C:\Projects\motion\content\calendar
-Save fixed versions to: C:\Projects\motion\content\calendar\_fixed
+Source folder: C:\Projects\motion\content\calendar\posts
+Save fixed versions to: C:\Projects\motion\content\calendar\_archive\fixed-exports
 Do not overwrite or delete the originals.
 
 GENERAL RULES
@@ -356,7 +356,7 @@ Fix:
 1. Cut only the identity section, about 22-40s, at clean beat points.
 2. Remove anything showing a panel size, fabric weight, date, "Drop 01", "One slot left", the Studio or custom-design scene, or "Coming soon".
 3. End on this existing logo card:
-   C:\Projects\motion\content\stimpy-motion\out\00_end_cards\stimpy_endcards_logo-black.mp4
+   C:\Projects\motion\content\videos\stimpy-motion\out\00_end_cards\stimpy_endcards_logo-black.mp4
 4. Remaster the audio to the target. The source is about -8.8 LUFS with +2.3 dB peaks.
 5. Fade or cut the music cleanly into the end card.
 
@@ -377,7 +377,7 @@ Return the fixed videos and a short note for each one listing what changed, its 
 
 **If you're sending this to someone else:**
 - **Share the files:** they won't have access to your computer paths, so upload the 5 videos and `stimpy_endcards_logo-black.mp4` to a shared folder and tell them to use it.
-- **Editable files:** the studs and edition text are built into the 50-second video. For a clean fix, they may need the project in `content/stimpy-video`, so share that too.
+- **Editable files:** the studs and edition text are built into the 50-second video. For a clean fix, they may need the project in `content/videos/stimpy-video`, so share that too.
 - **Same Day design:** the full artwork is at `content/_stimpies/sameday.jpg`, and the Receipt one is `receipt.jpg` in the same folder. Include both.
 
 When the videos come back, tell me where they're saved and I'll check them against this list before they replace the originals.
@@ -394,10 +394,10 @@ C:\Projects\motion\content\calendar\STIMPY_CALENDAR.md
 Read the whole file before answering. If you cannot access that path, use the attached copy. If neither is available, stop and ask me to attach it.
 
 Related folders, if you can access them:
-- Calendar files: C:\Projects\motion\content\calendar
+- Calendar files: C:\Projects\motion\content\calendar\posts
 - Previews: C:\Projects\motion\content\calendar\_previews
 - Covers: C:\Projects\motion\content\calendar\_covers
-- Original versions of replaced videos: C:\Projects\motion\content\calendar\_old
+- Original versions of replaced videos: C:\Projects\motion\content\calendar\_archive\replaced-originals
 - Posters: C:\Projects\motion\content\posters
 
 Do not edit any file. Do not agree automatically, and do not invent problems to look thorough. Do not repeat a previous recommendation unless it is still unresolved. Do not claim to have seen full videos or heard audio you did not access. Do not use unsupported Lebanon cost benchmarks or guarantee results. Cite current official Meta documentation for platform claims where possible, and label weaker sources.

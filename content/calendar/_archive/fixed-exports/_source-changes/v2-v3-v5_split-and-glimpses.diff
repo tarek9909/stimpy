@@ -1,0 +1,248 @@
+diff --git a/C:/Projects/motion/content/stimpy-motion/app/src/films/glimpses.ts b/motion/src/films/glimpses.ts
+index 8d247f6..a7f80a1 100644
+--- a/C:/Projects/motion/content/stimpy-motion/app/src/films/glimpses.ts
++++ b/motion/src/films/glimpses.ts
+@@ -4,16 +4,19 @@
+ //  2–5     the zipper opens a few centimetres: a sliver of the artwork, then it snaps shut; again elsewhere
+ //  5–8     the rhythm speeds up with the music: open, flash, close. Three single frames (2 frames at 60 fps,
+ //          so they survive a 30 fps upload) show a much bigger piece: "Pause it if you can."
+-//  8–9.45  the pull runs down to 80%, stops… and zips shut
+-//  9.45–10 "Not yet."
++//  8–9.25  the pull runs down to 80%, stops…
++//  9.25–9.75 …and runs off the frame: the fabric parts and the whole design settles inside the safe area
++//  9.75–12.15 the full design holds, with its name
++//  12.15–14.75 the signature zip wipes to the logo
+ import { C, isDark, rgba } from '../engine/brand';
+ import { drawLockup, LOGO } from '../engine/logo';
++import { logoCard } from './shoot/cards';
+ import { text, type Ctx } from '../engine/draw';
+-import { closedTeeth, openTeeth, drawPull, Track, type TeethStyle } from '../engine/zipper';
+-import { byId, paint, type Design } from '../art/designs';
++import { closedTeeth, openTeeth, drawPull, Track, zipWipe, type TeethStyle } from '../engine/zipper';
++import { byId, paint, image, type Design } from '../art/designs';
+ import type { Film, Post } from '../engine/engine';
+ import { Score, n, chord } from '../audio/score';
+-import { W, H, SAFE, fabricFill, glow, pill } from './common';
++import { W, H, SAFE, fabricFill, glow, kinetic, SIG_WIPE, wipeTravelStart } from './common';
+ import { ease, seg, clamp, pulse, mulberry, clock, lerp } from '../engine/util';
+ 
+ const K = clock(120);
+@@ -31,9 +34,13 @@ export const EPISODES: Episode[] = [
+ ];
+ 
+ const PARK = 330;       // the slider rests near the top of the safe area (its tab hangs above)
+-const LONG = { t0: b(16), stop: b(17.8), shut0: b(18.5), shut1: b(18.9) };
+-const NOT_YET = LONG.shut1 + 0.03;
+-const END = 10;
++const LONG = { t0: b(16), stop: b(17.8) };
++const OPEN0 = b(18.5), OPEN1 = 9.75;           // the fabric clears, the design settles
++const WIPE0 = OPEN1 + 2.4;                     // the full design holds until here
++const HIT = WIPE0 + SIG_WIPE * 0.7;
++const END = WIPE0 + 2.6;
++const ART_TOP = 278, ART_H = 872;              // the whole design, inside the safe area
++const reveal = (t: number) => ease.inOutCubic(seg(t, OPEN0, OPEN1));
+ 
+ interface Op { t0: number; open: number; hold: number; close: number; yA: number; len: number; amp: number; flash?: boolean; focus?: number }
+ 
+@@ -42,15 +49,16 @@ function buildOps(seed: number, nFocus: number): Op[] {
+   const ops: Op[] = [];
+   // three slow glimpses
+   ops.push({ t0: b(4), open: 0.28, hold: 0.45, close: 0.09, yA: 700, len: 330, amp: 128 });
+-  ops.push({ t0: b(6.4), open: 0.24, hold: 0.4, close: 0.08, yA: 1080, len: 360, amp: 136 });
++  ops.push({ t0: b(6.4), open: 0.24, hold: 0.4, close: 0.08, yA: 880, len: 360, amp: 136 });
+   ops.push({ t0: b(8.4), open: 0.2, hold: 0.32, close: 0.07, yA: 430, len: 300, amp: 122 });
+   // 8ths then 16ths
+-  for (let q = 10; q < 13; q += 0.5) ops.push({ t0: b(q), open: 0.07, hold: 0.08, close: 0.05, yA: 330 + r() * 1000, len: 220 + r() * 180, amp: 80 + r() * 40 });
+-  for (let q = 13; q < 16; q += 0.25) ops.push({ t0: b(q), open: 0.035, hold: 0.04, close: 0.03, yA: 330 + r() * 1050, len: 200 + r() * 220, amp: 76 + r() * 44 });
++  const sliver = (u: number, l: number) => ({ yA: 330 + u * (1240 - 330 - l), len: l });
++  for (let q = 10; q < 13; q += 0.5) ops.push({ t0: b(q), open: 0.07, hold: 0.08, close: 0.05, ...sliver(r(), 220 + r() * 180), amp: 80 + r() * 40 });
++  for (let q = 13; q < 16; q += 0.25) ops.push({ t0: b(q), open: 0.035, hold: 0.04, close: 0.03, ...sliver(r(), 200 + r() * 220), amp: 76 + r() * 44 });
+   // the hidden frames: exactly two frames at 60 fps
+   for (const f of [b(11.5) + 0.12, b(13.75) + 0.02, b(15.25) + 0.05]) {
+     const tf = Math.round(f * 60) / 60;
+-    ops.push({ t0: tf, open: 0, hold: 2 / 60 - 1e-4, close: 0, yA: 280, len: 1450, amp: 430, flash: true });
++    ops.push({ t0: tf, open: 0, hold: 2 / 60 - 1e-4, close: 0, yA: 285, len: 955, amp: 400, flash: true });
+   }
+   ops.sort((a, b2) => a.t0 - b2.t0);
+   // every sliver lands on one of the design's details (cycling the secondary ones; the hero is saved for the
+@@ -77,11 +85,11 @@ function state(ops: Op[], t: number): State {
+   // the long open: a V below the parked slider
+   if (t >= LONG.t0) {
+     const down = ease.inOutCubic(seg(t, LONG.t0, LONG.stop));
+-    const up = ease.inCubic(seg(t, LONG.shut0, LONG.shut1));
++    const u = reveal(t);
+     const target = lerp(PARK, PARK + 0.8 * (H - PARK), down);
+-    const pull = lerp(target, PARK, up);
+-    const spread = 0.36 * (1 - up * 0.3);
+-    return { gap: (y) => (y > PARK && y < pull ? Math.min((pull - y) * spread, (y - PARK) * 1.4 + 2) : 0), pull, swing: Math.sin(t * 9) * 0.25 * (1 - seg(t, LONG.stop, LONG.stop + 0.4)), flash: false, openness: (pull - PARK) / (H - PARK), frame: null };
++    const pull = lerp(target, H + 300, u);
++    const spread = 0.36;
++    return { gap: (y) => (y > PARK && y < pull ? Math.min((pull - y) * spread, (y - PARK) * 1.4 + 2) : 0) + u * W * 0.8, pull, swing: Math.sin(t * 9) * 0.25 * (1 - seg(t, LONG.stop, LONG.stop + 0.4)), flash: false, openness: (pull - PARK) / (H - PARK), frame: null };
+   }
+   const active = ops.filter((o) => extent(o, t) > 0.001);
+   let pull = PARK, flash = false, openness = 0;
+@@ -116,23 +124,30 @@ function artwork(c: Ctx, d: Design, st: State, t: number) {
+   if (o && !o.flash && t < LONG.t0) { focus = d.focus[o.focus ?? 1] ?? focus; ay = o.yA + o.len * 0.3; zoom = 1.3; } // above the slider, where the opening is widest
+   else if (o?.flash) { ay = 900; zoom = 1.05; }
+   // a slow drift toward the detail while it is visible
+-  const drift = o && t < LONG.t0 ? 1 + 0.03 * clamp((t - o.t0) / 0.6) : 1 + 0.04 * seg(t, LONG.t0, LONG.shut0);
+-  paint(c, d, -40, -40, W + 80, H + 80, { focus, anchor: [(W / 2 + 40) / (W + 80), (ay + 40) / (H + 80)], zoom: zoom * drift, reach: 2.2 });
++  const drift = o && t < LONG.t0 ? 1 + 0.03 * clamp((t - o.t0) / 0.6) : 1 + 0.04 * seg(t, LONG.t0, OPEN0);
++  // the reveal: the frame closes in on the design until the whole image is showing, uncropped
++  const u = reveal(t), img = image(d.id);
++  const aw = ART_H * img.naturalWidth / img.naturalHeight;
++  const x = lerp(-40, (W - aw) / 2, u), y = lerp(-40, ART_TOP, u), w = lerp(W + 80, aw, u), h = lerp(H + 80, ART_H, u);
++  if (u > 0) { c.fillStyle = d.world; c.fillRect(-60, -60, W + 120, H + 120); }
++  paint(c, d, x, y, w, h, { focus, anchor: [(W / 2 - x) / w, (ay - y) / h], zoom: lerp(zoom * drift, 1, u), reach: lerp(2.2, 1, u) });
+ }
+ 
++const HUD_Y = 1205;
++
+ function hud(c: Ctx, ep: Episode, t: number) {
+   const fg = byId(ep.design).ink;
+   const col = isDark(ep.hint) ? { ...LOGO.onBlack, solid: fg, word: fg, outline: C.coral } : { ...LOGO.onWhite, outline: C.coral };
+   // the zipper splits the frame: the HUD sits on either side of it
+-  const lk = { x: SAFE.left + 150, y: SAFE.bottom - 30 };
++  const lk = { x: SAFE.left + 150, y: HUD_Y };
+   drawLockup(c, lk.x, lk.y, 46, col, { word: { reveal: seg(t, 0.2, 1.0) } });
+   // episode counter + the drop colours
+-  const y = SAFE.top - 20;
++  const y = SAFE.top + 42;
+   text(c, `GLIMPSE`, SAFE.left, y - 34, { size: 24, weight: 600, color: fg, track: 0.14 });
+   text(c, `Nº 0${ep.no}`, SAFE.left, y + 22, { size: 52, weight: 700, color: fg });
+   EPISODES.forEach((e, i) => {
+     const x = SAFE.right - (EPISODES.length - 1 - i) * 46 - 14;
+-    const y = SAFE.bottom - 40;
++    const y = HUD_Y - 10;
+     const cur = e.no === ep.no;
+     c.beginPath(); c.arc(x, y - 9, cur ? 18 : 15, 0, Math.PI * 2);
+     c.fillStyle = e.hint; c.fill();
+@@ -144,11 +159,16 @@ function scene(c: Ctx, ep: Episode, ops: Op[], t: number, post: Post | null) {
+   const d = byId(ep.design);
+   const st = state(ops, t);
+   const cx = W / 2;
+-  // slow push-in, reset at "Not yet."
+-  const push = t < NOT_YET ? 1 + 0.045 * ease.inOutQuad(seg(t, 0, NOT_YET)) : 1;
++  // slow push-in, released as the design settles
++  const push = 1 + 0.045 * ease.inOutQuad(seg(t, 0, OPEN0)) * (1 - reveal(t));
+   c.save();
+   c.translate(W / 2, H / 2); c.scale(push, push); c.translate(-W / 2, -H / 2);
+   artwork(c, d, st, t);
++  if (t >= OPEN1) {
++    c.restore();
++    if (post) { post.ca = 0; post.vignette = 0.06; }
++    return;
++  }
+   // the fabric: two halves with the openings cut into their shared edge
+   const Lp = new Path2D(), Rp = new Path2D();
+   const left: { x: number; y: number }[] = [], right: { x: number; y: number }[] = [];
+@@ -211,22 +231,16 @@ export function makeGlimpse(v: string): Film {
+     id: 'glimpses', title: `05 · Stimpie Glimpses — Nº 0${ep.no}`, duration: END,
+     marks: [
+       { t: 0, label: 'closed' }, { t: b(4), label: 'glimpses' }, { t: b(10), label: 'faster' },
+-      { t: LONG.t0, label: 'to 80%' }, { t: LONG.shut0, label: 'zip shut' }, { t: NOT_YET, label: 'not yet' },
++      { t: LONG.t0, label: 'to 80%' }, { t: OPEN0, label: 'reveal' }, { t: OPEN1, label: 'full design' }, { t: WIPE0, label: 'logo' },
+     ],
+     draw(c, t, post) {
+-      scene(c, ep, ops, t, post);
+-      hud(c, ep, t);
+-      if (t >= NOT_YET) {
+-        const age = t - NOT_YET;
+-        const s = ease.outBack(seg(age, 0, 0.35), 2.2);
+-        c.save();
+-        c.translate(W / 2, 980);
+-        c.scale(s, s);
+-        c.rotate(-0.04);
+-        pill(c, 'Not yet.', 0, 0, { size: 110, bg: C.cream, color: C.black, padX: 70, padY: 44 });
+-        c.restore();
+-        post.flash = 0.2 * pulse(age, 12);
+-      }
++      const shown = (k: Ctx) => {
++        scene(k, ep, ops, t, post);
++        if (t < OPEN0) hud(k, ep, t);
++        if (t >= OPEN1 - 0.1) kinetic(k, byId(ep.design).name, W / 2, ART_TOP + ART_H + 76, t - OPEN1 + 0.1, { size: 72, weight: 700, color: byId(ep.design).ink, align: 'center' });
++      };
++      if (t < WIPE0) { shown(c); post.flash = 0.25 * pulse(t - OPEN1, 12) * (t >= OPEN1 ? 1 : 0); return; }
++      zipWipe(c, (t - WIPE0) / SIG_WIPE, shown, (k) => logoCard(k, t - HIT, C.black), { dir: 'down', teeth: C.cream, tape: C.black });
+     },
+     score() {
+       const S = new Score(END, { delayTime: K.beat * 0.75, delayFb: 0.3 });
+@@ -255,11 +269,25 @@ export function makeGlimpse(v: string): Film {
+       S.riser(LONG.t0, LONG.stop, 0.7);
+       S.pad(LONG.t0, mnr.map((x) => root + 24 + x), LONG.stop - LONG.t0, 0.6, { attack: 0.6, release: 0.1, cutoff: 2400 });
+       S.gate(LONG.stop - 0.04, 0, 0.04);
+-      // …and shut
+-      S.zip(LONG.shut0, LONG.shut1, (u) => ease.inCubic(u), 26, 1.1, { stop: true, bright: 1.1 });
+-      S.boom(NOT_YET, 0.8);
+-      S.thud(NOT_YET, 0.8, 0.8);
+-      S.bell(NOT_YET + 0.02, root + 48, 0.6, { bus: 'sfx', decay: 1.4 });
++      // …and all the way: the music comes back on the full design
++      S.zip(OPEN0, OPEN1 - 0.05, (u) => ease.inOutCubic(u), 26, 1.1, { stop: true, bright: 1.1 });
++      S.gate(OPEN1 - 0.03, 1, 0.03);
++      S.boom(OPEN1, 0.8);
++      S.thud(OPEN1, 0.8, 0.8);
++      S.bell(OPEN1 + 0.02, root + 48, 0.6, { bus: 'sfx', decay: 1.4 });
++      S.pad(OPEN1, mnr.slice(0, 4).map((x) => root + 24 + x), WIPE0 - OPEN1 + 0.2, 0.55, { attack: 0.15, release: 0.3, cutoff: 1800 });
++      for (let q = 0; OPEN1 + q * K.beat < WIPE0 - 0.05; q++) {
++        const tq = OPEN1 + q * K.beat;
++        S.kick(tq, 0.7, { tone: 0.8 });
++        S.bass(tq, root, K.beat * 0.8, 0.6, { cutoff: 500 });
++        S.hat(tq + K.beat / 2, 0.35);
++      }
++      // the logo: the same closer as the end cards
++      S.signatureZip(wipeTravelStart(WIPE0, SIG_WIPE));
++      S.bell(HIT, root + 48, 0.6, { bus: 'sfx', decay: 2.2, verb: 0.6 });
++      S.bell(HIT, root + 55, 0.35, { bus: 'sfx', decay: 2.2, verb: 0.6 });
++      S.pad(HIT, mnr.slice(0, 4).map((x) => root + 24 + x), END - HIT - 0.4, 0.4, { attack: 0.1, release: 0.35 });
++      S.sub(HIT, root, END - HIT - 0.35, 0.45);
+       return S;
+     },
+   };
+diff --git a/C:/Projects/motion/content/stimpy-motion/app/src/films/split-screen.ts b/motion/src/films/split-screen.ts
+index 7aa5c18..457d448 100644
+--- a/C:/Projects/motion/content/stimpy-motion/app/src/films/split-screen.ts
++++ b/motion/src/films/split-screen.ts
+@@ -55,7 +55,7 @@ function lookAt(swaps: Swap[], t: number, start: string | null = null): Look {
+ const FIG = { x: 540, y: 800, s: 0.74 };
+ 
+ /** One figure in its world, drawn in a full W×H frame. */
+-function figure(c: Ctx, t: number, L: Look, live: boolean, beatAge: number) {
++function figure(c: Ctx, t: number, L: Look, live: boolean, beatAge: number, dy = 0, ks = 1) {
+   // the world: the new colour is pulled down with the zip
+   const edge = ease.inOutCubic(L.p) * (H + 40);
+   fill(c, world(L.prev));
+@@ -76,13 +76,13 @@ function figure(c: Ctx, t: number, L: Look, live: boolean, beatAge: number) {
+     const blank: Art = (k, w, h) => { k.fillStyle = '#111111'; k.fillRect(0, 0, w, h); };
+     panel = { art: from ?? blank, wipeTo: to ?? blank, wipe: L.p, zip: 1, parked: false };
+   } else if (L.design) panel = { art: paint(L.design), zip: 1, parked: true };
+-  drawHoodie(c, { x: FIG.x, y: FIG.y + bob, s: FIG.s, rot: sway, color: C.black, figure: true, shadow: 0.7, shadowY: 902, panel, sy: 1 - 0.012 * pulse(beatAge, 9) });
++  drawHoodie(c, { x: FIG.x, y: FIG.y + bob + dy, s: FIG.s * ks, rot: sway, color: C.black, figure: true, shadow: 0.7, shadowY: 902, panel, sy: 1 - 0.012 * pulse(beatAge, 9) });
+ }
+ 
+ function beats(t: number) { return t < 0 ? 99 : (t % K.beat); }
+ 
+ function wordmark(c: Ctx, bg: string) {
+-  drawIcon(c, W / 2, SAFE.top - 40, 72, bg === C.coral ? LOGO.main : isDark(bg) ? LOGO.onBlack : LOGO.onWhite);
++  drawIcon(c, W / 2, SAFE.top + 32, 60, bg === C.coral ? LOGO.main : isDark(bg) ? LOGO.onBlack : LOGO.onWhite);
+ }
+ 
+ export function makeSplitScreen(): Film {
+@@ -118,7 +118,8 @@ export function makeSplitScreen(): Film {
+           c.clip();
+           c.translate(cx, cy); c.scale(sc, sc); c.translate(-W / 2, -H / 2);
+           const L = lookAt(quads[q]!, t, SEQ2[SEQ2.length - 1]!);
+-          figure(c, t, L, false, bAge);
++          // each row keeps its hoodie inside the safe area
++          figure(c, t, L, false, bAge, k * (j ? -483 : 40), lerp(1, 0.92, k));
+           c.restore();
+         });
+         // gutters
+@@ -142,7 +143,7 @@ export function makeSplitScreen(): Film {
+       wordmark(c, bg);
+       const col = ink(world(L.design ?? null) === PLAIN_BG ? PLAIN_BG : bg);
+       const hl = { size: 118, weight: 700, color: col, align: 'center' as const, stagger: 0.08 };
+-      const y = SAFE.top + 150;
++      const y = SAFE.top + 195;
+       if (t < T.final) kinetic(c, 'Same hoodie.', W / 2, y, dropAge - 0.05, { ...hl, color: ink(PLAIN_BG) });
+       else if (t < T.final + 0.25) kineticOut(c, 'Same hoodie.', W / 2, y, seg(t, T.final, T.final + 0.2), { ...hl, color: ink(PLAIN_BG) });
+       if (t >= T.final + 0.15 && t < T.off + 0.3) {

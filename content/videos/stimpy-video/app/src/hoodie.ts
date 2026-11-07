@@ -356,43 +356,21 @@ function drawSlot(c: CanvasRenderingContext2D, o: HoodieOpts) {
     c.shadowOffsetY = 6;
     c.drawImage(cardCanvas(o.card), cx - cw / 2, cy - ch / 2, cw, ch);
     c.restore();
-    // the card sits on fabric: darken edges, let the drape run through it
-    c.save();
-    c.beginPath();
-    c.rect(cx - cw / 2, cy - ch / 2, cw, ch);
-    c.clip();
-    const g = c.createLinearGradient(x, 0, x + w, 0);
-    g.addColorStop(0, 'rgba(0,0,0,0.22)');
-    g.addColorStop(0.2, 'rgba(0,0,0,0)');
-    g.addColorStop(0.8, 'rgba(0,0,0,0)');
-    g.addColorStop(1, 'rgba(0,0,0,0.22)');
-    c.fillStyle = g;
-    c.fillRect(x - 20, y - 20, w + 40, h + 40);
-    c.filter = 'blur(10px)';
-    c.strokeStyle = 'rgba(0,0,0,0.12)';
-    c.lineWidth = 18;
-    c.beginPath();
-    c.moveTo(x + 60, y);
-    c.bezierCurveTo(x + 80, y + 200, x + 40, y + 360, x + 70, y + h);
-    c.moveTo(x + w - 50, y);
-    c.bezierCurveTo(x + w - 80, y + 220, x + w - 40, y + 380, x + w - 70, y + h);
-    c.stroke();
-    c.restore();
-  } else {
-    c.save();
-    c.strokeStyle = 'rgba(255,255,255,0.14)';
-    c.lineWidth = 2;
-    c.setLineDash([9, 7]);
-    c.strokeRect(x, y, w, h);
-    if (glow > 0) {
-      c.strokeStyle = `rgba(255,42,26,${clamp(glow)})`;
-      c.shadowColor = '#ff2a1a';
-      c.shadowBlur = 30 * glow;
-      c.lineWidth = 3.5;
-      c.strokeRect(x, y, w, h);
-    }
-    c.restore();
+    return; // just the stimpie: no outline or studs around it
   }
+  c.save();
+  c.strokeStyle = 'rgba(255,255,255,0.14)';
+  c.lineWidth = 2;
+  c.setLineDash([9, 7]);
+  c.strokeRect(x, y, w, h);
+  if (glow > 0) {
+    c.strokeStyle = `rgba(255,42,26,${clamp(glow)})`;
+    c.shadowColor = '#ff2a1a';
+    c.shadowBlur = 30 * glow;
+    c.lineWidth = 3.5;
+    c.strokeRect(x, y, w, h);
+  }
+  c.restore();
   // snap studs: the attachment mechanism
   const f = o.snapFlash ?? 0;
   for (const [sx, sy] of [[x + 20, y + 20], [x + w - 20, y + 20], [x + 20, y + h - 20], [x + w - 20, y + h - 20]]) {

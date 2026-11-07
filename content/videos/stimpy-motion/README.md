@@ -1,13 +1,13 @@
 # Stimpy: motion graphics
 
-The six motion-graphic videos from `motion.md`, built as code: 21 variants in total. Every frame is a pure
+The six motion-graphic videos from [`video-briefs.md`](../video-briefs.md), built as code: 21 variants in total. Every frame is a pure
 function of time, and every soundtrack is synthesised from the same timeline, so what you preview is
 exactly what gets rendered. **Nothing has been rendered to video yet.** That waits for your approval.
 
 ## Preview (inspect and approve)
 
 ```sh
-cd stimpy-motion/app
+cd content/videos/stimpy-motion/app
 npm install          # already done on this machine
 npm run dev          # → http://localhost:5210
 ```
@@ -82,7 +82,7 @@ A day track at the top carries every day's colour. On launch day the hoodie turn
 - **Brand colours.** Coral, black, white and electric blue lead every film (the pixel scan for all 8 colours was done with the earlier procedural designs; the real artworks now bring their own world colours).
 - **Colour roles.** Primary colours lead. Electric blue is used for action moments: the counter, "Live now", the "Coming soon" underline, the poll bar colours. The secondaries arrive as Stimpie and drop colours.
 - **Poppins throughout.** Other fonts appear only inside Stimpie artwork, such as the countdown's changing number styles.
-- **The split S.** It's rebuilt as vector art from the Poppins Bold "S", matching `identity/`, and it signs every Stimpie in the corner.
+- **The split S.** It's rebuilt as vector art from the Poppins Bold "S", matching `content/identity/`, and it signs every Stimpie in the corner.
 - **Zip wipes and the zip sound.**
   - Every transition is a real zipper: interlocking teeth, and a coral pull tab carrying the split S.
   - Its sound is generated from the pull's motion.
@@ -92,7 +92,7 @@ A day track at the top carries every day's colour. On launch day the hoodie turn
 ## Render (after approval)
 
 ```sh
-cd stimpy-motion/app
+cd content/videos/stimpy-motion/app
 node scripts/render.ts video --film logo                          # → ../out/stimpy_logo.mp4 (+ .wav)
 node scripts/render.ts video --film countdown --v d3
 node scripts/render.ts all                                        # every film and variant

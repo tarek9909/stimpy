@@ -55,7 +55,7 @@ dist/
 *.wmv
 
 # Rendered outputs: reproducible with the render commands in each project's README.
-# The shoot briefs (out/**/README.md) stay tracked, and so does stimpy-video/out/stimpies:
+# The shoot briefs (out/**/README.md) stay tracked, and so does content/videos/stimpy-video/out/stimpies:
 # the website seed (website/backend/prisma/seed.ts) reads the card art from there.
 *.mp4
 *.mov
@@ -63,24 +63,30 @@ dist/
 *.mkv
 *.avi
 *.m4v
-content/stimpy-motion/out/**
-!content/stimpy-motion/out/**/
-!content/stimpy-motion/out/**/README.md
-content/stimpy-video/out/*
-!content/stimpy-video/out/stimpies/
-content/second_video/stimpy/out/
+content/videos/stimpy-motion/out/**
+!content/videos/stimpy-motion/out/**/
+!content/videos/stimpy-motion/out/**/README.md
+content/videos/stimpy-video/out/*
+!content/videos/stimpy-video/out/stimpies/
+content/videos/second_video/stimpy/out/
 
 # The drop's print pack: the same PNGs are unzipped in content/drop-001
 content/drop-001/*.zip
 
 # High-resolution artwork, kept out of git for size (~350 MB). The videos use the
 # WebP copies in each app's public/stimpies, which stay tracked. The website seed
-# reads the card PNGs from stimpy-video/out/stimpies, so copy them in by hand.
+# reads the card PNGs from content/videos/stimpy-video/out/stimpies, so copy them in by hand.
 content/drop-001/*.png
-content/stimpy-video/out/stimpies/*.png
+content/videos/stimpy-video/out/stimpies/*.png
 
 # Excluded large files (>100MB per GitHub limit)
 stimpy-motion.zip
 stimpy-video/out/stimpy_master.mp4
 **/stimpy_master.mp4
 
+
+# Dashboard product card: still render of the hoodie model
+!website/frontend/admin/public/images/hoodie-3d.webp
+
+# Large local 3D model
+pp/pp.obj

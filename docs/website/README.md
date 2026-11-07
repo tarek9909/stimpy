@@ -2,7 +2,7 @@
 
 This folder is the **specification set** for the Stimpy website, dashboard and backend. The implementation lives in [`website/`](../../website/). Use the specification documents for intended behavior, then check the implementation handoff, decisions and audit under `website/docs/` for current delivery and verification status.
 
-The business plan these documents implement is [stimpy_website_plan.md](../../stimpy_website_plan.md) (what the website and dashboard are for, their pages, and their behaviour). The brand source of truth is [identity/stimpy_brand_identity.md](../../content/identity/stimpy_brand_identity.md) and the [master plan](../../stimpy_master_plan.md).
+The business plan these documents implement is [stimpy_website_plan.md](../../stimpy_website_plan.md) (what the website and dashboard are for, their pages, and their behaviour). The brand source of truth is [identity/stimpy_brand_identity.md](../../content/identity/stimpy_brand_identity.md) and the [master plan](../../content/strategy/master-plan.md).
 
 ## Reading order
 

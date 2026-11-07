@@ -1,0 +1,349 @@
+diff --git a/C:/Projects/motion/content/stimpy-video/app/src/hoodie.ts b/v1/src/hoodie.ts
+index 702c1dd..207a36a 100644
+--- a/C:/Projects/motion/content/stimpy-video/app/src/hoodie.ts
++++ b/v1/src/hoodie.ts
+@@ -356,7 +356,8 @@ function drawSlot(c: CanvasRenderingContext2D, o: HoodieOpts) {
+     c.shadowOffsetY = 6;
+     c.drawImage(cardCanvas(o.card), cx - cw / 2, cy - ch / 2, cw, ch);
+     c.restore();
+-    return; // just the stimpie: no outline or studs around it
++    panelZip(c, x, y, w, h, 0, o.snapFlash ?? 0);
++    return; // just the stimpie, zipped on
+   }
+   c.save();
+   c.strokeStyle = 'rgba(255,255,255,0.14)';
+@@ -371,29 +372,40 @@ function drawSlot(c: CanvasRenderingContext2D, o: HoodieOpts) {
+     c.strokeRect(x, y, w, h);
+   }
+   c.restore();
+-  // snap studs: the attachment mechanism
+-  const f = o.snapFlash ?? 0;
+-  for (const [sx, sy] of [[x + 20, y + 20], [x + w - 20, y + 20], [x + 20, y + h - 20], [x + w - 20, y + h - 20]]) {
+-    const g = c.createRadialGradient(sx - 3, sy - 3, 1, sx, sy, 11);
+-    g.addColorStop(0, '#9a9a9f');
+-    g.addColorStop(0.5, '#3a3a3e');
+-    g.addColorStop(1, '#141416');
+-    c.fillStyle = g;
+-    c.beginPath();
+-    c.arc(sx, sy, 10, 0, Math.PI * 2);
+-    c.fill();
+-    if (f > 0.01 || glow > 0.01) {
++  panelZip(c, x, y, w, h, glow, o.snapFlash ?? 0);
++}
++
++// the zip track around the panel, teeth and pull
++function panelZip(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, glow: number, flash: number) {
++  const m = 12, x0 = x - m, y0 = y - m, x1 = x + w + m, y1 = y + h + m;
++  c.save();
++  c.strokeStyle = '#0c0c0e';
++  c.lineWidth = 22;
++  c.strokeRect(x0, y0, x1 - x0, y1 - y0);
++  const lit = clamp(Math.max(glow * 0.8, flash));
++  c.fillStyle = lit > 0.02 ? (flash > glow ? '#ffffff' : '#ff4a3a') : '#c4c4ca';
++  if (lit > 0.02) { c.shadowColor = '#ff2a1a'; c.shadowBlur = 24 * lit; }
++  const pitch = 12, tw = 11, th = 7;
++  const edge = (ax: number, ay: number, bx: number, by: number) => {
++    const L = Math.hypot(bx - ax, by - ay), n = Math.round(L / pitch);
++    const ux = (bx - ax) / L, uy = (by - ay) / L;
++    for (let i = 0; i < n; i++) {
++      const px = ax + ux * (i + 0.5) * (L / n), py = ay + uy * (i + 0.5) * (L / n);
+       c.save();
+-      c.globalAlpha = clamp(Math.max(f, glow * 0.7));
+-      c.fillStyle = f > glow ? '#fff' : '#ff2a1a';
+-      c.shadowColor = '#ff2a1a';
+-      c.shadowBlur = 30;
+-      c.beginPath();
+-      c.arc(sx, sy, 6 + 6 * f, 0, Math.PI * 2);
+-      c.fill();
++      c.translate(px - uy * (i % 2 ? 2.5 : -2.5), py + ux * (i % 2 ? 2.5 : -2.5));
++      c.rotate(Math.atan2(uy, ux));
++      c.fillRect(-th / 2, -tw / 2, th, tw);
+       c.restore();
+     }
+-  }
++  };
++  edge(x0, y0, x1, y0); edge(x1, y0, x1, y1); edge(x1, y1, x0, y1); edge(x0, y1, x0, y0);
++  c.shadowBlur = 0;
++  // the pull, parked at the top right corner
++  c.fillStyle = '#d8d8dc';
++  c.fillRect(x1 - 15, y0 - 14, 30, 28);
++  c.fillStyle = '#ff2a1a';
++  c.fillRect(x1 - 7, y0 + 12, 14, 42);
++  c.restore();
+ }
+ 
+ function drawFront(c: CanvasRenderingContext2D, hem: number) {
+diff --git a/C:/Projects/motion/content/stimpy-video/app/src/scene.ts b/v1/src/scene.ts
+index 22d292c..5d80972 100644
+--- a/C:/Projects/motion/content/stimpy-video/app/src/scene.ts
++++ b/v1/src/scene.ts
+@@ -114,17 +114,18 @@ function brackets(c: Ctx, color: string, alpha: number) {
+   c.restore();
+ }
+ 
+-function topHud(c: Ctx, color: string, alpha: number) {
++function topHud(c: Ctx, color: string, alpha: number, y = 300, x = 84) {
+   if (alpha <= 0) return;
+   brackets(c, color, alpha * 0.6);
+-  text(c, 'STIMPY', 84, 128, '900 38px ArchivoX', color, 'left', alpha);
++  const my = y - 128, mx = x - 84;
++  text(c, 'STIMPY', x, y, '900 38px ArchivoX', color, 'left', alpha);
+   c.save();
+   c.globalAlpha = alpha;
+   c.fillStyle = RED;
+   c.beginPath();
+-  c.moveTo(84, 146);
+-  c.lineTo(104, 146);
+-  c.lineTo(94, 158);
++  c.moveTo(mx + 84, my + 146);
++  c.lineTo(mx + 104, my + 146);
++  c.lineTo(mx + 94, my + 158);
+   c.closePath();
+   c.fill();
+   c.restore();
+@@ -133,11 +134,13 @@ function topHud(c: Ctx, color: string, alpha: number) {
+ // ---------------------------------------------------------------- world dispatch
+ 
+ function drawWorld(c: Ctx, name: string, t: number, lt: number) {
+-  if (name === 'void') worldVoid(c, t, lt);
+-  else if (name === 'afterdark') worldAfterDark(c, t, lt);
+-  else if (name === 'cedar') worldCedar(c, t, lt);
+-  else if (name === 'dreamer') worldDreamer(c, t, lt);
+-  else worldDark(c, t, 1, 0, 0);
++  lifted(c, WORLD_LIFT, () => {
++    if (name === 'void') worldVoid(c, t, lt);
++    else if (name === 'afterdark') worldAfterDark(c, t, lt);
++    else if (name === 'cedar') worldCedar(c, t, lt);
++    else if (name === 'dreamer') worldDreamer(c, t, lt);
++    else worldDark(c, t, 1, 0, 0);
++  });
+ }
+ 
+ // scene light per world, from its stimpie's glow colours
+@@ -152,16 +155,45 @@ const HUD_ACC: Record<string, string> = { void: '#D6264A', afterdark: '#FFD23F',
+ 
+ // ---------------------------------------------------------------- the frame
+ 
+-export function drawFrame(c: Ctx, t: number): Post {
++// The shortened opening: 2 bars of words (2x) + 1 bar of the walk (4x), then the rest of the film 9.375 s earlier.
++const OPEN_WORDS = 3.75, OPEN_END = 5.625, CUT = 9.375;
++const songTime = (o: number) => (o < OPEN_WORDS ? o * 2 : o < OPEN_END ? 7.5 + (o - OPEN_WORDS) * 4 : o + CUT);
++const audioTime = (o: number) => (o < OPEN_WORDS ? o : o + CUT);
++
++// Everything important sits inside the Reels safe area, so the worlds are lifted with the hoodie.
++// The strip they vacate at the bottom is filled with their own mirror image.
++function lifted(c: Ctx, d: number, draw: () => void) {
++  c.save();
++  c.translate(0, -d);
++  draw();
++  c.restore();
++  c.save();
++  c.beginPath();
++  c.rect(-60, H - d, W + 120, d + 60);
++  c.clip();
++  c.translate(0, 2 * (H - d));
++  c.scale(1, -1);
++  c.translate(0, -d);
++  draw();
++  c.restore();
++}
++const WORLD_POS = { y: 729, s: 0.66 }, WORLD_LIFT = 281;
++const DECK_POS = { y: 942, s: 0.64 }, DECK_LIFT = 158;
++const SWAP_POS = { y: 836, s: 0.54 };
++const END_POS = { y: 610, s: 0.5 };
++
++export function drawFrame(c: Ctx, tOut: number): Post {
++  const t = songTime(tOut);
++  const heardT = audioTime(tOut);
+   const post: Post = { flash: 0, flashColor: [1, 1, 1], ca: 0.0015, bloom: 0.55, grain: 0.028, vignette: 0.4, fade: 1 };
+   c.setTransform(1, 0, 0, 1, 0, 0);
+   c.globalAlpha = 1;
+   c.globalCompositeOperation = 'source-over';
+   c.filter = 'none';
+ 
+-  const walk = (t / BEAT) * Math.PI;
+-  const kickP = pulse(SONG.kicks, t, 0.09);
+-  const heartP = pulse(SONG.hearts, t, 0.18);
++  const walk = (tOut / BEAT) * Math.PI;
++  const kickP = pulse(SONG.kicks, heardT, 0.09);
++  const heartP = pulse(SONG.hearts, heardT, 0.18);
+ 
+   // camera: kick punch + click shake
+   let shake = 0;
+@@ -189,10 +221,10 @@ export function drawFrame(c: Ctx, t: number): Post {
+     const door = t < T(4) ? 0.02 + 0.03 * (t / T(4)) : lerp(0.05, 1, inv(T(4), T(8) - BEAT, t));
+     const travel = walking * (t - T(4)) * 1.6;
+     const flicker = t < T(4) ? heartP * 0.6 : 0;
+-    worldDark(c, t, door, travel, flicker);
++    lifted(c, WORLD_LIFT, () => worldDark(c, t, door, travel, flicker));
+     const push = easeInOut(inv(T(4), T(8) - BEAT, t));
+     hoodie = {
+-      x: 540, y: lerp(1330, 1060, push), s: lerp(0.5 + 0.04 * (t / T(4)), 1.0, push), t, walk, walkAmt: walking,
++      x: 540, y: lerp(1000, WORLD_POS.y, push), s: lerp(0.42 + 0.03 * (t / T(4)), WORLD_POS.s, push), t, walk, walkAmt: walking,
+       sad: 1 - smooth(T(4.5), T(7), t),
+       rim: BONE, rimAmt: 0.15 + heartP * 0.25 * (t < T(4) ? 1 : 0) + door * 0.9, card: null,
+       slotGlow: t > T(5.5) ? smooth(T(5.5), T(6), t) * (0.55 + 0.45 * Math.sin(t * 16)) : 0,
+@@ -216,7 +248,7 @@ export function drawFrame(c: Ctx, t: number): Post {
+         words.forEach((wd, wi) => {
+           const a = smooth(t0 + wi * BEAT * step, t0 + wi * BEAT * step + 0.3, t) * out;
+           const wpx = c.measureText(wd + ' ').width;
+-          text(c, wd, x, 560 + li * 86 + (1 - a) * 14, '400 64px CormI', li === 2 ? RED : BONE, 'left', a);
++          text(c, wd, x, 330 + li * 86 + (1 - a) * 14, '400 64px CormI', li === 2 ? RED : BONE, 'left', a);
+           x += wpx;
+           x0 += wpx;
+         });
+@@ -251,7 +283,7 @@ export function drawFrame(c: Ctx, t: number): Post {
+     const lt = t - wt;
+     const push = inv(wt, wt + 2 * BAR, t);
+     hoodie = {
+-      x: 540, y: 1010 - push * 10, s: 1.0 + push * 0.05, t, walk, walkAmt: 0.55,
++      x: 540, y: WORLD_POS.y - push * 6, s: WORLD_POS.s + push * 0.03, t, walk, walkAmt: 0.55,
+       ...LIGHT[name], card: att?.a.card ?? null,
+       cardSettle: att ? Math.exp(-(t - att.a.t) / 0.07) : 0,
+       snapFlash: att ? Math.exp(-(t - att.a.t) / 0.12) : 0,
+@@ -274,30 +306,39 @@ export function drawFrame(c: Ctx, t: number): Post {
+       drawWorld(c, name, t, lt);
+       c.restore();
+     } else drawWorld(c, name, t, lt);
+-    if (name === 'dreamer') after = () => worldDreamerFront(c, t, lt);
++    if (name === 'dreamer') after = () => lifted(c, WORLD_LIFT, () => worldDreamerFront(c, t, lt));
+     post.bloom = name === 'afterdark' ? 1.0 : name === 'void' ? 0.8 : 0.6;
+     post.grain = name === 'cedar' ? 0.045 : 0.028;
+     post.flash = 0.9 * Math.exp(-wc / 0.09);
+     const ink = HUD_INK[name];
+     hud = () => {
++      if (name === 'dreamer') {
++        // the drifting blocks pass behind the nameplate: a soft shade keeps it readable
++        const g = c.createLinearGradient(0, 1050, 0, 1270);
++        g.addColorStop(0, 'rgba(0,0,0,0)');
++        g.addColorStop(0.3, 'rgba(0,0,0,0.6)');
++        g.addColorStop(0.8, 'rgba(0,0,0,0.6)');
++        g.addColorStop(1, 'rgba(0,0,0,0)');
++        c.fillStyle = g;
++        c.fillRect(0, 1050, W, 220);
++      }
+       topHud(c, name === 'cedar' ? '#2a1208' : ink, 1); // dark on the amber sky, light on the sea below
+       const card = CARDS[WORLD_CARDS[wi]];
+       const u = inv(wt + 0.05, wt + 0.5, t);
+-      text(c, scramble(`STIMPIE N° ${num(card.n)} · ${card.spec!.word}`, u, wi * 10), 84, 1500, '600 26px PlexB', HUD_ACC[name], 'left', 1, 3);
+-      text(c, scramble(card.name, inv(wt + 0.1, wt + 0.6, t), wi * 10 + 3), 80, 1572, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), ink);
+-      text(c, scramble(`EDITION ${edition(card.n)} · ${String(wi + 1).padStart(2, '0')}/04`, inv(wt + 0.2, wt + 0.8, t), wi * 10 + 5), 84, 1616, '400 24px Plex', ink, 'left', 0.85, 2);
+-      text(c, card.spec!.line, 84, 1676, '400 40px CormI', ink, 'left', smooth(wt + 0.5, wt + 0.9, t) * 0.95);
++      text(c, scramble(`STIMPIE N° ${num(card.n)} · ${card.spec!.word}`, u, wi * 10), 84, 1098, '600 26px PlexB', HUD_ACC[name], 'left', 1, 3);
++      text(c, scramble(card.name, inv(wt + 0.1, wt + 0.6, t), wi * 10 + 3), 80, 1170, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), ink);
++      text(c, card.spec!.line, 84, 1232, '400 40px CormI', ink, 'left', smooth(wt + 0.5, wt + 0.9, t) * 0.95);
+     };
+   } else if (t < T(20)) {
+     // ------------------------------------------------ DECK: the system
+     const lt = t - T(16);
+-    worldStudio(c, t, 0.6 + 0.4 * smooth(T(16), T(16.5), t));
++    lifted(c, DECK_LIFT, () => worldStudio(c, t, 0.6 + 0.4 * smooth(T(16), T(16.5), t)));
+     const toFront = easeInOut(inv(T(16) + 0.15, T(16, 3), t));
+     const toBack = easeInOut(inv(T(17, 2), T(18), t));
+     const turn = Math.PI * toFront + Math.PI * toBack;
+     const vac = t > T(20) - BEAT;
+     hoodie = {
+-      x: 540, y: 1100, s: 0.82, t, walk, walkAmt: 0.15, turn, rim: vac ? RED : BONE, rimAmt: vac ? 0.8 : 0.4, card: null,
++      x: 540, y: DECK_POS.y, s: DECK_POS.s, t, walk, walkAmt: 0.15, turn, rim: vac ? RED : BONE, rimAmt: vac ? 0.8 : 0.4, card: null,
+       slotGlow: vac ? 1 : smooth(T(19), T(20) - BEAT, t) * (0.5 + 0.5 * Math.sin(t * 25)),
+     };
+     // the fan of stimpies
+@@ -321,7 +362,7 @@ export function drawFrame(c: Ctx, t: number): Post {
+         let w = 230;
+         const oa = (k / N) * TAU + spin;
+         const depth = Math.sin(oa);
+-        const ox = 540 + Math.cos(oa) * 470, oy = 980 + depth * 170;
++        const ox = 540 + Math.cos(oa) * 365, oy = 900 + depth * 170;
+         x = lerp(x, ox, orbitMix);
+         y = lerp(y, oy, orbitMix);
+         rot = lerp(rot, Math.cos(oa) * 0.25, orbitMix);
+@@ -342,15 +383,15 @@ export function drawFrame(c: Ctx, t: number): Post {
+     hud = () => {
+       topHud(c, BONE, 1 - (vac ? 1 : 0));
+       const a1 = smooth(T(16, 2.5), T(16, 3), t) * (1 - smooth(T(17, 2), T(17, 2.5), t));
+-      text(c, 'FRONT', 540, 330, '900 110px ArchivoX', BONE, 'center', a1);
+-      text(c, '= BRAND', 540, 420, '400 64px CormI', BONE, 'center', a1 * f);
++      text(c, 'FRONT', 540, 420, '900 110px ArchivoX', BONE, 'center', a1);
++      text(c, '= BRAND', 540, 505, '400 64px CormI', BONE, 'center', a1 * f);
+       const a2 = smooth(T(17, 3), T(17, 3.5), t) * (1 - smooth(T(18) - 0.1, T(18), t));
+-      text(c, 'BACK', 540, 330, '900 110px ArchivoX', RED, 'center', a2);
+-      text(c, '= EXPRESSION', 540, 420, '400 64px CormI', BONE, 'center', a2);
++      text(c, 'BACK', 540, 420, '900 110px ArchivoX', RED, 'center', a2);
++      text(c, '= EXPRESSION', 540, 505, '400 64px CormI', BONE, 'center', a2);
+       const a3 = smooth(T(18), T(18) + 0.15, t) * (1 - smooth(T(19) - 0.1, T(19), t));
+-      text(c, 'ONE HOODIE.', 540, 360, fitFont(c, 'ONE HOODIE.', '900', 'ArchivoX', 120, 960), BONE, 'center', a3);
++      text(c, 'ONE HOODIE.', 540, 430, fitFont(c, 'ONE HOODIE.', '900', 'ArchivoX', 120, 950), BONE, 'center', a3);
+       const a4 = smooth(T(19), T(19) + 0.1, t) * (1 - (vac ? 1 : 0));
+-      text(c, '∞ STIMPIES.', 540, 360, fitFont(c, '∞ STIMPIES.', '900', 'ArchivoX', 120, 960), RED, 'center', a4);
++      text(c, '11 STIMPIES.', 540, 430, fitFont(c, '11 STIMPIES.', '900', 'ArchivoX', 120, 950), RED, 'center', a4);
+     };
+     if (vac) {
+       c.fillStyle = 'rgba(0,0,0,0.85)';
+@@ -379,23 +420,23 @@ export function drawFrame(c: Ctx, t: number): Post {
+     const word = sp.word;
+     const wu = easeOutCubic(clamp((t - SWAP_CLICKS[k]) / 0.12));
+     c.save();
+-    c.translate(540, 350);
++    c.translate(540, 470);
+     c.scale(1.25 - 0.25 * wu, 1.25 - 0.25 * wu);
+-    text(c, word, 0, 0, fitFont(c, word, '900', 'ArchivoX', 250, 980), pal.ink, 'center', 1);
++    text(c, word, 0, 0, fitFont(c, word, '900', 'ArchivoX', 230, 950), pal.ink, 'center', 1);
+     c.restore();
+     hoodie = {
+-      x: 540, y: 1040, s: 0.95, t, walk, walkAmt: 0.4, rim: sp.glow[0] === sp.world ? sp.glow[1] : sp.glow[0], rimAmt: dark ? 0.7 : 0.3,
++      x: 540, y: SWAP_POS.y, s: SWAP_POS.s, t, walk, walkAmt: 0.4, rim: sp.glow[0] === sp.world ? sp.glow[1] : sp.glow[0], rimAmt: dark ? 0.7 : 0.3,
+       card: att?.a.card ?? null, cardSettle: att ? Math.exp(-(t - att.a.t) / 0.06) : 0, snapFlash: att ? Math.exp(-(t - att.a.t) / 0.1) : 0,
+     };
+     post.flash = 0.3 * Math.exp(-sc / 0.07);
+     post.flashColor = k % 2 ? [1, 0.16, 0.1] : [1, 1, 1];
+     post.bloom = 0.5;
+     hud = () => {
+-      topHud(c, pal.ink, 1);
+-      text(c, `STIMPIE N° ${num(card.n)}`, 84, 1500, '600 26px PlexB', pal.ink, 'left', 1, 3);
+-      text(c, card.name, 80, 1572, fitFont(c, card.name, '900', 'ArchivoX', 70, 900), pal.ink);
+-      text(c, `${String(card.n).padStart(2, '0')}/${NCARDS}`, W - 84, 1572, '600 26px PlexB', pal.ink, 'right', 1, 3);
+-      text(c, sp.line, 84, 1632, '400 40px CormI', pal.ink, 'left', 0.95);
++      topHud(c, pal.ink, 1, 1118, 846);
++      text(c, `STIMPIE N° ${num(card.n)}`, 84, 1118, '600 26px PlexB', pal.ink, 'left', 1, 3);
++      text(c, card.name, 80, 1182, fitFont(c, card.name, '900', 'ArchivoX', 62, 700), pal.ink);
++      text(c, `${String(card.n).padStart(2, '0')}/${NCARDS}`, W - 84, 1182, '600 26px PlexB', pal.ink, 'right', 1, 3);
++      text(c, sp.line, 84, 1234, '400 36px CormI', pal.ink, 'left', 0.95);
+     };
+   } else {
+     // ------------------------------------------------ LOGO
+@@ -404,7 +445,7 @@ export function drawFrame(c: Ctx, t: number): Post {
+     worldEnd(c, t, glow);
+     const pull = easeInOut(inv(T(23) + 0.45, T(24) + 0.4, t));
+     hoodie = {
+-      x: 540, y: lerp(1040, avatar.ready ? 720 : 790, pull), s: lerp(0.95, 0.62, pull), t, walk, walkAmt: 0.2 * (1 - pull), rim: RED, rimAmt: 0.7,
++      x: 540, y: lerp(SWAP_POS.y, END_POS.y, pull), s: lerp(SWAP_POS.s, END_POS.s, pull), t, walk, walkAmt: 0.2 * (1 - pull), rim: RED, rimAmt: 0.7,
+       card: 0, cardSettle: Math.exp(-lt / 0.08), snapFlash: Math.exp(-lt / 0.15),
+     };
+     post.flash = 0.9 * Math.exp(-lt / 0.22);
+@@ -424,14 +465,14 @@ export function drawFrame(c: Ctx, t: number): Post {
+         c.font = font;
+         const cw = c.measureText(word[i]).width;
+         c.save();
+-        c.translate(x + cw / 2, 1440);
++        c.translate(x + cw / 2, 1030);
+         c.scale(1, clamp(a, 0, 1.3));
+         text(c, word[i], 0, 0, font, BONE, 'center', clamp(a * 2) * flick);
+         c.restore();
+         x += cw;
+       }
+-      text(c, 'ONE HOODIE. YOUR WORLD.', 540, 1540, '600 32px PlexB', BONE, 'center', smooth(T(24), T(24) + 0.3, t) * flick, 5);
+-      text(c, '@STIMPY.LB', 540, 1640,'900 44px ArchivoX', BONE, 'center', smooth(T(24, 3), T(24, 3) + 0.3, t) * flick, 2);
++      text(c, 'ONE HOODIE. YOUR WORLD.', 540, 1110, '600 32px PlexB', BONE, 'center', smooth(T(24), T(24) + 0.3, t) * flick, 5);
++      text(c, '@STIMPY.LB', 540, 1200, '900 44px ArchivoX', BONE, 'center', smooth(T(24, 3), T(24, 3) + 0.3, t) * flick, 2);
+       brackets(c, BONE, 0.5 * flick);
+     };
+   }
+@@ -479,7 +520,7 @@ export function drawFrame(c: Ctx, t: number): Post {
+   // the stimpie peels off before the breakdown
+   const pu = inv(DETACH - 0.3, DETACH + 0.55, t);
+   if (pu > 0 && pu < 1) {
+-    const r = slotRect({ x: 540, y: 1010, s: 1.0, t, walk, walkAmt: 0.55 });
++    const r = slotRect({ x: 540, y: WORLD_POS.y, s: WORLD_POS.s, t, walk, walkAmt: 0.55 });
+     const e = pu * pu;
+     drawCard(c, ATTACH[3].card, lerp(r.cx, 300, e), lerp(r.cy, -500, e), lerp(r.w, r.w * 1.6, e), lerp(0, -0.9, e), 1);
+   }

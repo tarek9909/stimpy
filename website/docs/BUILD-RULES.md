@@ -10,7 +10,7 @@ Read this first. These rules exist because several workers build different parts
 | Specifications (authoritative) | `C:\Projects\motion\docs\website\` (backend/, frontend/, wiring/, open-questions.md) |
 | Business plan | `C:\Projects\motion\stimpy_website_plan.md` |
 | Brand identity + logo PNGs | `C:\Projects\motion\content\identity\` |
-| Real Stimpie artwork (17 PNGs, 3200x5000, aspect 0.64) | `C:\Projects\motion\content\stimpy-video\out\stimpies\stimpie-000.png` ... `-016.png` |
+| Real Stimpie artwork (17 PNGs, 3200x5000, aspect 0.64) | `C:\Projects\motion\content\videos\stimpy-video\out\stimpies\stimpie-000.png` ... `-016.png` |
 
 `docs/website/open-questions.md` overrides any older wording in the frontend documents. `backend/api-reference.md` is the contract: every endpoint, field, enum and error code must match it exactly. If the spec is silent, choose the most sensible behaviour, implement it, and append a line to `website/docs/DECISIONS.md` (`- [area] decision, reason`). Never silently skip a spec requirement. If something in the spec is contradictory, follow the most specific, most recent document and record it in DECISIONS.md.
 
