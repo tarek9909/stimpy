@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Bebas+Neue&amp;family=Alfa+Slab+One&amp;family=Oswald:wght@500&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="7"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.22"/></feComponentTransfer>
+    </filter>
+    <filter id="wear" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" seed="2"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.95  0 0 0 0 0.91  0 0 0 0 0.84  0 0 0 -2.2 1.25"/>
+    </filter>
+    <g id="match">
+      <rect x="-22" y="0" width="44" height="560" rx="6" fill="#E9C98F"/>
+      <rect x="-22" y="0" width="14" height="560" fill="#D2AD6E"/>
+      <ellipse cx="0" cy="-10" rx="46" ry="70" fill="#D7372B"/>
+      <ellipse cx="-14" cy="-28" rx="12" ry="22" fill="#F07A6E"/>
+    </g>
+  </defs>
+
+  <!-- paper -->
+  <rect width="3000" height="4000" fill="#F3E9D6"/>
+
+  <!-- frame -->
+  <rect x="170" y="170" width="2660" height="3660" fill="none" stroke="#111111" stroke-width="16"/>
+  <rect x="215" y="215" width="2570" height="3570" fill="none" stroke="#111111" stroke-width="5"/>
+
+  <!-- top band -->
+  <rect x="260" y="260" width="2480" height="420" fill="#FF7A59"/>
+  <rect x="268" y="270" width="2480" height="420" fill="#111111" opacity="0.06"/>
+  <text x="1500" y="582" text-anchor="middle" font-family="Bebas Neue" font-size="330" letter-spacing="24" fill="#FFF4E6">STRIKE A NEW LOOK</text>
+
+  <!-- art field -->
+  <rect x="260" y="740" width="2480" height="2380" fill="#B9D4C0"/>
+  <circle cx="1500" cy="1880" r="1010" fill="#A5C6AE"/>
+  <circle cx="1500" cy="1880" r="760" fill="#93B99F"/>
+
+  <!-- crossed matches behind the hoodie -->
+  <use href="#match" transform="translate(760 1150) rotate(-28)"/>
+  <use href="#match" transform="translate(2240 1150) rotate(28)"/>
+
+  <!-- hoodie, misregistered coral plate under black plate -->
+  <g transform="translate(26 20)">
+    <path fill="#FF7A59" d="M1500 960 C1640 960 1760 1080 1770 1290 L2000 1360 C2120 1400 2180 1480 2210 1600 L2330 2380 L2120 2420 L2020 1900 L2010 2700 L990 2700 L980 1900 L880 2420 L670 2380 L790 1600 C820 1480 880 1400 1000 1360 L1230 1290 C1240 1080 1360 960 1500 960 Z"/>
+  </g>
+  <path fill="#111111" d="M1500 960 C1640 960 1760 1080 1770 1290 L2000 1360 C2120 1400 2180 1480 2210 1600 L2330 2380 L2120 2420 L2020 1900 L2010 2700 L990 2700 L980 1900 L880 2420 L670 2380 L790 1600 C820 1480 880 1400 1000 1360 L1230 1290 C1240 1080 1360 960 1500 960 Z"/>
+  <!-- hood opening + ribs -->
+  <path d="M1330 1290 C1350 1130 1420 1050 1500 1050 C1580 1050 1650 1130 1670 1290 Z" fill="#2A2A2A"/>
+  <rect x="990" y="2620" width="1020" height="80" fill="#262626"/>
+  <rect x="680" y="2330" width="200" height="70" transform="rotate(8 780 2365)" fill="#262626"/>
+  <rect x="2120" y="2330" width="200" height="70" transform="rotate(-8 2220 2365)" fill="#262626"/>
+
+  <!-- the Stimpie: zipped-on back panel with a flame -->
+  <rect x="1200" y="1480" width="600" height="800" fill="#FFF4E6"/>
+  <rect x="1200" y="1480" width="600" height="800" fill="none" stroke="#FF7A59" stroke-width="18" stroke-dasharray="34 18"/>
+  <path fill="#FF7A59" d="M1500 1580 C1570 1730 1710 1830 1690 2020 C1675 2150 1595 2220 1500 2220 C1405 2220 1325 2150 1310 2020 C1295 1880 1395 1830 1425 1700 C1455 1800 1478 1845 1520 1868 C1534 1765 1522 1662 1500 1580 Z"/>
+  <path fill="#FFE45C" d="M1500 1850 C1545 1930 1615 1990 1600 2090 C1590 2160 1550 2195 1500 2195 C1450 2195 1408 2160 1400 2090 C1392 2010 1445 1980 1462 1915 C1478 1960 1490 1975 1512 1990 C1520 1940 1515 1890 1500 1850 Z"/>
+  <!-- zipper pull -->
+  <rect x="1785" y="1460" width="34" height="90" rx="10" fill="#FF7A59"/>
+
+  <!-- tiny label print details -->
+  <text x="330" y="830" font-family="Oswald" font-weight="500" font-size="62" letter-spacing="6" fill="#111111">Nº 001</text>
+  <text x="2670" y="830" text-anchor="end" font-family="Oswald" font-weight="500" font-size="62" letter-spacing="6" fill="#111111">50 LOOKS</text>
+  <text x="1500" y="3050" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="70" letter-spacing="14" fill="#111111">ZIP · STRIKE · REPEAT</text>
+
+  <!-- bottom band -->
+  <text x="1500" y="3440" text-anchor="middle" font-family="Alfa Slab One" font-size="212" fill="#111111" letter-spacing="4">SAFETY STIMPIES</text>
+  <line x1="420" y1="3520" x2="2580" y2="3520" stroke="#111111" stroke-width="8"/>
+  <text x="1500" y="3640" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="92" letter-spacing="18" fill="#111111">ONE HOODIE · ENDLESS LOOKS</text>
+
+  <!-- print wear + grain -->
+  <rect width="3000" height="4000" filter="url(#wear)" opacity="0.22"/>
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

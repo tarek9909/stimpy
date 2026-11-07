@@ -4923,6 +4923,28 @@
           "updatedAt"
         ]
       },
+      "PushTestResultInput": {
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "sent": {
+            "type": "boolean"
+          },
+          "recipients": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "configured",
+          "sent",
+          "recipients"
+        ]
+      },
       "SettingsInput": {
         "type": "object",
         "properties": {
@@ -10263,6 +10285,29 @@
           "state",
           "createdAt",
           "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "PushTestResult": {
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "sent": {
+            "type": "boolean"
+          },
+          "recipients": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "configured",
+          "sent",
+          "recipients"
         ],
         "additionalProperties": false
       },
@@ -29549,6 +29594,51 @@
                     null
                   ],
                   "description": "No content"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/push/test": {
+      "post": {
+        "summary": "Send a test push to the signed-in user (needs OneSignal configured and the app signed in)",
+        "tags": [
+          "push"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTestResult"
                 }
               }
             }

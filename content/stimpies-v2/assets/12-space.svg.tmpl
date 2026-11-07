@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Alfa+Slab+One&amp;family=Anton&amp;family=Bangers&amp;family=Oswald:wght@500;700&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="57"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.18"/></feComponentTransfer>
+    </filter>
+    <filter id="paint" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="brush" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.004 0.04" numOctaves="3" seed="8"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.95  0 0 0 0 0.85  0 0 0 0.9 -0.3"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="nebula" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="120"/></filter>
+    <radialGradient id="vig" cx="0.5" cy="0.55" r="0.75"><stop offset="0.6" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.45"/></radialGradient>
+
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B2340"/><stop offset="0.35" stop-color="#27306B"/><stop offset="0.62" stop-color="#7A3A72"/>
+      <stop offset="0.82" stop-color="#D2603F"/><stop offset="1" stop-color="#F6B25E"/>
+    </linearGradient>
+    <radialGradient id="planet" cx="0.35" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#FCE3A0"/><stop offset="0.45" stop-color="#E8904A"/><stop offset="0.8" stop-color="#9B3B3E"/><stop offset="1" stop-color="#3E1838"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFE7B0" stop-opacity="0.2"/><stop offset="0.4" stop-color="#FFE7B0"/><stop offset="1" stop-color="#C9B6FF" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2F4F7"/><stop offset="0.45" stop-color="#9AA6B8"/><stop offset="0.55" stop-color="#5E6A80"/><stop offset="1" stop-color="#2B3245"/>
+    </linearGradient>
+    <radialGradient id="dome" cx="0.4" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#E9FFFF"/><stop offset="0.5" stop-color="#5CC8FF"/><stop offset="1" stop-color="#1E4E8C"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4FF9E" stop-opacity="0.85"/><stop offset="1" stop-color="#F4FF9E" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3A1E4A"/><stop offset="1" stop-color="#140B1E"/>
+    </linearGradient>
+    <clipPath id="ringFront"><rect x="0" y="1520" width="3000" height="1000"/></clipPath>
+    <clipPath id="planetBands"><circle cx="2300" cy="1520" r="390"/></clipPath>
+  </defs>
+
+  <!-- ===== painted art ===== -->
+  <g filter="url(#paint)">
+    <rect x="-40" y="880" width="3080" height="3160" fill="url(#sky)"/>
+    <g filter="url(#nebula)" opacity="0.55">
+      <ellipse cx="700" cy="1500" rx="700" ry="260" fill="#5CC8FF" opacity="0.35"/>
+      <ellipse cx="1900" cy="2200" rx="900" ry="300" fill="#C04A8C" opacity="0.45"/>
+      <ellipse cx="2500" cy="1100" rx="500" ry="220" fill="#7A6BE0" opacity="0.4"/>
+    </g>
+    <g fill="#FFF8E6">
+    __STARS__
+    </g>
+
+    <!-- small moon -->
+    <circle cx="640" cy="1240" r="96" fill="#E8E2F4"/>
+    <circle cx="610" cy="1215" r="22" fill="#C9C0DD"/><circle cx="672" cy="1268" r="16" fill="#C9C0DD"/>
+
+    <!-- ringed planet: back ring, body, bands, front ring -->
+    <ellipse cx="2300" cy="1520" rx="620" ry="150" transform="rotate(-16 2300 1520)" fill="none" stroke="url(#ring)" stroke-width="70" opacity="0.55"/>
+    <circle cx="2300" cy="1520" r="390" fill="url(#planet)"/>
+    <g clip-path="url(#planetBands)" fill="none" stroke="#5E2340" stroke-opacity="0.35">
+      <path d="M1900 1380 Q2350 1300 2800 1420" stroke-width="40"/>
+      <path d="M1900 1540 Q2350 1470 2800 1590" stroke-width="26"/>
+      <path d="M1900 1690 Q2350 1630 2800 1740" stroke-width="50"/>
+    </g>
+    <ellipse cx="2300" cy="1520" rx="620" ry="150" transform="rotate(-16 2300 1520)" fill="none" stroke="url(#ring)" stroke-width="70" clip-path="url(#ringFront)"/>
+
+    <!-- distant mesas on the horizon -->
+    <path d="M-40 3010 L260 2900 L420 2930 L520 2820 L760 2820 L840 2930 L1180 2960 L1500 2900 L1760 2940 L1900 2860 L2140 2860 L2220 2950 L2600 2920 L3040 2980 L3040 3200 L-40 3200 Z" fill="#7C3A56" opacity="0.8"/>
+
+    <!-- tractor beam -->
+    <path d="M1040 1760 L1300 1760 L1900 3180 L520 3180 Z" fill="url(#beam)" style="mix-blend-mode:screen"/>
+    <g fill="none" stroke="#F4FF9E" stroke-width="10" opacity="0.5">
+      <ellipse cx="1190" cy="2050" rx="230" ry="30"/><ellipse cx="1205" cy="2420" rx="390" ry="44"/><ellipse cx="1210" cy="2800" rx="560" ry="58"/>
+    </g>
+
+    <!-- foreground ground with craters -->
+    <path d="M-40 3120 C500 3040 1100 3100 1600 3060 C2100 3020 2600 3080 3040 3040 L3040 4040 L-40 4040 Z" fill="url(#ground)"/>
+    <g fill="#120A1A" opacity="0.7">
+      <ellipse cx="500" cy="3330" rx="220" ry="46"/><ellipse cx="1600" cy="3260" rx="140" ry="28"/><ellipse cx="2350" cy="3420" rx="260" ry="52"/>
+    </g>
+    <g fill="none" stroke="#5B3470" stroke-width="10">
+      <path d="M280 3320 Q500 3270 720 3320"/><path d="M1460 3255 Q1600 3225 1740 3255"/><path d="M2090 3410 Q2350 3360 2610 3410"/>
+    </g>
+
+    <!-- abducted hoodie -->
+    <g transform="translate(1210 2470) rotate(14) scale(0.5) translate(-1500 -1830)">
+      <path fill="#FF7A59" stroke="#111111" stroke-width="20" d="M1500 960 C1640 960 1760 1080 1770 1290 L2000 1360 C2120 1400 2180 1480 2210 1600 L2330 2380 L2120 2420 L2020 1900 L2010 2700 L990 2700 L980 1900 L880 2420 L670 2380 L790 1600 C820 1480 880 1400 1000 1360 L1230 1290 C1240 1080 1360 960 1500 960 Z"/>
+      <path d="M1330 1290 C1350 1130 1420 1050 1500 1050 C1580 1050 1650 1130 1670 1290 Z" fill="#B9472F"/>
+      <path d="M2020 1900 L2010 2700 L1830 2700 L1840 1500 L2000 1360 C2120 1400 2180 1480 2210 1600 L2330 2380 L2120 2420 Z" fill="#B9472F" opacity="0.45"/>
+      <rect x="1200" y="1480" width="600" height="800" fill="#FFF4E6" stroke="#111111" stroke-width="16"/>
+      <path d="M1500 1600 A240 240 0 0 0 1500 2080 Z" fill="#111111"/>
+      <path d="M1500 1640 A240 240 0 0 1 1500 2120 Z" fill="none" stroke="#FF7A59" stroke-width="30"/>
+    </g>
+    <!-- sparkle trail -->
+    <g fill="#F4FF9E">
+      <path d="M980 2150 l14 -46 l14 46 l46 14 l-46 14 l-14 46 l-14 -46 l-46 -14 Z"/>
+      <path d="M1480 2780 l10 -32 l10 32 l32 10 l-32 10 l-10 32 l-10 -32 l-32 -10 Z"/>
+      <path d="M1520 2060 l8 -26 l8 26 l26 8 l-26 8 l-8 26 l-8 -26 l-26 -8 Z"/>
+    </g>
+
+    <!-- flying saucer -->
+    <g transform="rotate(-8 1170 1650)">
+      <ellipse cx="1170" cy="1690" rx="300" ry="64" fill="#2B3245"/>
+      <ellipse cx="1170" cy="1640" rx="440" ry="96" fill="url(#metal)"/>
+      <ellipse cx="1170" cy="1560" rx="180" ry="140" fill="url(#dome)"/>
+      <ellipse cx="1120" cy="1510" rx="56" ry="30" fill="#FFFFFF" opacity="0.7"/>
+      <g fill="#FFE45C">
+        <circle cx="830" cy="1652" r="16"/><circle cx="950" cy="1672" r="16"/><circle cx="1070" cy="1682" r="16"/>
+        <circle cx="1270" cy="1682" r="16"/><circle cx="1390" cy="1672" r="16"/><circle cx="1510" cy="1652" r="16"/>
+      </g>
+      <ellipse cx="1170" cy="1700" rx="140" ry="26" fill="#F4FF9E" filter="url(#glow)"/>
+    </g>
+
+    <!-- astronaut silhouette pointing up -->
+    <g transform="translate(2300 3010)">
+      <rect x="-70" y="40" width="150" height="230" rx="40" fill="#0D0714"/>
+      <rect x="-60" y="260" width="55" height="150" rx="20" fill="#0D0714"/>
+      <rect x="15" y="260" width="55" height="150" rx="20" fill="#0D0714"/>
+      <path d="M60 70 L200 -150" stroke="#0D0714" stroke-width="54" stroke-linecap="round"/>
+      <circle cx="5" cy="-20" r="95" fill="#0D0714"/>
+      <circle cx="5" cy="-20" r="95" fill="none" stroke="#5CC8FF" stroke-width="10" opacity="0.6"/>
+      <path d="M-40 -70 Q0 -100 40 -80" stroke="#E9FFFF" stroke-width="12" fill="none" opacity="0.8" stroke-linecap="round"/>
+    </g>
+  </g>
+  <rect x="0" y="880" width="3000" height="3120" fill="url(#vig)"/>
+  <rect x="0" y="880" width="3000" height="3120" filter="url(#brush)" opacity="0.18" style="mix-blend-mode:soft-light"/>
+
+  <!-- ===== cover lines ===== -->
+  <g transform="rotate(-5 700 3500)">
+    <text x="230" y="3420" font-family="Bangers" font-size="250" letter-spacing="6" fill="#FFE45C" stroke="#111111" stroke-width="22" paint-order="stroke">THEY CAME</text>
+    <text x="230" y="3660" font-family="Bangers" font-size="250" letter-spacing="6" fill="#FFE45C" stroke="#111111" stroke-width="22" paint-order="stroke">FOR THE DRIP!</text>
+  </g>
+  <text x="2780" y="1020" text-anchor="end" font-family="Oswald" font-weight="700" font-size="74" letter-spacing="6" fill="#FFF4E6">A NOVELETTE OF</text>
+  <text x="2780" y="1100" text-anchor="end" font-family="Oswald" font-weight="700" font-size="74" letter-spacing="6" fill="#FFE45C">INTERGALACTIC FASHION</text>
+
+  <!-- ===== masthead ===== -->
+  <rect x="0" y="0" width="3000" height="880" fill="#FFD84A"/>
+  <rect x="0" y="860" width="3000" height="24" fill="#111111"/>
+  <rect x="200" y="190" width="330" height="440" fill="#D7372B" stroke="#111111" stroke-width="12"/>
+  <text x="365" y="400" text-anchor="middle" font-family="Anton" font-size="190" fill="#FFF4E6">35¢</text>
+  <text x="365" y="500" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="60" letter-spacing="4" fill="#FFF4E6">No. 012</text>
+  <text x="365" y="580" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="44" letter-spacing="4" fill="#FFD84A">OCT 1957</text>
+  <text x="600" y="320" font-family="Anton" font-size="170" letter-spacing="22" fill="#111111">ASTOUNDING</text>
+  <text x="2800" y="320" text-anchor="end" font-family="Oswald" font-weight="700" font-size="54" letter-spacing="8" fill="#111111">SCIENCE FICTION</text>
+  <text x="614" y="768" font-family="Alfa Slab One" font-size="420" textLength="2190" lengthAdjust="spacingAndGlyphs" fill="#111111">STIMPY TALES</text>
+  <text x="600" y="752" font-family="Alfa Slab One" font-size="420" textLength="2190" lengthAdjust="spacingAndGlyphs" fill="#D7372B">STIMPY TALES</text>
+
+  <rect width="3000" height="4000" fill="#F2E3C2" opacity="0.08" style="mix-blend-mode:multiply"/>
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#FFFFFF" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

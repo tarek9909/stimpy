@@ -46,7 +46,7 @@ export function end(S: Stage, t: number) {
   const tag = seg(t, EV.tagline, EV.tagline + 0.5);
   mono(f, 'ONE HOODIE.', W / 2, 1375, { size: 26, align: 'center', alpha: tag, weight: 500 });
   mono(f, 'MULTIPLE IDENTITIES.', W / 2, 1412, { size: 26, align: 'center', alpha: seg(t, EV.tagline + 0.25, EV.tagline + 0.75), weight: 500 });
-  mono(f, 'DROP 01 — COMING SOON', W / 2, 1468, { size: 19, align: 'center', color: '#6F7DFF', alpha: seg(t, 56.6, 57.0), weight: 700 });
+  mono(f, 'DROP 01 — 14.11.26', W / 2, 1468, { size: 19, align: 'center', color: '#6F7DFF', alpha: seg(t, 56.6, 57.0), weight: 700 });
   if (logoAge >= 0) {
     // corner marks
     f.save();

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,900;1,6..96,500&amp;family=Inter:wght@400;600&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="11"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.16"/></feComponentTransfer>
+    </filter>
+    <linearGradient id="fadeB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111111" stop-opacity="0"/>
+      <stop offset="1" stop-color="#111111" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="fadeS" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#111111" stop-opacity="1"/>
+      <stop offset="0.12" stop-color="#111111" stop-opacity="0"/>
+      <stop offset="0.88" stop-color="#111111" stop-opacity="0"/>
+      <stop offset="1" stop-color="#111111" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="3000" height="4000" fill="#111111"/>
+
+  <!-- headline -->
+  <text x="1500" y="600" text-anchor="middle" font-family="Bodoni Moda" font-weight="900" font-size="350" textLength="2620" lengthAdjust="spacingAndGlyphs" fill="#FFF4E6">OVERTHINKING</text>
+  <line x1="190" y1="700" x2="1080" y2="700" stroke="#FF7A59" stroke-width="6"/>
+  <line x1="1920" y1="700" x2="2810" y2="700" stroke="#FF7A59" stroke-width="6"/>
+  <text x="1500" y="728" text-anchor="middle" font-family="Bodoni Moda" font-style="italic" font-weight="500" font-size="96" fill="#FF7A59">since 150 AD</text>
+
+  <!-- the bust: Roman, mid-2nd century, Art Institute of Chicago, CC0 -->
+  <image x="225" y="790" width="2550" height="2584" preserveAspectRatio="xMidYMid slice" href="data:image/jpeg;base64,__IMG__"/>
+  <rect x="225" y="790" width="2550" height="2584" fill="url(#fadeS)"/>
+  <rect x="0" y="3000" width="3000" height="420" fill="url(#fadeB)"/>
+
+  <!-- pixel shades -->
+  <g transform="translate(1168 1432) rotate(-1 352 88)" fill="#111111">
+    <rect x="0" y="0" width="704" height="44"/>
+    <rect x="44" y="44" width="264" height="44"/>
+    <rect x="396" y="44" width="264" height="44"/>
+    <rect x="308" y="44" width="88" height="44"/>
+    <rect x="44" y="88" width="264" height="44"/>
+    <rect x="396" y="88" width="264" height="44"/>
+    <rect x="88" y="132" width="176" height="44"/>
+    <rect x="440" y="132" width="176" height="44"/>
+    <g fill="#FFF4E6">
+      <rect x="88" y="44" width="44" height="44"/>
+      <rect x="132" y="88" width="44" height="44"/>
+      <rect x="440" y="44" width="44" height="44"/>
+      <rect x="484" y="88" width="44" height="44"/>
+    </g>
+  </g>
+
+  <!-- vertical gallery caption -->
+  <text transform="translate(2800 2350) rotate(90)" text-anchor="middle" font-family="Inter" font-weight="600" font-size="46" letter-spacing="14" fill="#FF7A59">THE STIMPY COLLECTION · GALLERY 2 · ANTIQUITIES &amp; ANXIETIES</text>
+
+  <!-- museum label -->
+  <rect x="200" y="3470" width="10" height="300" fill="#FF7A59"/>
+  <text font-family="Inter" fill="#FFF4E6">
+    <tspan x="250" y="3530" font-weight="600" font-size="62">Nº 008 — Portrait Bust of a Woman, Remixed</tspan>
+    <tspan x="250" y="3615" font-weight="400" font-size="48" fill="#CFC6B8">Roman, mid–2nd century AD. Marble. Still thinking about it.</tspan>
+    <tspan x="250" y="3690" font-weight="400" font-size="40" fill="#8E877D">Bust: Art Institute of Chicago, public domain (CC0).</tspan>
+  </text>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:screen"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#FFFFFF" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

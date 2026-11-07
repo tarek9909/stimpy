@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Bowlby+One&amp;family=Rye&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="21"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.20"/></feComponentTransfer>
+    </filter>
+    <filter id="wear" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" seed="9"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.96  0 0 0 0 0.90  0 0 0 0 0.78  0 0 0 -2.2 1.25"/>
+    </filter>
+    <radialGradient id="crust" cx="0.4" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#F6C46B"/><stop offset="0.6" stop-color="#E39A3B"/><stop offset="1" stop-color="#B9661F"/>
+    </radialGradient>
+    <path id="ring" d="M540 1880 A960 960 0 0 1 2460 1880"/>
+    <path id="arch" d="M380 760 Q1500 420 2620 760"/>
+  </defs>
+
+  <rect width="3000" height="4000" fill="#F4E4C1"/>
+  <g fill="#E0503C">
+    <path d="M1500 1880 L5700 1880 L5619 2699 Z"/>
+    <path d="M1500 1880 L5380 3487 L4992 4213 Z"/>
+    <path d="M1500 1880 L4470 4850 L3833 5372 Z"/>
+    <path d="M1500 1880 L3107 5760 L2319 5999 Z"/>
+    <path d="M1500 1880 L1500 6080 L681 5999 Z"/>
+    <path d="M1500 1880 L-107 5760 L-833 5372 Z"/>
+    <path d="M1500 1880 L-1470 4850 L-1992 4213 Z"/>
+    <path d="M1500 1880 L-2380 3487 L-2619 2699 Z"/>
+    <path d="M1500 1880 L-2700 1880 L-2619 1061 Z"/>
+    <path d="M1500 1880 L-2380 273 L-1992 -453 Z"/>
+    <path d="M1500 1880 L-1470 -1090 L-833 -1612 Z"/>
+    <path d="M1500 1880 L-107 -2000 L681 -2239 Z"/>
+    <path d="M1500 1880 L1500 -2320 L2319 -2239 Z"/>
+    <path d="M1500 1880 L3107 -2000 L3833 -1612 Z"/>
+    <path d="M1500 1880 L4470 -1090 L4992 -453 Z"/>
+    <path d="M1500 1880 L5380 273 L5619 1061 Z"/>
+  </g>
+
+  <!-- badge -->
+  <circle cx="1500" cy="1880" r="1050" fill="#D7372B" stroke="#111111" stroke-width="26"/>
+  <circle cx="1500" cy="1880" r="870" fill="#FFF4E6" stroke="#111111" stroke-width="22"/>
+  <text font-family="Bowlby One" font-size="84" letter-spacing="14" fill="#FFF4E6"><textPath href="#ring" startOffset="50%" text-anchor="middle">★ A STIMPY BAKERY PRODUCTION ★</textPath></text>
+
+  <ellipse cx="1500" cy="2540" rx="360" ry="44" fill="#111111" opacity="0.18"/>
+
+  <!-- legs and shoes -->
+  <g fill="none" stroke="#111111" stroke-width="32" stroke-linecap="round">
+    <path d="M1440 1960 C1428 2150 1452 2300 1404 2440"/>
+    <path d="M1560 1960 C1582 2150 1546 2300 1600 2440"/>
+  </g>
+  <ellipse cx="1340" cy="2478" rx="130" ry="62" fill="#111111"/>
+  <ellipse cx="1665" cy="2478" rx="130" ry="62" fill="#111111"/>
+  <ellipse cx="1300" cy="2456" rx="40" ry="16" fill="#FFFFFF" opacity="0.8"/>
+  <ellipse cx="1705" cy="2456" rx="40" ry="16" fill="#FFFFFF" opacity="0.8"/>
+
+  <!-- rubber-hose arms -->
+  <g fill="none" stroke="#111111" stroke-width="32" stroke-linecap="round">
+    <path d="M1000 1830 C930 1760 890 1660 880 1550"/>
+    <path d="M1985 1790 C2160 1720 2280 1850 2200 1960"/>
+  </g>
+  <!-- waving glove -->
+  <g transform="translate(870 1470) rotate(-14) scale(0.9)">
+    <rect x="-48" y="-150" width="38" height="120" rx="19" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <rect x="-8" y="-170" width="38" height="140" rx="19" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <rect x="32" y="-150" width="38" height="120" rx="19" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <ellipse cx="10" cy="-10" rx="78" ry="74" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <ellipse cx="-78" cy="-30" rx="26" ry="50" transform="rotate(-35 -78 -30)" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <rect x="-60" y="50" width="140" height="56" rx="20" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <line x1="-30" y1="-60" x2="-26" y2="-10" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <line x1="10" y1="-66" x2="12" y2="-14" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <line x1="50" y1="-60" x2="48" y2="-10" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <!-- fist on hip -->
+  <g transform="translate(2190 1975) rotate(30)">
+    <ellipse rx="80" ry="70" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+    <path d="M-40 -30 Q-10 -10 -40 20 M0 -40 Q30 -10 0 30 M40 -30 Q65 0 40 25" fill="none" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+    <rect x="-130" y="-34" width="56" height="74" rx="18" fill="#FFFFFF" stroke="#111111" stroke-width="14"/>
+  </g>
+
+  <!-- croissant -->
+  <g transform="translate(770 2010) rotate(-62)">
+    <ellipse rx="95" ry="115" fill="url(#crust)" stroke="#111111" stroke-width="22"/>
+    <path d="M-52 -63 Q0 -98 52 -63" fill="none" stroke="#FFE2A6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-66 40 Q0 71 66 40" fill="none" stroke="#8A4514" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g transform="translate(2230 2010) rotate(62)">
+    <ellipse rx="95" ry="115" fill="url(#crust)" stroke="#111111" stroke-width="22"/>
+    <path d="M-52 -63 Q0 -98 52 -63" fill="none" stroke="#FFE2A6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-66 40 Q0 71 66 40" fill="none" stroke="#8A4514" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g transform="translate(935 1880) rotate(-45)">
+    <ellipse rx="155" ry="175" fill="url(#crust)" stroke="#111111" stroke-width="22"/>
+    <path d="M-85 -96 Q0 -149 85 -96" fill="none" stroke="#FFE2A6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-108 61 Q0 108 108 61" fill="none" stroke="#8A4514" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g transform="translate(2065 1880) rotate(45)">
+    <ellipse rx="155" ry="175" fill="url(#crust)" stroke="#111111" stroke-width="22"/>
+    <path d="M-85 -96 Q0 -149 85 -96" fill="none" stroke="#FFE2A6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-108 61 Q0 108 108 61" fill="none" stroke="#8A4514" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g transform="translate(1185 1760) rotate(-22)">
+    <ellipse rx="215" ry="235" fill="url(#crust)" stroke="#111111" stroke-width="22"/>
+    <path d="M-118 -129 Q0 -200 118 -129" fill="none" stroke="#FFE2A6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-150 82 Q0 146 150 82" fill="none" stroke="#8A4514" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g transform="translate(1815 1760) rotate(22)">
+    <ellipse rx="215" ry="235" fill="url(#crust)" stroke="#111111" stroke-width="22"/>
+    <path d="M-118 -129 Q0 -200 118 -129" fill="none" stroke="#FFE2A6" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-150 82 Q0 146 150 82" fill="none" stroke="#8A4514" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g transform="translate(1500 1700)">
+    <ellipse rx="305" ry="295" fill="url(#crust)" stroke="#111111" stroke-width="24"/>
+    <path d="M-190 -170 Q0 -270 190 -170" fill="none" stroke="#FFE2A6" stroke-width="18" stroke-linecap="round"/>
+  </g>
+
+  <!-- shades pushed up -->
+  <g transform="rotate(-6 1500 1470)">
+    <ellipse cx="1405" cy="1468" rx="96" ry="62" fill="#111111"/>
+    <ellipse cx="1595" cy="1468" rx="96" ry="62" fill="#111111"/>
+    <rect x="1490" y="1450" width="20" height="18" fill="#111111"/>
+    <path d="M1360 1440 L1400 1425" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+    <path d="M1550 1440 L1590 1425" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- face: pie-cut eyes, blush, grin -->
+  <clipPath id="pup1415"><ellipse cx="1423" cy="1682" rx="42" ry="72"/></clipPath>
+  <ellipse cx="1415" cy="1660" rx="72" ry="112" fill="#FFFFFF" stroke="#111111" stroke-width="16"/>
+  <ellipse cx="1423" cy="1682" rx="42" ry="72" fill="#111111"/>
+  <path d="M1429 1664 L1485 1600 L1489 1670 Z" fill="#FFFFFF" clip-path="url(#pup1415)"/>
+  <clipPath id="pup1585"><ellipse cx="1593" cy="1682" rx="42" ry="72"/></clipPath>
+  <ellipse cx="1585" cy="1660" rx="72" ry="112" fill="#FFFFFF" stroke="#111111" stroke-width="16"/>
+  <ellipse cx="1593" cy="1682" rx="42" ry="72" fill="#111111"/>
+  <path d="M1599 1664 L1655 1600 L1659 1670 Z" fill="#FFFFFF" clip-path="url(#pup1585)"/>
+  <ellipse cx="1310" cy="1790" rx="56" ry="34" fill="#FF7A59" opacity="0.6"/>
+  <ellipse cx="1690" cy="1790" rx="56" ry="34" fill="#FF7A59" opacity="0.6"/>
+  <clipPath id="mouth"><path d="M1380 1800 Q1500 1950 1620 1800 Q1500 1850 1380 1800 Z"/></clipPath>
+  <path d="M1380 1800 Q1500 1950 1620 1800 Q1500 1850 1380 1800 Z" fill="#111111"/>
+  <ellipse cx="1500" cy="1905" rx="70" ry="40" fill="#D7372B" clip-path="url(#mouth)"/>
+  <path d="M1380 1800 Q1500 1950 1620 1800 Q1500 1850 1380 1800 Z" fill="none" stroke="#111111" stroke-width="14" stroke-linejoin="round"/>
+
+  <!-- arched title with drop shadow -->
+  <text font-family="Bowlby One" font-size="300" letter-spacing="8" fill="#111111" transform="translate(14 18)"><textPath href="#arch" startOffset="50%" text-anchor="middle">FLAKY BUT</textPath></text>
+  <text font-family="Bowlby One" font-size="300" letter-spacing="8" fill="#FFF4E6" stroke="#111111" stroke-width="16" paint-order="stroke"><textPath href="#arch" startOffset="50%" text-anchor="middle">FLAKY BUT</textPath></text>
+
+  <!-- ribbon -->
+  <path d="M260 2930 L520 2930 L520 3230 L260 3230 L360 3080 Z" fill="#9E2418" stroke="#111111" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M2740 2930 L2480 2930 L2480 3230 L2740 3230 L2640 3080 Z" fill="#9E2418" stroke="#111111" stroke-width="18" stroke-linejoin="round"/>
+  <path d="M440 2860 Q1500 2780 2560 2860 L2560 3170 Q1500 3090 440 3170 Z" fill="#D7372B" stroke="#111111" stroke-width="22" stroke-linejoin="round"/>
+  <text x="1500" y="3080" text-anchor="middle" font-family="Bowlby One" font-size="230" letter-spacing="10" fill="#FFF4E6" stroke="#111111" stroke-width="10" paint-order="stroke">FABULOUS</text>
+
+  <rect x="420" y="3330" width="2160" height="330" rx="40" fill="#FFF4E6" stroke="#111111" stroke-width="18"/>
+  <text x="1500" y="3470" text-anchor="middle" font-family="Rye" font-size="96" letter-spacing="6" fill="#111111">Butter first. Questions later.</text>
+  <text x="1500" y="3590" text-anchor="middle" font-family="Bowlby One" font-size="52" letter-spacing="16" fill="#9E2418">STIMPIE Nº 011 · BAKED WITH ATTITUDE</text>
+
+  <rect width="3000" height="4000" filter="url(#wear)" opacity="0.16"/>
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

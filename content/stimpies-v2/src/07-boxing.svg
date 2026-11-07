@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Holtwood+One+SC&amp;family=Ultra&amp;family=Rye&amp;family=Oswald:wght@500;700&amp;display=block');</style>
+  <defs>
+    <filter id="press" x="-2%" y="-2%" width="104%" height="104%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="9" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="2" seed="6" result="s"/>
+      <feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -6 4.9" result="m"/>
+      <feComposite in="d" in2="m" operator="in"/>
+    </filter>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="41"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.24"/></feComponentTransfer>
+    </filter>
+    <filter id="paper" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006" numOctaves="3" seed="12"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.55  0 0 0 0 0.45  0 0 0 0 0.3  0 0 0 -1.2 0.7"/>
+    </filter>
+    <pattern id="dotsK" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="17" cy="17" r="9" fill="#151515"/></pattern>
+    <pattern id="dotsR" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(15)"><circle cx="17" cy="17" r="10" fill="#C8312A"/></pattern>
+    <linearGradient id="fadeDown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.9"/><stop offset="1" stop-color="#fff" stop-opacity="0.05"/></linearGradient>
+    <linearGradient id="fadeUp" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0.9"/><stop offset="1" stop-color="#fff" stop-opacity="0.05"/></linearGradient>
+    <mask id="mDown"><rect width="1100" height="1000" fill="url(#fadeDown)"/></mask>
+    <mask id="mUp"><rect width="1100" height="1000" fill="url(#fadeUp)"/></mask>
+    <clipPath id="box"><rect width="1100" height="1000"/></clipPath>
+  </defs>
+
+  <rect width="3000" height="4000" fill="#EDE4CC"/>
+  <rect width="3000" height="4000" filter="url(#paper)" opacity="0.35"/>
+
+  <g filter="url(#press)">
+    <!-- border -->
+    <rect x="170" y="170" width="2660" height="3660" fill="none" stroke="#151515" stroke-width="22"/>
+    <rect x="215" y="215" width="2570" height="3570" fill="none" stroke="#151515" stroke-width="6"/>
+
+    <text x="1500" y="380" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="92" letter-spacing="26" fill="#151515">THE STIMPY ATHLETIC CLUB PRESENTS</text>
+    <rect x="300" y="440" width="2400" height="12" fill="#151515"/>
+    <text x="1500" y="715" text-anchor="middle" font-family="Ultra" font-size="205" letter-spacing="6" fill="#C8312A">TONIGHT ONLY!</text>
+    <rect x="300" y="810" width="2400" height="12" fill="#151515"/>
+    <rect x="300" y="836" width="2400" height="5" fill="#151515"/>
+
+    <!-- left corner: MONDAY (an alarm clock in gloves) -->
+    <g transform="translate(300 900)">
+      <rect width="1100" height="1000" fill="url(#dotsR)" mask="url(#mDown)" opacity="0.55"/>
+      <g clip-path="url(#box)">
+        <!-- bells -->
+        <path d="M290 290 A110 110 0 0 1 510 290Z" transform="rotate(-28 400 290)" fill="#151515"/>
+        <path d="M590 290 A110 110 0 0 1 810 290Z" transform="rotate(28 700 290)" fill="#151515"/>
+        <path d="M550 205 L550 150 M500 150 L600 150" stroke="#151515" stroke-width="26" stroke-linecap="round"/>
+        <circle cx="550" cy="140" r="24" fill="#151515"/>
+        <!-- legs -->
+        <path d="M430 700 L380 900 L300 900 L300 950 L450 950 L500 720Z M670 700 L720 900 L800 900 L800 950 L650 950 L600 720Z" fill="#151515"/>
+        <!-- arms + gloves -->
+        <path d="M290 520 C200 520 160 470 150 400" stroke="#151515" stroke-width="34" fill="none"/>
+        <path d="M810 520 C900 520 960 470 970 400" stroke="#151515" stroke-width="34" fill="none"/>
+        <circle cx="150" cy="350" r="105" fill="#C8312A"/><rect x="100" y="420" width="100" height="70" fill="#151515"/>
+        <circle cx="975" cy="350" r="105" fill="#C8312A"/><rect x="925" y="420" width="100" height="70" fill="#151515"/>
+        <!-- face -->
+        <circle cx="550" cy="500" r="290" fill="#151515"/>
+        <circle cx="550" cy="500" r="235" fill="#EDE4CC"/>
+        <circle cx="550" cy="500" r="235" fill="url(#dotsK)" opacity="0.25"/>
+        <g stroke="#151515" stroke-width="16"><path d="M550 285v50M550 665v50M335 500h50M715 500h50"/></g>
+        <!-- angry brows + eyes -->
+        <path d="M420 420 L520 460 M680 420 L580 460" stroke="#151515" stroke-width="30" stroke-linecap="round"/>
+        <circle cx="480" cy="495" r="26" fill="#151515"/><circle cx="620" cy="495" r="26" fill="#151515"/>
+        <!-- hands at 7:00 -->
+        <path d="M550 540 L550 380 M550 540 L470 640" stroke="#C8312A" stroke-width="22" stroke-linecap="round"/>
+        <circle cx="550" cy="540" r="20" fill="#151515"/>
+      </g>
+      <rect width="1100" height="1000" fill="none" stroke="#151515" stroke-width="14"/>
+    </g>
+
+    <!-- right corner: ME (hooded fighter) -->
+    <g transform="translate(1600 900)">
+      <rect width="1100" height="1000" fill="url(#dotsK)" mask="url(#mUp)" opacity="0.5"/>
+      <g clip-path="url(#box)">
+        <path d="M120 1000 C140 700 300 590 550 575 C800 590 960 700 980 1000Z" fill="#151515"/>
+        <path d="M360 470 C350 210 445 105 550 105 C655 105 750 210 740 470 C710 580 390 580 360 470Z" fill="#151515"/>
+        <!-- face -->
+        <path d="M440 300 C450 215 495 180 550 180 C605 180 650 215 660 300 C668 390 620 480 550 490 C480 480 432 390 440 300Z" fill="#EDE4CC"/>
+        <path d="M550 180 C605 180 650 215 660 300 C668 390 620 480 550 490Z" fill="url(#dotsK)" opacity="0.6"/>
+        <path d="M478 300 L530 318 M622 300 L570 318" stroke="#151515" stroke-width="18" stroke-linecap="round"/>
+        <circle cx="505" cy="340" r="14" fill="#151515"/><circle cx="595" cy="340" r="14" fill="#151515"/>
+        <path d="M518 425 L585 418" stroke="#151515" stroke-width="14" stroke-linecap="round"/>
+        <!-- drawstrings + pocket -->
+        <path d="M500 560 C495 640 505 700 495 780 M600 560 C605 640 595 700 605 780" stroke="#EDE4CC" stroke-width="16" fill="none"/>
+        <rect x="483" y="775" width="24" height="44" rx="6" fill="#C8312A"/><rect x="593" y="775" width="24" height="44" rx="6" fill="#C8312A"/>
+        <path d="M330 1000 L380 860 L720 860 L770 1000" stroke="#EDE4CC" stroke-width="12" fill="none"/>
+        <!-- gloves in guard -->
+        <circle cx="330" cy="640" r="125" fill="#C8312A"/>
+        <path d="M265 735 L395 735 L385 830 L275 830Z" fill="#151515"/>
+        <circle cx="770" cy="640" r="125" fill="#C8312A"/>
+        <path d="M705 735 L835 735 L825 830 L715 830Z" fill="#151515"/>
+        <path d="M262 600 C282 552 322 532 362 537" stroke="#EDE4CC" stroke-width="14" fill="none" stroke-linecap="round"/>
+        <path d="M702 600 C722 552 762 532 802 537" stroke="#EDE4CC" stroke-width="14" fill="none" stroke-linecap="round"/>
+      </g>
+      <rect width="1100" height="1000" fill="none" stroke="#151515" stroke-width="14"/>
+    </g>
+
+    <!-- vs badge -->
+    <circle cx="1500" cy="1400" r="210" fill="#C8312A"/>
+    <circle cx="1500" cy="1400" r="210" fill="none" stroke="#151515" stroke-width="14"/>
+    <circle cx="1500" cy="1400" r="175" fill="none" stroke="#EDE4CC" stroke-width="6"/>
+    <text x="1500" y="1470" text-anchor="middle" font-family="Rye" font-size="210" fill="#EDE4CC">vs.</text>
+
+    <!-- names -->
+    <text x="850" y="2190" text-anchor="middle" font-family="Holtwood One SC" font-size="200" fill="#151515">MONDAY</text>
+    <text x="2150" y="2190" text-anchor="middle" font-family="Holtwood One SC" font-size="200" fill="#151515">ME</text>
+    <text x="850" y="2290" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="60" letter-spacing="8" fill="#C8312A">UNDEFEATED · 52 WINS A YEAR</text>
+    <text x="2150" y="2290" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="60" letter-spacing="8" fill="#C8312A">FRESH STIMPIE · ZERO SLEEP</text>
+
+    <rect x="300" y="2370" width="2400" height="12" fill="#151515"/>
+
+    <!-- main event -->
+    <text x="1500" y="2830" text-anchor="middle" font-family="Holtwood One SC" font-size="330" fill="#151515" letter-spacing="4">12 ROUNDS</text>
+    <text x="1500" y="3030" text-anchor="middle" font-family="Ultra" font-size="108" fill="#C8312A" letter-spacing="4">HEAVYWEIGHT HOODIE TITLE</text>
+    <text x="1500" y="3150" text-anchor="middle" font-family="Oswald" font-weight="700" font-size="76" letter-spacing="20" fill="#151515">FOR THE COMFIEST BELT IN THE WORLD</text>
+
+    <rect x="300" y="3225" width="2400" height="5" fill="#151515"/>
+    <rect x="300" y="3243" width="2400" height="12" fill="#151515"/>
+
+    <text x="1400" y="3440" text-anchor="middle" font-family="Rye" font-size="130" fill="#C8312A">Admission: One Hoodie</text>
+    <text x="1400" y="3590" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="66" letter-spacing="16" fill="#151515">DOORS 7 A.M. · RINGSIDE COFFEE · NO REFUNDS</text>
+  </g>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2660 3730)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="200" fill="#151515" clip-path="url(#sigL)">S</text>
+    <text x="0" y="15" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="200" fill="none" stroke="#C8312A" stroke-width="9" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

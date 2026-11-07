@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Bebas+Neue&amp;family=Yellowtail&amp;family=Josefin+Sans:wght@700&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="11"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.2"/></feComponentTransfer>
+    </filter>
+    <filter id="gouache" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="4" seed="5"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -1.6 0.9"/>
+    </filter>
+    <clipPath id="dayside"><rect x="0" y="0" width="1500" height="4000"/></clipPath>
+    <clipPath id="nightside"><rect x="1500" y="0" width="1500" height="4000"/></clipPath>
+    <g id="plane">
+      <path d="M40 -42 L-150 -400 L-60 -400 L170 -42Z M40 42 L-150 400 L-60 400 L170 42Z" fill="#FFF4E6"/>
+      <path d="M-230 -38 L-330 -175 L-275 -175 L-160 -38Z M-230 38 L-330 175 L-275 175 L-160 38Z" fill="#FFF4E6"/>
+      <path d="M-320 0 C-320 -42 -280 -48 -210 -48 L230 -48 C320 -48 365 -22 378 0 C365 22 320 48 230 48 L-210 48 C-280 48 -320 42 -320 0Z" fill="#FFF4E6"/>
+      <path d="M-210 48 L230 48 C320 48 365 22 378 0 L-320 0 C-320 42 -280 48 -210 48Z" fill="#E5D9C6"/>
+      <path d="M-30 -42 L-150 -400 L-115 -400 L60 -42Z M-30 42 L-150 400 L-115 400 L60 42Z" fill="#FF7A59"/>
+      <path d="M300 -36 C335 -28 356 -14 366 0 L300 0Z" fill="#111111"/>
+    </g>
+    <g id="star"><path d="M0 -34 L8 -8 L34 0 L8 8 L0 34 L-8 8 L-34 0 L-8 -8Z" fill="#FFF4E6"/></g>
+  </defs>
+
+  <!-- sky: day / night -->
+  <rect width="1500" height="4000" fill="#F6E7CF"/>
+  <rect x="1500" width="1500" height="4000" fill="#1F2B4D"/>
+
+  <!-- sun with rings -->
+  <g clip-path="url(#dayside)">
+    <circle cx="760" cy="1430" r="590" fill="none" stroke="#FFD9B8" stroke-width="70"/>
+    <circle cx="760" cy="1430" r="470" fill="none" stroke="#FFC79C" stroke-width="70"/>
+    <circle cx="760" cy="1430" r="330" fill="#FF7A59"/>
+  </g>
+  <!-- moon + stars -->
+  <g clip-path="url(#nightside)">
+    <circle cx="2600" cy="2010" r="200" fill="#FFF4E6"/>
+    <circle cx="2680" cy="1960" r="185" fill="#1F2B4D"/>
+    <use href="#star" transform="translate(1800 1050) scale(1.3)"/>
+    <use href="#star" transform="translate(2640 880) scale(0.8)"/>
+    <use href="#star" transform="translate(2640 1500)"/>
+    <use href="#star" transform="translate(1920 1640) scale(0.6)"/>
+    <use href="#star" transform="translate(2050 900) scale(0.5)"/>
+    <use href="#star" transform="translate(2750 1300) scale(0.6)"/>
+  </g>
+
+  <!-- headline: split colour across the two sides -->
+  <g font-family="Yellowtail" font-size="300" text-anchor="middle">
+    <text x="1500" y="470" fill="#FF7A59" clip-path="url(#dayside)">Visit</text>
+    <text x="1500" y="470" fill="#FF7A59" clip-path="url(#nightside)">Visit</text>
+  </g>
+  <g font-family="Bebas Neue" font-size="500" text-anchor="middle" letter-spacing="11">
+    <text x="1448" y="910" fill="#1F2B4D" clip-path="url(#dayside)">THE OTHER SIDE</text>
+    <text x="1448" y="910" fill="#F6E7CF" clip-path="url(#nightside)">THE OTHER SIDE</text>
+  </g>
+
+  <!-- contrail: coral + black, with a cream gap -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M-120 2560 C 700 2470 1555 1986 1861 1729" stroke="#FF7A59" stroke-width="104"/>
+    <path d="M-120 2690 C 740 2600 1633 2078 1939 1821" stroke="#111111" stroke-width="104"/>
+  </g>
+  <use href="#plane" transform="translate(2160 1560) rotate(-40) scale(1.05)"/>
+
+  <!-- horizon: flat geometric mountains -->
+  <g clip-path="url(#dayside)">
+    <path d="M0 2900 L380 2380 L700 2900Z" fill="#1F2B4D"/>
+    <path d="M420 2900 L900 2240 L1380 2900Z" fill="#FF7A59"/>
+    <path d="M900 2240 L1080 2490 L980 2470 L900 2560 L820 2470 L720 2490Z" fill="#F6E7CF"/>
+    <path d="M1100 2900 L1500 2450 L1900 2900Z" fill="#111111"/>
+  </g>
+  <g clip-path="url(#nightside)">
+    <path d="M1100 2900 L1500 2450 L1900 2900Z" fill="#111111"/>
+    <path d="M1650 2900 L2140 2280 L2630 2900Z" fill="#FF7A59" opacity="0.88"/>
+    <path d="M2140 2280 L2310 2500 L2210 2480 L2140 2570 L2070 2480 L1970 2500Z" fill="#F6E7CF"/>
+    <path d="M2400 2900 L2760 2420 L3120 2900Z" fill="#3A4C7E"/>
+  </g>
+
+  <!-- sea: rows of flat waves -->
+  <g clip-path="url(#dayside)">
+    <rect y="2880" width="3000" height="500" fill="#5CC8FF"/>
+    <path d="M0 2990 q75 -60 150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 V3060 H0Z" fill="#2E63FF"/>
+    <path d="M0 3140 q75 -60 150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 V3210 H0Z" fill="#2E63FF"/>
+    <path d="M0 3290 q75 -60 150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 V3360 H0Z" fill="#2E63FF"/>
+  </g>
+  <g clip-path="url(#nightside)">
+    <rect y="2880" width="3000" height="500" fill="#2A3A66"/>
+    <path d="M1500 2990 q75 -60 150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 V3060 H1500Z" fill="#14203D"/>
+    <path d="M1500 3140 q75 -60 150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 V3210 H1500Z" fill="#14203D"/>
+    <path d="M1500 3290 q75 -60 150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 t150 0 V3360 H1500Z" fill="#14203D"/>
+    <rect x="2240" y="2920" width="100" height="16" fill="#F6E7CF" opacity="0.7"/>
+    <rect x="2210" y="3070" width="160" height="16" fill="#F6E7CF" opacity="0.5"/>
+    <rect x="2180" y="3220" width="220" height="16" fill="#F6E7CF" opacity="0.35"/>
+  </g>
+
+  <!-- airline band -->
+  <rect y="3370" width="3000" height="630" fill="#FFF4E6"/>
+  <rect y="3370" width="3000" height="26" fill="#111111"/>
+  <text x="1430" y="3620" text-anchor="middle" font-family="Josefin Sans" font-weight="700" font-size="168" letter-spacing="34" fill="#111111">STIMPY AIRWAYS</text>
+  <text x="1430" y="3760" text-anchor="middle" font-family="Josefin Sans" font-weight="700" font-size="74" letter-spacing="26" fill="#FF7A59">DEPARTURES ONLY · EVERY DAY</text>
+
+  <!-- gouache + grain -->
+  <rect width="3000" height="4000" filter="url(#gouache)" opacity="0.18" style="mix-blend-mode:soft-light"/>
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3790)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="260" fill="#111111" clip-path="url(#sigL)">S</text>
+    <text x="0" y="20" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="260" fill="none" stroke="#FF7A59" stroke-width="10" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

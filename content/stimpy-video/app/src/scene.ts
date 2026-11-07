@@ -434,7 +434,7 @@ export function drawFrame(c: Ctx, t: number): Post {
         x += cw;
       }
       text(c, 'ONE HOODIE. YOUR WORLD.', 540, 1540, '600 32px PlexB', BONE, 'center', smooth(T(24), T(24) + 0.3, t) * flick, 5);
-      text(c, 'DROP 001  ·  11.11.26  ·  100 HOODIES', 540, 1600, '400 26px Plex', RED, 'center', smooth(T(24, 2), T(24, 2) + 0.3, t) * flick, 3);
+      text(c, 'DROP 001  ·  14.11.26  ·  100 HOODIES', 540, 1600, '400 26px Plex', RED, 'center', smooth(T(24, 2), T(24, 2) + 0.3, t) * flick, 3);
       text(c, '@STIMPY.LB', 540, 1690, '900 44px ArchivoX', BONE, 'center', smooth(T(24, 3), T(24, 3) + 0.3, t) * flick, 2);
       brackets(c, BONE, 0.5 * flick);
     };

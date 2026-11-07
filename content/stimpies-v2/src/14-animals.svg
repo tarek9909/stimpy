@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3000 4000" width="3000" height="4000">
+  <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&amp;family=Graduate&amp;family=Oswald:wght@500;700&amp;family=Yellowtail&amp;display=block');</style>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="4"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 0.25"/></feComponentTransfer>
+    </filter>
+    <!-- chenille: fuzzy edges + looped-yarn mottling -->
+    <filter id="chenille" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="18" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="2" seed="3" result="loops"/>
+      <feColorMatrix in="loops" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 0.55" result="shade"/>
+      <feComposite in="shade" in2="d" operator="in" result="shadeIn"/>
+      <feMerge><feMergeNode in="d"/><feMergeNode in="shadeIn"/></feMerge>
+    </filter>
+    <filter id="wool" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.5 0.04" numOctaves="3" seed="6"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.09 0"/>
+    </filter>
+    <filter id="drop" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity="0.55"/>
+    </filter>
+    <clipPath id="inner"><circle cx="1500" cy="1700" r="880"/></clipPath>
+    <path id="arcTop" d="M 560 1700 A 940 940 0 0 1 2440 1700"/>
+    <path id="arcBot" d="M 400 1700 A 1100 1100 0 0 0 2600 1700"/>
+    <g id="star"><path d="M0 -60 L17 -18 L62 -18 L26 9 L39 54 L0 28 L-39 54 L-26 9 L-62 -18 L-17 -18 Z"/></g>
+  </defs>
+
+  <!-- wool jacket background -->
+  <rect width="3000" height="4000" fill="#14231C"/>
+  <rect width="3000" height="4000" filter="url(#wool)"/>
+
+  <!-- the crest -->
+  <g filter="url(#drop)">
+    <circle cx="1500" cy="1700" r="1190" fill="#111111"/>
+    <g filter="url(#chenille)">
+      <circle cx="1500" cy="1700" r="1160" fill="#FFF4E6"/>
+      <circle cx="1500" cy="1700" r="1120" fill="#1F5A40"/>
+      <circle cx="1500" cy="1700" r="900" fill="#FFF4E6"/>
+    </g>
+  </g>
+  <circle cx="1500" cy="1700" r="1140" fill="none" stroke="#111111" stroke-width="6" stroke-dasharray="22 16" opacity="0.6"/>
+  <circle cx="1500" cy="1700" r="900" fill="none" stroke="#111111" stroke-width="6" stroke-dasharray="22 16" opacity="0.5"/>
+
+  <!-- arched varsity lettering (felt with shadow) -->
+  <g font-family="Graduate" font-size="250" letter-spacing="12" text-anchor="middle" stroke-linejoin="round">
+    <text fill="#111111" stroke="#111111" stroke-width="58"><textPath href="#arcTop" startOffset="50%">TRASH PANDA</textPath></text>
+    <text fill="#FFF4E6" stroke="#FFF4E6" stroke-width="30"><textPath href="#arcTop" startOffset="50%">TRASH PANDA</textPath></text>
+    <text fill="#FF7A59" filter="url(#chenille)"><textPath href="#arcTop" startOffset="50%">TRASH PANDA</textPath></text>
+    <text fill="#111111" stroke="#111111" stroke-width="58"><textPath href="#arcBot" startOffset="50%">SOCIETY</textPath></text>
+    <text fill="#FFF4E6" stroke="#FFF4E6" stroke-width="30"><textPath href="#arcBot" startOffset="50%">SOCIETY</textPath></text>
+    <text fill="#FF7A59" filter="url(#chenille)"><textPath href="#arcBot" startOffset="50%">SOCIETY</textPath></text>
+  </g>
+  <use href="#star" transform="translate(470 1720) scale(1.3)" fill="#FFE45C"/>
+  <use href="#star" transform="translate(2530 1720) scale(1.3)" fill="#FFE45C"/>
+
+  <!-- raccoon in a hoodie -->
+  <g clip-path="url(#inner)">
+    <!-- moon behind -->
+    <circle cx="1500" cy="1500" r="560" fill="#FFE45C" opacity="0.55"/>
+    <!-- hoodie body -->
+    <path fill="#FF7A59" d="M760 2700 C780 2330 920 2160 1150 2110 L1850 2110 C2080 2160 2220 2330 2240 2700 Z"/>
+    <path fill="#E5603F" d="M1150 2110 C1250 2260 1750 2260 1850 2110 Z"/>
+    <!-- drawstrings -->
+    <path d="M1400 2190 C1390 2300 1400 2400 1385 2480" stroke="#FFF4E6" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <path d="M1600 2190 C1610 2300 1600 2400 1615 2480" stroke="#FFF4E6" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <rect x="1370" y="2470" width="30" height="70" rx="8" fill="#111111"/>
+    <rect x="1600" y="2470" width="30" height="70" rx="8" fill="#111111"/>
+    <!-- ears poking through hood -->
+    <ellipse cx="1255" cy="1010" rx="125" ry="150" transform="rotate(-22 1255 1010)" fill="#F2EEE8"/>
+    <ellipse cx="1262" cy="1022" rx="88" ry="110" transform="rotate(-22 1262 1022)" fill="#7C7775"/>
+    <ellipse cx="1745" cy="1010" rx="125" ry="150" transform="rotate(22 1745 1010)" fill="#F2EEE8"/>
+    <ellipse cx="1738" cy="1022" rx="88" ry="110" transform="rotate(22 1738 1022)" fill="#7C7775"/>
+    <!-- hood -->
+    <path fill="#FF7A59" d="M1500 960 C1830 960 2020 1230 2010 1620 C2000 1940 1930 2110 1850 2190 L1150 2190 C1070 2110 1000 1940 990 1620 C980 1230 1170 960 1500 960 Z"/>
+    <path fill="#C9472D" d="M1500 1100 C1760 1100 1880 1320 1870 1640 C1862 1900 1790 2060 1730 2110 L1270 2110 C1210 2060 1138 1900 1130 1640 C1120 1320 1240 1100 1500 1100 Z"/>
+    <!-- face -->
+    <path fill="#8A8582" d="M1500 1160 C1720 1160 1830 1330 1830 1560 C1830 1790 1700 1960 1500 1990 C1300 1960 1170 1790 1170 1560 C1170 1330 1280 1160 1500 1160 Z"/>
+    <!-- cheek tufts -->
+    <path fill="#F2EEE8" d="M1180 1640 C1230 1760 1300 1860 1420 1930 L1300 1920 L1340 1960 C1240 1920 1170 1800 1160 1700 Z"/>
+    <path fill="#F2EEE8" d="M1820 1640 C1770 1760 1700 1860 1580 1930 L1700 1920 L1660 1960 C1760 1920 1830 1800 1840 1700 Z"/>
+    <!-- brow patches -->
+    <path fill="#F2EEE8" d="M1250 1430 C1300 1340 1400 1330 1450 1390 C1380 1400 1310 1420 1250 1430 Z"/>
+    <path fill="#F2EEE8" d="M1750 1410 C1700 1320 1600 1320 1550 1380 C1620 1385 1690 1395 1750 1410 Z"/>
+    <!-- forehead stripe -->
+    <path fill="#3A3736" d="M1470 1170 L1530 1170 L1550 1470 L1450 1470 Z"/>
+    <!-- bandit mask -->
+    <path fill="#1A1919" d="M1180 1560 C1200 1460 1300 1430 1400 1470 C1450 1490 1480 1520 1500 1530 C1520 1520 1550 1490 1600 1470 C1700 1430 1800 1460 1820 1560 C1830 1650 1760 1700 1680 1690 C1600 1680 1550 1640 1500 1640 C1450 1640 1400 1680 1320 1690 C1240 1700 1170 1650 1180 1560 Z"/>
+    <!-- eyes: one half-lidded, one raised brow (unbothered) -->
+    <ellipse cx="1350" cy="1575" rx="62" ry="52" fill="#FFF4E6"/>
+    <circle cx="1362" cy="1584" r="32" fill="#111111"/>
+    <circle cx="1372" cy="1572" r="10" fill="#FFFFFF"/>
+    <path d="M1282 1560 L1420 1560 L1420 1520 L1282 1520 Z" fill="#1A1919"/>
+    <path d="M1280 1562 L1422 1556" stroke="#3A3736" stroke-width="10"/>
+    <ellipse cx="1650" cy="1570" rx="62" ry="58" fill="#FFF4E6"/>
+    <circle cx="1640" cy="1580" r="32" fill="#111111"/>
+    <circle cx="1650" cy="1568" r="10" fill="#FFFFFF"/>
+    <path d="M1580 1480 C1630 1450 1690 1452 1730 1478" stroke="#F2EEE8" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <!-- muzzle: short pointed raccoon snout -->
+    <path fill="#F2EEE8" d="M1500 1640 C1580 1640 1630 1700 1625 1770 C1620 1840 1560 1905 1500 1915 C1440 1905 1380 1840 1375 1770 C1370 1700 1420 1640 1500 1640 Z"/>
+    <path fill="#111111" d="M1462 1752 C1462 1730 1538 1730 1538 1752 C1538 1778 1518 1795 1500 1798 C1482 1795 1462 1778 1462 1752 Z"/>
+    <circle cx="1486" cy="1746" r="7" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M1500 1798 L1500 1828 C1485 1852 1455 1852 1440 1836 M1500 1828 C1522 1856 1560 1854 1575 1830" stroke="#111111" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <!-- toothpick -->
+    <path d="M1565 1838 L1740 1790" stroke="#E9C98F" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- banner -->
+  <g filter="url(#drop)">
+    <path fill="#B8472E" d="M520 2960 L760 2960 L760 3200 L520 3200 L600 3080 Z"/>
+    <path fill="#B8472E" d="M2480 2960 L2240 2960 L2240 3200 L2480 3200 L2400 3080 Z"/>
+    <path fill="#FF7A59" d="M700 2900 L2300 2900 L2300 3150 L700 3150 Z"/>
+  </g>
+  <text x="1500" y="3070" text-anchor="middle" font-family="Graduate" font-size="150" letter-spacing="12" fill="#FFF4E6">EST. LATE NIGHT</text>
+
+  <!-- sub copy -->
+  <text x="1500" y="3420" text-anchor="middle" font-family="Yellowtail" font-size="180" fill="#FFE45C">dumpster diving team</text>
+  <text x="1500" y="3600" text-anchor="middle" font-family="Oswald" font-weight="500" font-size="72" letter-spacing="18" fill="#FFF4E6" opacity="0.85">CHAPTER Nº 014 · NOCTURNAL DIVISION</text>
+
+  <rect width="3000" height="4000" filter="url(#grain)" style="mix-blend-mode:multiply"/>
+
+  <g id="stimpy-sig" transform="translate(2730 3760)">
+    <clipPath id="sigL"><rect x="-200" y="-300" width="200" height="400"/></clipPath>
+    <clipPath id="sigR"><rect x="0" y="-300" width="200" height="400"/></clipPath>
+    <text x="0" y="0" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="#FFFFFF" clip-path="url(#sigL)">S</text>
+    <text x="0" y="22" text-anchor="middle" font-family="Poppins" font-weight="700" font-size="300" fill="none" stroke="#FF7A59" stroke-width="11" clip-path="url(#sigR)">S</text>
+  </g>
+</svg>

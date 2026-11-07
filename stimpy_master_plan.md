@@ -85,17 +85,16 @@ A printed, full-cotton back panel that attaches to the hoodie with a **one-way z
 
 | Offer | Cost | Price | Profit before delivery, packaging and ads |
 |---|---|---|---|
-| Hoodie + 1 Stimpie | $17 | **$35** | $18 |
-| Hoodie + 2 Stimpies | $23 | **$45** | $22 |
+| Hoodie + 2 Stimpies | **$18** (updated 7 Nov 2026) | **$30** | $12 |
 | Extra Stimpie sold alone | $6 | **$10–12** | $4–6 each |
 
 ### Why these packs
 
 - The original idea of three Stimpies for $40 cost $29 per box and left only $11 before delivery, packaging, and ads, which is too thin.
 - Selling extra Stimpies separately keeps customers coming back, which is the recurring strength of the system.
-- **The $45 two-Stimpie pack is the main product.** With two designs, customers experience the swap from day one, which drives word of mouth.
-- **The $35 one-Stimpie pack is the entry option** for customers who can't stretch to $45.
-- Next to each other, the $45 pack looks like the smart choice, since the second Stimpie effectively costs only $10.
+- **The $30 two-Stimpie pack is the main product** (price confirmed 7 Nov 2026). With two designs, customers experience the swap from day one, which drives word of mouth.
+- **The one-Stimpie pack is dropped** (7 Nov 2026). The hoodie is sold only as the $30 two-Stimpie pack; extra Stimpies are sold alone.
+- **Margin:** at $30 with an $18 cost, the pack leaves $12. **Delivery ($5) is paid by the customer**, so only packaging and failed cash-on-delivery orders come out of it (about $2), leaving about **$10** before ads. Extra Stimpies ($10–12, can be added on the website) are where most of the profit comes from.
 
 ### Pricing notes
 
@@ -330,7 +329,178 @@ The hidden single frames encourage replays and pauses, which the algorithm rewar
 
 ## 10. Schedule
 
-### The four-week pre-launch
+> **Updated 7 November 2026.** Launch date confirmed: **Saturday 14.11.26** (Drop 001, 100 hoodies). There is no time for the original four-week pre-launch, so it is compressed into one week. The concealment teasers (Glimpses, Hidden Back) are kept for Drop 02. The original four-week plan is kept at the end of this section for reference.
+>
+> **Post times, captions, files and the Codex handoff:** see [`docs/launch-handoff-codex.md`](docs/launch-handoff-codex.md). Posts and Reels go out at 20:30, stories at 13:00 and 21:00, and the launch Reel on Sat 14 Nov at 12:30 (Beirut time).
+
+### Pre-launch week (7–13 November)
+
+| Date | Post / Reel | Stories | Behind the scenes |
+|---|---|---|---|
+| **Sat 7 Nov** | – | – | Pre-launch bio (1 or 4 with the date). Choose the early-access keyword. Start the 5 ad exports (see "Ad schedule"). |
+| **Sun 8 Nov** | Logo Reveal | "Something's about to change." | Finish the 5 ad exports. |
+| **Mon 9 Nov** | The Question | Countdown **D5** · "Which Back?" poll 1 (Loud / Soft) | Check the 4 items under "Before paid day 1" below. |
+| **Tue 10 Nov** | Zipper close-up: the gloved-hand unzip from the first 3 s of **STIMPY 2**, with the zip sound, no explanation | Countdown **D4** · poll 1 result (real votes) · poll 2 (Wild / Chill) | – |
+| **Wed 11 Nov** | Split Screen | Countdown **D3** · poll 2 result · poll 3 (Unleashed / Offline) | Bio 6: DM "STIMPY" for early access. |
+| **Thu 12 Nov** | The Reveal (ends on 14.11) | Countdown **D2** · poll 3 result | Write and schedule all launch-day captions. |
+| **Fri 13 Nov** | **STIMPY 1** Reel (founder explains the idea) | Countdown **Tomorrow** | **Early access:** send the store link to everyone who DM'd the keyword. The store is already open, so this is their head start before the public launch post. Create the retargeting audiences. Upload the ads in Ads Manager (paused) and approve the summary. |
+
+### Launch day (Sat 14 November)
+
+- Countdown **Launch** story ("Live now / Tap the link").
+- Post **STIMPY 3** as the launch Reel (the real swap), then a carousel of all 11 Stimpies.
+- Repost every customer and tag through the day.
+- Switch the bio to 7 or 8 (launch, how to order).
+- **Turn on the paid campaigns** (see "Ad campaign" below).
+- Stories through the day: orders being packed, reposts, prices and the "Order" highlight.
+
+### Launch month (15 November – 13 December)
+
+- **Sun 15 Nov:** **STIMPY 2** Reel (quality and fit). Pin it.
+- **Tue 17 Nov:** **STIMPY 4** Reel (overhead swaps, no talking). Caption: "Which one would you pick?"
+- 3–4 posts or reels per week, daily stories: swap videos, styling, customer photos, packing.
+- Pin three posts: how it works (STIMPY 3), quality and fit (STIMPY 2), packs and prices and delivery.
+- Add the Reviews highlight as soon as real customer messages arrive.
+- **~24–27 Nov:** mid-month ad review (below).
+- **~Wed 25 Nov:** turn on ad A3 (STIMPY 2) in the Website campaign, after the review.
+- **Sun 29 Nov:** retargeting campaign (R1, STIMPY 2) starts at 00:00.
+- **Sun 13 Dec, 23:59:** all ads end. Final report on Mon 14 Dec.
+- **From ~19 Dec:** start teasing **Drop 02** (4–6 weeks after launch) using the Glimpses, Hidden Back and countdown videos, with the drop's secondary color.
+
+### Ad campaign (Meta, 30 days: 14 Nov – 13 Dec, $450)
+
+Changed from the 30 October PDF plan: the $60 Instagram profile-growth campaign is replaced by a **retargeting** campaign in the second half of the month. $2/day for profile visits is too little to learn anything; the same $60 works harder on people who have already seen Stimpy.
+
+| Campaign | Budget | Dates | Setup | Ads |
+|---|---|---|---|---|
+| **1. Website orders** | **$240** ($8/day) | 14 Nov – 13 Dec | Sales > Website > Purchase. One ad set: Lebanon (areas you deliver to), 18–34, all genders, Feed + Reels + Stories. | **A1: STIMPY 3** (real swap) + end card "One hoodie + two Stimpies · $30 + $5 delivery · Shop now". **A2:** poster 16 "The Swap" with the offer. **A3 (from mid-month review):** STIMPY 2 (quality and fit). |
+| **2. WhatsApp orders** | **$150** ($5/day) | 14 Nov – 13 Dec | Engagement > Messaging apps > WhatsApp > Conversations. Same audience. | **W1: STIMPY 4** + text "Pick your two. $30" + end card "Message us your size and two designs". **W2: STIMPY 3** + end card "Message us your size and two designs". (No carousel: it shows poorly in Reels, and at $5/day two videos is enough.) |
+| **3. Retargeting** | **$60** ($4/day) | 29 Nov – 13 Dec | Sales > Website > Purchase. Custom audience: watched 50%+ of any Stimpy video, engaged with the Instagram account, or visited the website (last 30 days). **Exclude buyers.** | **R1: STIMPY 2** (quality and fit) + end card "$30 · Pick your two · Shop now". |
+
+#### Ads Manager settings (set up on Fri 13 Nov, publish Sat 14 Nov)
+
+**Account basics (once):**
+- Ad account currency **USD**, time zone **Beirut**, payment method added.
+- Facebook Page, Instagram account and **WhatsApp Business number** connected in Business settings.
+- ✅ Website **Pixel (dataset)** connected (confirmed 7 Nov 2026). Still check: the website's domain verified and the Conversions API token set on the server (`META_PIXEL_ID`, `META_CAPI_TOKEN`). One test order must show as **Purchase** in Events Manager.
+
+**Campaign level (all three):**
+
+| Setting | Value |
+|---|---|
+| Setup | Manual campaign (not Advantage+ sales campaign). Buying type: **Auction**. |
+| Special ad category | None |
+| Budget | Set on the **ad set**, not the campaign (one ad set per campaign). |
+| Names | `STP_Launch_Website` · `STP_Launch_WhatsApp` · `STP_Launch_Retargeting` |
+
+**Ad set level:**
+
+| Setting | 1. Website | 2. WhatsApp | 3. Retargeting |
+|---|---|---|---|
+| Name | `Web_LB_18-34` | `WA_LB_18-34` | `RT_Warm_30d` |
+| Conversion location | Website | Messaging apps > **WhatsApp** | Website |
+| Performance goal | Maximise number of conversions | Maximise number of conversations | Maximise number of conversions |
+| Event | **Purchase** (Stimpy Pixel) | – | **Purchase** |
+| Bid strategy | **Highest volume** (no cost cap: too little data yet) | Highest volume | Highest volume |
+| Attribution | 7-day click, 1-day view | Default | 7-day click, 1-day view |
+| Daily budget | **$8** | **$5** | **$4** |
+| Start / end | 14 Nov 00:00 → 13 Dec 23:59 | 14 Nov 00:00 → 13 Dec 23:59 | 29 Nov 00:00 → 13 Dec 23:59 |
+| Location | Lebanon, **people living in** the location. Remove any area you do not deliver to. | Same | Lebanon |
+| Age / gender | **18–34**, all genders (Advantage+ audience off, so the age stays fixed) | Same | 18–65+ (it is a warm audience) |
+| Detailed targeting / languages | None | None | None |
+| Custom audiences | – | – | **Include:** (a) video viewers 50%+ of any Stimpy video, 30 days; (b) Instagram account engagers, 30 days; (c) website visitors, 30 days. **Exclude:** Purchase, 180 days. Create these on **13 Nov** so they fill up before 29 Nov. |
+| Placements | **Manual:** Instagram Feed, Explore, **Reels**, **Stories**. Facebook off (the brand is Instagram-led). | Same | Same |
+| Dynamic creative | Off | Off | Off |
+
+**Ad level:**
+
+| Setting | Value |
+|---|---|
+| Identity | Stimpy Facebook Page + Stimpy Instagram account |
+| Format | Single video (or single image for A2). Upload the 9:16 file and check the **4:5 Feed** crop. |
+| Advantage+ creative enhancements | **All off** (music, text improvements, visual touch-ups, image expansion, etc.) |
+| Automatic captions | **Off** (captions are already in the video) |
+| Primary text / headline | See "Ad text" below |
+| Button | Website ads: **Shop now**. WhatsApp ads: **Send WhatsApp message**. |
+| Website link | The pack page. **URL parameters:** `utm_source=meta&utm_medium=paid&utm_campaign=launch_website&utm_content=A1` (change `utm_content` to A2, A3, R1, and `utm_campaign` to `launch_retargeting` for R1). The website saves these on each order, so the order sheet shows which ad sold it. |
+| WhatsApp message | Pre-filled text: "Hi, I want to order the hoodie + 2 Stimpies. Size: __ · Designs: __" plus the W1 or W2 code, so each chat shows which ad it came from. |
+| Tracking | Website events: Stimpy Pixel **on**. |
+| Ad names | `A1_STIMPY3_web` · `A2_Poster16_web` · `A3_STIMPY2_web` · `W1_STIMPY4_wa` · `W2_STIMPY3_wa` · `R1_STIMPY2_rt` |
+
+**After publishing:** reply to ad comments within a few hours (comments are part of the ad), and check Events Manager on day 1 that Purchases are arriving.
+
+#### Ad schedule (what to upload)
+
+| Ad | Campaign | Video / image | Runs | Opening (first 2 s) | On-screen ending (2–3 s card) | Meta button | Destination |
+|---|---|---|---|---|---|---|---|
+| **A1** | 1. Website | **STIMPY 3** (21 s) | **14 Nov → 13 Dec** | Swap starts by 2 s (Sabotage → Same Day → Chameleon…) | "One hoodie + two Stimpies · $30 + $5 delivery · Shop now" | **Shop now** | Website pack page |
+| **A2** | 1. Website | **Poster 16 "The Swap"** (image, 4:5 + 9:16) | **14 Nov → 13 Dec** | ZIP OFF / ZIP ON / SWAP | Add on the poster: "$30 · Pick your two" | **Shop now** | Website pack page |
+| **A3** | 1. Website | **STIMPY 2** (18.5 s) | **~25 Nov → 13 Dec** (added at mid-month review) | Gloved hand unzips Sabotage | "Same hoodie. Different you. · $30 · Shop now" | **Shop now** | Website pack page |
+| **W1** | 2. WhatsApp | **STIMPY 4** (7.7 s) | **14 Nov → 13 Dec** | Overhead: panels changing on the back | Text through the video: "Pick your two. $30". End: "Message us your size and two designs" | **Send WhatsApp message** | WhatsApp Business |
+| **W2** | 2. WhatsApp | **STIMPY 3** (21 s) | **14 Nov → 13 Dec** | Same as A1 | "One hoodie + two Stimpies · $30 + $5 delivery · WhatsApp us your size and two designs" | **Send WhatsApp message** | WhatsApp Business |
+| **R1** | 3. Retargeting | **STIMPY 2** (18.5 s) | **29 Nov → 13 Dec** | Same as A3 | "$30 · Pick your two · Shop now" | **Shop now** | Website pack page |
+
+Any ad can stop earlier under the kill rule below.
+
+**Ad text (write it in Lebanese Arabic, keep the English brand line):**
+- **Website ads, primary text:** "One hoodie. Multiple identities. Zip on a new back in seconds. Hoodie + two Stimpies for $30 + $5 delivery anywhere in Lebanon, cash on delivery. Add a third Stimpie for $10–12." **Headline:** "$30 · Pick your two".
+- **WhatsApp ads, primary text:** "One hoodie, two backs, $30. Send us your size and the two designs you want, $5 delivery anywhere in Lebanon, cash on delivery." **Headline:** "Order on WhatsApp".
+- **WhatsApp greeting (auto-reply):** price list (hoodie + 2 Stimpies $30 + $5 delivery / extra Stimpie $10–12), the size chart, and "Which two designs do you want?"
+
+**Files to make by Fri 13 Nov (5 exports):** STIMPY 3 website · STIMPY 3 WhatsApp · STIMPY 4 WhatsApp · STIMPY 2 website (used by A3 and R1) · Poster 16 with the price. All videos 9:16; check each in the 4:5 Feed preview.
+
+**Not used for paid:** STIMPY 1 (the swap appears too late, at ~17 s). It stays organic: the founder/story post and the "Story" highlight.
+
+**Edits every ad video needs first:** a 2–3 s coral end card with the price and **one** action (Shop now *or* WhatsApp us). In Ads Manager turn off Meta's auto-captions (captions are already burned in) and the AI creative enhancements (added music, text, crops). Check the 4:5 Feed preview. Prefer black-hoodie shots: the panel on the cream hoodie looks wavy in STIMPY 1 and 3.
+
+**No Mystery Boxes** (no creators for this launch). The $60 stays on retargeting.
+
+**Before paid day 1 (by 13 Nov):**
+- Pixel is connected ✅. Still place one test order on the website and check it appears as a **Purchase** in Meta Events Manager.
+- Check the live store prices are $30 for the 2-Stimpie pack and $10–12 for extra Stimpies, that no 1-Stimpie pack is still on sale, and that they match the ads.
+- ✅ The live store uses the same 11 design names as the ads (confirmed 7 Nov 2026).
+- Make sure no paid ad ends on "Coming soon", "Not yet" or "Set a reminder".
+
+**Which ads to keep, cut or move money to, and based on what:**
+
+The goal number is **cost per delivered order ≤ $10** (on the $30 pack). At $30 with an $18 product cost, the customer paying the $5 delivery, and about $2 of your own costs (packaging, failed cash-on-delivery orders), each order leaves about **$10 before ads**, so **$10 is break-even on the first order**. Profit comes from extra Stimpies ($4–6 each, at checkout or later). Above about $15 per order, even one extra Stimpie does not pay it back. Everything else below is an early warning sign before enough orders exist.
+
+| When | Look at | Rule |
+|---|---|---|
+| **Days 1–3** | Delivery, links, tracking | Only fix broken things: ad not spending, wrong link, Purchase not showing in Events Manager, WhatsApp replies slow. Don't judge performance yet. |
+| **Day 7** (~$25–35 spent per ad) | **Hook:** 3-second views ÷ impressions. **Link CTR.** **WhatsApp:** cost per conversation. | Hook under ~20% → the first 2 s aren't stopping people; try a new opening on the same video. Link CTR under ~0.8% → the offer or ending isn't clear. WhatsApp conversations above ~$2 each → change the opening or the on-screen text. These are rough guides, not hard Lebanon benchmarks. |
+| **Kill rule** (any time) | Spend vs. results per ad | An ad that spent **$30 (3× the target)** with **no purchase and no checkout started** → pause it. A WhatsApp ad with $15 spent and no real order conversation → pause it. |
+| **Mid-month review (~24–27 Nov)** | Cost per **delivered** order per campaign (orders from the ledger, not Meta's estimate). WhatsApp: conversations → confirmed → delivered. | **≤ $10:** winner, move money to it. **$10–15:** keep, test one change (new ending or A3). **> $15 after 3+ orders** (losing money): cut it, move its budget to the better campaign. If WhatsApp chats come in but fewer than 1 in 5 become orders, fix the replies and quick-reply prices before spending more. |
+| **29 Nov** | none | Start retargeting R1. |
+| **~6 Dec** | Retargeting cost per order | If retargeting orders cost **less** than campaign 1, move up to $2/day from campaign 1 into it. If it has spent $30 with no order, stop it and return the rest to the winner. |
+| **13 Dec** (end) | Total delivered orders, cost per delivered order, which video won | The winning video becomes the base for the next month's ads and Drop 02. |
+
+Other rules:
+- **Move money between campaigns only at the review points above**, not daily. Changing budgets daily restarts Meta's learning.
+- **Raise a winner's budget by at most ~20% at a time.**
+- **Count an order once:** website visitor who then orders on WhatsApp is one order. Keep placed, confirmed, delivered and returned in the order sheet, and judge ads on delivered.
+- A few orders are a direction, not proof. With this budget the month shows which video and which channel look promising, not a final winner.
+- **Push the extra Stimpie:** on the website (customers can add one to the pack) and in every WhatsApp order reply: "Add a third for $10–12?" Also offer it to past customers by WhatsApp. That is where the profit is.
+
+### Notes: to do on the stronger PC
+
+These need a re-render. They were not done on this PC.
+
+1. **Remove the custom "Stimpy Studio" scene from the 60 s film** (`content/second_video/stimpy`, 48–54 s). Custom designs are not offered yet. Steps:
+   - `music/compose.py`: set `DUR = 54.0`; remove `("yours", 48, 54)` from `SECTIONS` and set end to `("end", 48, 54)`; delete the `grab`/`drop`/`print`/`snap2` events; move `peel`/`logo`/`tagline`/`fade` 6 s earlier (48 / 49 / 50 / 52.5); delete the `# YOURS` block; move every hard-coded time in the `# END` block 6 s earlier. Then run `uv run python compose.py` to rewrite `stimpy.wav` and `music.json`.
+   - `app/src/timeline.ts`: remove the `yours` import and entry. Delete `app/src/scenes/yours.ts`.
+   - `app/src/scenes/end.ts`: move every hard-coded time 6 s earlier (54→48, 55→49, … 59.9→53.9). Replace `S.artMine` with a real design (for example `S.art[0]`, Sabotage).
+   - `app/src/scenes/collection.ts`: the flying card should be a real Stimpie (`PICK = 0`), not the blank slot. Change "11 STIMPIES + 1" to "11 STIMPIES", "/ 12" to "/ 11", and "ONE SLOT LEFT." to "PICK YOUR TWO."
+   - `app/src/art/designs.ts` (`renderCardBlank`): change "YOUR DESIGN HERE / CUSTOM" to "NEXT DROP / SOON / DROP 02".
+   - Update `README.md` (54 s, no Yours scene).
+   - Note: the film's artwork images (`app/public/stimpies/*.png|jpg`) are not in the repo (gitignored). Copy them in before rendering, or the render fails with "source image cannot be decoded".
+2. **Re-render with fixes already made in the code:** the 60 s film (panel now 30 × 40 cm, end text "DROP 01 — 14.11.26") and the 49.75 s 3D film (`content/stimpy-video`, date now 14.11.26).
+3. **Make the 5 ad exports** listed under "Ad schedule": STIMPY 3 website, STIMPY 3 WhatsApp, STIMPY 4 WhatsApp (with "Pick your two. $30"), STIMPY 2 website, Poster 16 with the price. Needed by **13 Nov**.
+4. **Make ad versions** of The Reveal, Split Screen and The Question that end on the offer and "Shop now" or "WhatsApp us" instead of "Coming soon" / "Set a reminder".
+5. **Re-render the "Which Back" result videos** with the real poll percentages (`content/stimpy-motion/app/src/films/which-back.ts`, the `result` values).
+6. **Don't use the 3D snap-stud attachment shots** (`content/stimpy-video`) in ads; the real product uses a zipper.
+
+### Original four-week pre-launch (replaced, for reference)
 
 | Week | Content |
 |---|---|
@@ -338,14 +508,6 @@ The hidden single frames encourage replays and pauses, which the algorithm rewar
 | **Week 2** | The Hidden Back, Stimpie Glimpses, "Which Back Are You?" polls |
 | **Week 3** | Open the Early-Access List, send out the Mystery Boxes |
 | **Week 4** | The Reveal, followed by The Split Screen, then the Countdown until launch day, when the Mystery Box unboxings go live |
-
-### Launch week
-
-The most active week: post the main swap video, show each Stimpie design, share stories of orders being packed, and repost anyone who tags the brand.
-
-### After launch
-
-3–4 posts or reels per week and daily stories, with each new drop teased about a week in advance.
 
 ### Production rule
 
@@ -506,7 +668,7 @@ Keep names around 10–12 characters or less. Covers are simple white or black i
 |---|-----------|------------------|-------|
 | 1 | **How it works** | Short clips showing the swap. | Coral |
 | 2 | **Order** | Step-by-step: DM or WhatsApp, choose size and Stimpies, pay cash on delivery. | Coral |
-| 3 | **Prices** | The $35 and $45 packs and extra Stimpie prices. | Coral |
+| 3 | **Prices** | The $30 two-Stimpie pack and extra Stimpie prices. | Coral |
 | 4 | **Sizes** | Size chart, fit, and model photos with height and size. | Coral |
 | 5 | **Delivery** | Areas, timing, fees, and cash on delivery details. | Coral |
 | 6 | **Stimpies** | Every available design, one per story. | Black |
@@ -575,11 +737,11 @@ The planning and creative work is complete. What remains is execution.
 - [ ] Shoot the real footage once samples are ready.
 - [ ] Finish most videos before posting the first teaser.
 - [ ] Write all captions in advance.
-- [ ] Confirm the 5–10 Mystery Box creators.
+- [x] Mystery Boxes: not used for this launch (no creators).
 - [ ] Choose the Early-Access DM keyword.
-- [ ] Set the launch date (ideally October or November).
+- [x] Set the launch date: **14.11.26**.
 
-Once these are complete, post the first teaser and start the four-week countdown.
+Once these are complete, follow the dated pre-launch week in section 10 (8–13 November) through to launch on 14.11.26.
 
 ---
 
