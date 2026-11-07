@@ -291,12 +291,16 @@ The replacement exports are now in `posts\`, and the originals are in `_archive\
 
 | File | Status |
 |---|---|
-| `2026-11-13_2030_reel_50s-film.mp4` | Replaced. Sampled frames no longer show studs, edition text or "∞ Stimpies". Play it fully before posting |
-| `2026-11-19_2030_reel_split.mp4` | Replaced. Owner watched it and confirmed all its designs are on the website. Ready to post |
-| `2026-11-21_2030_reel_glimpse-receipt.mp4` | Replaced |
-| `2026-11-28_2030_reel_glimpse-sameday.mp4` | Replaced |
+| `2026-11-13_2030_reel_50s-film.mp4` | Replaced and checked Nov 8: decodes in full, 40s, -14.0 LUFS, -2.5 dBTP. Frames every second show a zip around the panel instead of studs, no edition text, "11 STIMPIES" and the "ONE HOODIE. YOUR WORLD. @STIMPY.LB" end card. Ready to post |
+| `2026-11-19_2030_reel_split.mp4` | Replaced. Owner watched it and confirmed all its designs are on the website. Checked Nov 8: 12s, -14.1 LUFS, -1.1 dBTP. Ready to post |
+| `2026-11-21_2030_reel_glimpse-receipt.mp4` | Replaced. Checked Nov 8: 15s, -14.1 LUFS, -1.6 dBTP |
+| `2026-11-24_2030_reel_60s-film.mp4` | Replaced. Checked Nov 8: 21s, -14.0 LUFS, -2.7 dBTP. The 13-17s titles are a fast transition, with each new panel arriving about 0.25s before its title, so `_CHECK-PLAYBACK` was removed from the name. It has no calendar row |
+| `2026-11-28_2030_reel_glimpse-sameday.mp4` | Replaced. Checked Nov 8: 15s, -14.1 LUFS, -1.5 dBTP |
+
+All five were decoded start to finish with no errors. Audio was measured, not listened to.
 
 Covers still needed: Arabic Videos 1-5 and the Dec 3 re-cut. Covers for Nov 21 and Nov 28 are in `_covers\`.
+
 ## Files still to add
 
 | File or note | Needed by |
@@ -306,3 +310,5 @@ Covers still needed: Arabic Videos 1-5 and the Dec 3 re-cut. Covers for Nov 21 a
 | Arabic Video 2 with subtitles | Nov 11 |
 | Arabic Video 1, website and WhatsApp versions | Nov 10 |
 | Arabic Video 3 | Nov 16 |
+| Arabic Video 5 (order or customer clip) | Nov 26, suggested |
+| Dec 3 best-performer re-cut | Dec 2, suggested |

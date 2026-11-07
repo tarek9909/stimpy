@@ -101,7 +101,7 @@ Nov 28 can shift the $182: $127/$55 toward whichever route qualifies, with a $5 
 - Rights to SABOTAGE and NEON. The owner says they hold them. No proof has been seen, and the art closely echoes the Beastie Boys song and Gear 5 Luffy. This is a visual judgment, not legal advice.
 - Live store: prices, delivery fee, stock, slugs, and whether "One of One" (end of `split`) is sold.
 - C, Meta's minimum budgets and limits, and production Purchase tracking.
-- Full playback of the five replacement videos, audio by ear, and about 13-17s of the 60-second film, where some titles appear with a different design.
+- Audio of the five replacement videos by ear. All five were decoded in full on Nov 8 with no errors, at -13.9 to -14.3 LUFS and -1.1 to -2.7 dBTP. The 60-second film's 13-17s titles are a fast transition: each new panel arrives about 0.25s before its title.
 
 **Open decision:** checkout requires an email address (`form.ts:133`, `orders/schemas.ts:129`). The advice is to make it optional, because it may lose cash-on-delivery buyers. The code hasn't been changed.
 
@@ -149,7 +149,7 @@ Names only. The files aren't in the repo.
 - `posts/2026-11-19_2030_reel_split.mp4`
 - `posts/2026-11-21_2030_reel_glimpse-receipt.mp4`
 - `posts/2026-11-23_1230_story_perfectloop.mp4`
-- `posts/2026-11-24_2030_reel_60s-film_CHECK-PLAYBACK.mp4`
+- `posts/2026-11-24_2030_reel_60s-film.mp4`
 - `posts/2026-11-28_2030_reel_glimpse-sameday.mp4`
 
 **`_archive/fixed-exports/` (replacement exports as received)**
