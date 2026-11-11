@@ -188,7 +188,7 @@ Zip off. Zip on. New style.
 **First WhatsApp reply (send the price here, before asking for designs)**
 
 ```text
-أهلا! الهودي مع تنين Stimpies بـ$45 + التوصيل، والدفع عند الاستلام.
+أهلا! الهودي مع تنين Stimpies بـ$30 + التوصيل، والدفع عند الاستلام.
 شو مقاسك، وأي تنين بدك؟
 ```
 
