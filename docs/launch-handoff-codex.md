@@ -1,5 +1,7 @@
 # Stimpy launch: handoff for Codex (posts + ads)
 
+> **Superseded (11 November 2026):** do not use this file. The current calendar, prices and ad plan are in [`content/calendar/STIMPY_CALENDAR.md`](../content/calendar/STIMPY_CALENDAR.md) and its [`HANDOFF.md`](../content/calendar/HANDOFF.md). This file's $30 price, ad dates and ad list no longer apply.
+
 Prepared 7 November 2026. Launch: **Saturday 14.11.26** (Drop 001, 100 hoodies). All times are **Beirut time (EET, UTC+2)**.
 
 This file is what Codex needs to schedule the Instagram posts and build the Meta ads. The full plan is in [`stimpy_master_plan.md`](../stimpy_master_plan.md) (section 10). Every Ads Manager setting is in [`stimpy-ads-manager-settings.pdf`](stimpy-ads-manager-settings.pdf), and the full campaign document is [`stimpy-ad-campaign.docx`](stimpy-ad-campaign.docx).

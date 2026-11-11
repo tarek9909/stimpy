@@ -1,6 +1,7 @@
 # Stimpy videos still to build
 
 Written Oct 31, 2026. The working plan is [STIMPY_CALENDAR.md](STIMPY_CALENDAR.md). If the two files disagree, the calendar wins.
+> **Nov 11 update:** the ads were restructured to use only the five filmed videos, uploaded as they are (STIMPY 1-4 and the WhatsApp clip). The ad dates, budgets, ad list, design pair and links in this file are out of date where they differ from the "Ads" section of [STIMPY_CALENDAR.md](STIMPY_CALENDAR.md). Nothing needs to be filmed or re-cut for the ads any more.
 
 Save videos in `C:\Projects\motion\content\calendar\posts\`, using the names below. Save covers in `C:\Projects\motion\content\calendar\_covers\`. Once a file is added, delete its `ADD-*.txt` note.
 
