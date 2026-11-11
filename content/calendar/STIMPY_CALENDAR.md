@@ -136,7 +136,7 @@ All four: Advantage+ audience off, manual placements with only Instagram Feed, R
 | Daily budget (on the ad set) | $15 | $10, then see Nov 28 | $6, then see Nov 28 | $5 |
 | Videos, as is | STIMPY 4 | STIMPY 3; STIMPY 2 from Nov 21 | STIMPY 3; WhatsApp clip from Nov 21 | STIMPY 1 |
 | Text | Profile visits copy | Website copy | WhatsApp copy, with the prefilled message | Website copy |
-| Destination | `@stimpy.lb` | `https://stimpylb.com/shop/hoodie/stimpy-hoodie?pack=hoodie-2-stimpies&stimpie=sabotage,same-day-different-me&utm_source=instagram&utm_medium=paid&utm_campaign=web_sales&utm_content=s3_web` (`s2_web` for Ad 4) | WhatsApp Business, +961 70 392 653 | Same page with `utm_campaign=retargeting&utm_content=s1_rt` |
+| Destination | `@stimpy.lb` | `https://stimpylb.com/shop/hoodie/stimpy-hoodie?pack=hoodie-2-stimpies&stimpie=sabotage,same-day-different-me&utm_source=instagram&utm_medium=paid&utm_campaign=web_sales&utm_content=s3_web` (`s2_web` for Ad 4) | WhatsApp Business, +961 76 034 810 | Same page with `utm_campaign=retargeting&utm_content=s1_rt` |
 | Submit by | Nov 11 | Ad 2 Nov 12, Ad 4 Nov 19 | Ad 3 Nov 12, Ad 5 Nov 19 | Nov 28 |
 
 1. Set the account spending limit to $450 and the campaign limits from "Spending limits".
