@@ -33,7 +33,7 @@ export function StoreHero({ homepage, stimpie = null, hoodieHref }: { homepage: 
           <p className="store-hero-description">{homepage.heroSubheadline}</p>
           <div className="store-hero-actions">
             <Link href={hoodieHref} className="store-button">Shop the hoodie <ArrowRight size={18} aria-hidden="true" /></Link>
-            <Link href="/shop?tab=stimpies" className="store-text-link">Explore Stimpies <ArrowRight size={16} aria-hidden="true" /></Link>
+            <a href="#builder-teaser" className="store-button store-button-secondary">Try it on <ArrowRight size={18} aria-hidden="true" /></a>
           </div>
         </div>
       </div>

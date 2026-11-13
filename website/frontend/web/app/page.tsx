@@ -86,9 +86,9 @@ async function HomeSections({ content, hoodies, catalog }: {
         <DropCountdown drop={drop} variant="inline" staticText={staticDropText(drop.state === 'UPCOMING' ? drop.startsAt : (drop.endsAt ?? drop.startsAt), tz)} />}
       <Link href={`/drops/${drop.slug}`} className="store-text-link">Discover the drop <ArrowRight size={16} aria-hidden="true" /></Link>
     </div></div> : null}
+    <BuilderTeaserSlot hoodieImage={hoodie?.images[0] ?? null} stimpies={teaserStimpies} />
     <HomeDeferredGate kind="commerce" {...commerceProps} fallback={<HomeCommerce {...commerceProps} />} />
     <HomeHowItWorks steps={content.howItWorks.steps} />
-    <BuilderTeaserSlot hoodieImage={hoodie?.images[0] ?? null} stimpies={teaserStimpies} />
     <HomeReviews reviews={content.reviews} />
     {faqPreview.length ? <section className="store-section store-faq" aria-labelledby="faq-title"><div className="container store-faq-grid">
       <header><p className="store-eyebrow">Good to know</p><h2 id="faq-title">A few quick answers.</h2><Link href="/help?tab=faq" className="store-text-link">Visit the help centre <ArrowRight size={17} aria-hidden="true" /></Link></header>

@@ -141,6 +141,16 @@ html {
   box-shadow: 0 8px 24px rgba(17, 17, 17, 0.18);
   text-decoration: none;
 }
+/* Secondary Store Button: outlined on a solid fill so it stays readable over the hero photo */
+.store-button.store-button-secondary {
+  background: #ffffff;
+  color: #111111;
+}
+.store-button.store-button-secondary:hover {
+  background: #f4f1ec;
+  border-color: #111111;
+  color: #111111;
+}
 .store-button:active {
   transform: translateY(0);
   box-shadow: 0 4px 10px rgba(17, 17, 17, 0.12);

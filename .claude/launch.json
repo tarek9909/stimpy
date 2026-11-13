@@ -6,6 +6,18 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "pp-viewer", "run", "dev", "--", "--port", "5199", "--strictPort"],
       "port": 5199
+    },
+    {
+      "name": "web-live-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "website/frontend/web", "run", "dev", "--", "--port", "3100"],
+      "env": {
+        "NEXT_PUBLIC_API_URL": "https://stimpylb.com/api/v1",
+        "API_URL_INTERNAL": "https://stimpylb.com/api/v1",
+        "NEXT_PUBLIC_SITE_URL": "http://localhost:3100",
+        "NEXT_PUBLIC_APP_ENV": "local"
+      },
+      "port": 3100
     }
   ]
 }
